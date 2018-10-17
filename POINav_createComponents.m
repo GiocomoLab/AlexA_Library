@@ -122,6 +122,8 @@ ed = varargin{2};
 app = varargin{3};
 if ~isempty(ed.Indices)
     app.hf.UserData.selectedRow=ed.Indices(1);
+    app.Template_Ax_Image.CData=app.hf.UserData.templates(:,:,ed.Indices(1));
+
 end
 end
 
@@ -137,7 +139,7 @@ for ii=1:10
     if x~=0
         
         plot(x,y,'.')
-        text(x,y,int2str(ii),'VerticalAlignment','bottom','HorizontalAlignment','right')
+        text(double(x),double(y),int2str(ii),'VerticalAlignment','bottom','HorizontalAlignment','right')
     end
 end
 end
@@ -187,7 +189,7 @@ else
     
 end
 if update
-    ud.templates(:,:,selectedRow)=CData;
+    app.hf.UserData.templates(:,:,selectedRow)=CData;
     app.Template_Ax_Image.CData=CData;
     app.UITable.Data{selectedRow,1}=x;
     app.UITable.Data{selectedRow,2}=y;

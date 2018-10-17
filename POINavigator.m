@@ -13,10 +13,11 @@ if flag
     set(POINav.hf,'menubar','none');
     POINav.hf.UserData.FTA=5;
 
-    POINav=POINav_createComponents(POINav);
-    %mmfile.Format = {'int16' [1 16] 'header' ; 'uint16' double([mmfile.Data.header(2) mmfile.Data.header(3)]) 'chA'};
-    %imageData = double(intmax('uint16')-mmfile.Data.chA);
-     imageData = randn(256);
+    mmfile.Format = {'int16' [1 16] 'header' ; 'uint16' double([mmfile.Data.header(2) mmfile.Data.header(3)]) 'chA'};
+    imageData = double(intmax('uint16')-mmfile.Data.chA);
+    POINav=POINav_createComponents(POINav,size(imageData,1),size(imageData,2));
+
+     %imageData = randn(256);
     
     POINav.hf.UserData.IMAGES=zeros([size(imageData),POINav.hf.UserData.FTA]);
     POINav.hf.UserData.COUNTER=0;
@@ -28,7 +29,7 @@ else
     %update graphics here
       %imageData = delta*imageData + (1-delta)*double(intmax('uint16')-mmfile.Data.chA);
         %ih.CData = mchA;
-    newFrame=randn(256);
+    newFrame=mmfile.Data.chA;
     POINav.hf.UserData.COUNTER=POINav.hf.UserData.COUNTER+1;
     idx=mod(POINav.hf.UserData.COUNTER,POINav.hf.UserData.FTA)+1;
     POINav.hf.UserData.IMAGES(:,:,idx)=newFrame;
@@ -41,14 +42,15 @@ else
         CData=av_image;
     end
         POINav.Live_Ax_Image.CData=CData;
-        POINav.hf.UserData.currX=rand(1)*5-2.5;
-        POINav.hf.UserData.currY=rand(1)*5-2.5;
-        POINav.hf.UserData.currZ=rand(1)*5-2.5;
+        %POINav.Template_Ax_Image.CData=squeeze(POINav.hf.UserData.templates(:,:,POINav.hf.UserData.selectedRow));
+        POINav.hf.UserData.currX=mmfile.Data.header(10);
+        POINav.hf.UserData.currY=mmfile.Data.header(11);
+        POINav.hf.UserData.currZ=mmfile.Data.header(12);
 
         
     
 end
-
+mmfile.Data.header(1) = -1; % signal Scanbox that frame has been consumed!
 drawnow limitrate
 
 end
