@@ -46,11 +46,32 @@ else
         POINav.hf.UserData.currX=mmfile.Data.header(10);
         POINav.hf.UserData.currY=mmfile.Data.header(11);
         POINav.hf.UserData.currZ=mmfile.Data.header(12);
-
+        
+        plotCoordinates(POINav)
         
     
 end
 mmfile.Data.header(1) = -1; % signal Scanbox that frame has been consumed!
 drawnow limitrate
 
+end
+
+function plotCoordinates(app)
+%ud=app.hf.UserData;
+table=app.UITable.Data;
+axes(app.Map_Ax);
+cla
+hold on;
+for ii=1:app.hf.UserData.N_Images
+    x=table{ii,1};
+    y=table{ii,2};
+    z=table{ii,3};
+    
+    if x~=0 || y ~=0 || z ~=0
+        
+        plot(x,y,'.')
+        text(double(x),double(y),int2str(ii),'VerticalAlignment','bottom','HorizontalAlignment','right')
+    end
+end
+plot(app.hf.UserData.currX,app.hf.UserData.currY,'rx')
 end
