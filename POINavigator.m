@@ -1,4 +1,8 @@
-
+%     while running
+%         
+%         running = (mmfile.Data.header(1) ~= -2);    % no stop signal present
+%         
+%         if running && mmfile.Data.header(1)>=0 
 
 
 flag =true;
@@ -6,7 +10,7 @@ flag =true;
 while true
 
 if flag
-    
+    %do this the first time around
     POINav.hf=figure(1001);
     clf
     set(POINav.hf,'name','POINavigator','numberTitle','off');
@@ -26,10 +30,9 @@ if flag
     colormap gray;      % use gray colormap
     
 else
-    %update graphics here
-      %imageData = delta*imageData + (1-delta)*double(intmax('uint16')-mmfile.Data.chA);
-        %ih.CData = mchA;
-    newFrame=mmfile.Data.chA;
+    something2Display = mmfile.Data.header(1)>=0;
+    if something2Display
+    newFrame=double(intmax('uint16')-mmfile.Data.chA);
     POINav.hf.UserData.COUNTER=POINav.hf.UserData.COUNTER+1;
     idx=mod(POINav.hf.UserData.COUNTER,POINav.hf.UserData.FTA)+1;
     POINav.hf.UserData.IMAGES(:,:,idx)=newFrame;
@@ -48,7 +51,7 @@ else
         POINav.hf.UserData.currZ=mmfile.Data.header(12);
         
         plotCoordinates(POINav)
-        
+    end
     
 end
 mmfile.Data.header(1) = -1; % signal Scanbox that frame has been consumed!
@@ -58,6 +61,7 @@ end
 
 function plotCoordinates(app)
 %ud=app.hf.UserData;
+%flip plotting x and y to have same orientation as image
 table=app.UITable.Data;
 axes(app.Map_Ax);
 cla
@@ -69,8 +73,8 @@ for ii=1:app.hf.UserData.N_Images
     
     if x~=0 || y ~=0 || z ~=0
         
-        plot(x,y,'.')
-        text(double(x),double(y),int2str(ii),'VerticalAlignment','bottom','HorizontalAlignment','right')
+        plot(y,x,'.')
+        text(double(y),double(x),int2str(ii),'VerticalAlignment','bottom','HorizontalAlignment','right')
     end
 end
 plot(app.hf.UserData.currX,app.hf.UserData.currY,'rx')
