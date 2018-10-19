@@ -60,5 +60,4 @@ class CorrPlugin(IPlugin):
             #total_spikes=data[0,0,middle_bin:].sum();
             #violation_spikes=data[0,0,middle_bin:to].sum();
             violation_rate = n_violated/total_spikes
-            #pdb.set_trace()
             return violation_rate
