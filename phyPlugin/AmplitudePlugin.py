@@ -46,7 +46,7 @@ class AmplitudePlugin(IPlugin):
         #print('plugin')
         
         
-        def Amp16(cluster_id):
+        def Amp20(cluster_id):
             # This function takes a cluster id as input and returns a scalar.
     
             # We retrieve the spike_ids and waveforms for that cluster.
@@ -54,8 +54,10 @@ class AmplitudePlugin(IPlugin):
             # data = controller.get_waveforms(cluster_id)[0]
             #pdb.set_trace()
             bc = controller.get_best_channel(cluster_id)
-            waveforms_b = controller._select_data(cluster_id,controller.all_waveforms,500)
-            wf=waveforms_b.data
+            #waveforms_b = controller._select_data(cluster_id,controller.all_waveforms,500)
+            #wf=waveforms_b.data
+            spike_ids = controller._select_spikes(cluster_id, 500, batch_size=None)
+            wf=controller.all_waveforms[spike_ids]
             wf_m=wf.mean(axis=0)
             #plt.figure()
             #plt.subplot(2,1,1)
@@ -69,6 +71,8 @@ class AmplitudePlugin(IPlugin):
             #plt.plot(trace)
             #plt.show()
             #data = controller.get_amplitudes(cluster_id)
+            #noise=controller.get_channel_noise()
+            #wfa=controller.get_waveforms_amplitude(cluster_id)
             #pdb.set_trace()
             return amp
         
