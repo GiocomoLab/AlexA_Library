@@ -20,7 +20,7 @@ from phy import IPlugin
 
 import pdb
 
-class AmplitudePlugin(IPlugin):
+class AmplitudePluginDev(IPlugin):
     def attach_to_controller(self, controller):
         """This method is called when a controller is created.
         The controller emits a few events:
@@ -34,19 +34,19 @@ class AmplitudePlugin(IPlugin):
 
         # The ManualClustering instance is responsible for the manual
         # clustering logic and the cluster views.
-        mc = controller.manual_clustering
         # The context provides `cache()` and `memcache()` methods to cache
         # functions on disk or in memory, respectively.
-        ctx = controller.context
+        #ctx = controller.context
 
         # We add a column in the cluster view and set it as the default.
-        @mc.add_column(default=True)
+        #@mc.add_column
         # We memcache it.
-        @ctx.memcache
+        #@ctx.memcache
         #print('plugin')
         
         
-        def Amp21(cluster_id):
+        
+        def Amp(cluster_id):
             # This function takes a cluster id as input and returns a scalar.
     
             # We retrieve the spike_ids and waveforms for that cluster.
@@ -73,6 +73,13 @@ class AmplitudePlugin(IPlugin):
             #data = controller.get_amplitudes(cluster_id)
             #noise=controller.get_channel_noise()
             #wfa=controller.get_waveforms_amplitude(cluster_id)
-            #pdb.set_trace()
+            pdb.set_trace()
             return amp
         
+        @controller.connect
+        def on_gui_ready(gui):
+            # Called when the GUI is created.
+            # We add the matplotlib figure to the GUI.
+            pdb.set_trace()
+            print("here")
+            gui.supervisor.add_column(gui.get_amplitudes, name='amp')

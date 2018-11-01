@@ -35,7 +35,7 @@ class CorrPlugin(IPlugin):
 
         # The ManualClustering instance is responsible for the manual
         # clustering logic and the cluster views.
-        mc = controller.manual_clustering
+        mc = controller.supervisor
         # The context provides `cache()` and `memcache()` methods to cache
         # functions on disk or in memory, respectively.
         ctx = controller.context
@@ -45,7 +45,7 @@ class CorrPlugin(IPlugin):
         # We memcache it.
         @ctx.memcache
         
-        def VioRate(clusterID):
+        def VioRate132(clusterID):
             #n_bins = 100
             #middle_bin = 50
             #violation = 2
@@ -59,5 +59,6 @@ class CorrPlugin(IPlugin):
             #data = controller.get_correlograms((clusterID,),1,n_bins);
             #total_spikes=data[0,0,middle_bin:].sum();
             #violation_spikes=data[0,0,middle_bin:to].sum();
+            #pdb.set_trace()
             violation_rate = n_violated/total_spikes
             return violation_rate
