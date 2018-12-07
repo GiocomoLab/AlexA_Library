@@ -15,16 +15,18 @@ win=p.Results.win;
 aux=p.Results.aux;
 aux_win=p.Results.aux_win;
 
-
-
-n_times = length(time_idx);
 spike_times=sp_struct.st;
+
+time_idx(time_idx+win(1)<=0)=[];
+time_idx(time_idx+win(2)>max(spike_times))=[];
+n_times = length(time_idx);
 cluster_ID=sp_struct.clu;
 n_units = max(cluster_ID)+1;
 n_aux = size(aux,1)-1;
 
 time_vec=win(1):0.001:win(2);
 spike_mat=zeros(n_units,n_times,length(time_vec));
+
 for iT=1:n_times
     start = time_idx(iT)+win(1);
     stop = time_idx(iT)+win(2);

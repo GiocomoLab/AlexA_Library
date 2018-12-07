@@ -1,0 +1,16 @@
+filenames={'npF2_1015_contrasttrack_gainchanges_2.mat',...
+    'npF2_1016_contrasttrack_gainchanges_1.mat',...
+    'npF3_1018_contrasttrack_gainchanges_1.mat',...
+    'npF3_1019_contrasttrack_gainchanges_contrast_1.mat',...
+    'npF4_1023_gaincontrast_1.mat',...
+    'npF4_1025_gaincontrast_2.mat '};
+
+root_dir='C:\Users\giocomolab\Dropbox\Work\neuropixels\data\';
+
+for iF=2
+    %clear all
+    load([root_dir filenames{iF}]);
+    %sprintf('Now working on: %s',filenames{iF})
+    corrMbyDepth
+    %plot_pause_sequence
+end

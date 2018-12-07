@@ -1,30 +1,19 @@
-
 speed = diff(posx);
 %figure;plot(posx)
 jumps=find(speed<-40);
 for ii=1:length(jumps)
     speed(jumps(ii))=.5*speed(jumps(ii)-1)+.5*speed(jumps(ii)+1);
 end
-speed_t=0.1;
-figure; plot(speed)
-
-sit_periods=speed<speed_t;
-hold on
-plot(sit_periods)
-
 %%
-transitions=find(diff([0;sit_periods;0]));
-sit_times=transitions(2:2:end)-transitions(1:2:end);
+ff=abs(posx-250);
 
-figure
-histogram(sit_times,80)
+ff(ff>.5)=2;
+ff(ff<.5)=0;
 
-set(gca,'XTick',[0:25:1600],'XTickLabel',[0:25:1600]/50)
+TF=islocalmin(ff,'FlatSelection', 'center');
 
-sampling_rate=50;
-sitwin=[zeros(1,4*sampling_rate) ones(1,2.5*sampling_rate)];
-stop_idx=strfind(sit_periods',sitwin)+4*sampling_rate;
-stop_time=post(stop_idx);
+figure;plot(post,posx,post(TF),posx(TF),'r*')
+stop_time=post(TF);
 %%
 [spike_mat,win,adata]=extract_triggered_spikes(sp,stop_time,'win',[-4 4],'aux',[post'; [0 speed']],'aux_win',[-200 200]);
 %%
@@ -45,7 +34,7 @@ mean_fr_plot=squeeze(mean(zn(cellIDX,1:2:end,:),2));
 ff_plot=bsxfun(@rdivide,mean_fr_plot,a);
 ff_sort=bsxfun(@rdivide,mean_fr_sort,max(mean_fr_sort,[],2));
 
-figure
+figure('Name',filenames{iF})
 subplot(3,1,1)
 imagesc(ff_sort(ii,:))
 title('data used for sorting')
@@ -54,4 +43,3 @@ imagesc(ff_plot(ii,:))
 title('held out data')
 subplot(3,1,3)
 plot(-4:0.02:4,squeeze(adata))
-
