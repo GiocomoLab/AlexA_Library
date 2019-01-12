@@ -1,6 +1,6 @@
 % location of data
-data_dir = 'F:\G4\1204_mismatch_1\';
-session_name = '1204_mismatch_1';
+data_dir = 'F:\G5\1207_gain_2_mismatch_1';
+session_name = '1207_mismatch_1';
 
 
 % get neuropixels sync pulse times
@@ -37,6 +37,13 @@ vr_lick_data = fscanf(fid, '%f', [2,inf])';
 fclose(fid);
 lickx = vr_lick_data(:,1);
 lickt = vr_lick_data(:,2);
+
+[mm,ii]=max(diff(frametimes_np));
+frametimes_npOld = frametimes_np;
+if mm>1
+    disp('Found large step in np sync data, assuming two sessions, mismatch second session')
+    frametimes_np=frametimes_np(ii:end);
+end
 
 % set vr frame times to be the time of neuropixels pulses
 % make sure the number of frames matches (can be off by one because of
