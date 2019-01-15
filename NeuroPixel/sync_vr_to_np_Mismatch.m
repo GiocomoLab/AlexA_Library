@@ -1,6 +1,6 @@
 % location of data
-data_dir = 'F:\G5\1207_gain_2_mismatch_1';
-session_name = '1207_mismatch_1';
+data_dir = 'F:\G4\1204_mismatch_1';
+session_name = '1204_mismatch_1';
 
 
 % get neuropixels sync pulse times
@@ -97,4 +97,4 @@ sp.clu = sp.clu(keep);
 sp.tempScalingAmps = sp.tempScalingAmps(keep);
 
 % save processed data
-save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','mismatch_trigger','true_speed');
+%save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','mismatch_trigger','true_speed');

@@ -1,3 +1,5 @@
+load('F:\G5\1210_mismatch_1\1210_mismatch_1.mat')
+
 speed=true_speed;
 speed_t=0.05;
 % figure; plot(speed)
@@ -5,9 +7,9 @@ speed_t=0.05;
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
 run_periods=smooth(speed,25)>speed_t;
 run_window=-25:25;
-valid_idx=true(size(mm_trigs));
-for sort_idx=1:length(mm_trigs)
-    runbi=sum(run_periods(mm_trigs(sort_idx)+run_window));
+valid_idx=true(size(all_mm_trigs));
+for sort_idx=1:length(all_mm_trigs)
+    runbi=sum(run_periods(all_mm_trigs(sort_idx)+run_window));
     if runbi<length(run_window)
         valid_idx(sort_idx)=false;
     end
@@ -25,7 +27,7 @@ spike_mat=spike_mat(sp.cids+1,:,:);
 kernel=reshape(gausswin(401),1,1,[]);
 zn=convn(spike_mat,kernel,'same');
 %% separate into matrix for plotting and sorting, plus use only clusters with certain ID
-cellIDX=sp.cgs>=1;
+cellIDX=sp.cgs>=2;
 %cellIDX=true(1,size(zn,1));
 mean_fr_sort=squeeze(mean(zn(cellIDX,2:2:end,:),2));
 mean_fr_plot=squeeze(mean(zn(cellIDX,1:2:end,:),2));
@@ -63,7 +65,8 @@ plotAVGSEM(resp',gca,'parameters',params,'ms',true,'baseline',3500:3999)
 
 
 %%
-cellID=sort_idx(1);
+cell_list=find(cellIDX);
+cellID=cell_list(sort_idx(2));
 binned_array=squeeze(spike_mat(cellID,:,:));
 bins=win(1):0.001:win(2);
     
@@ -95,41 +98,48 @@ resp = squeeze(mean(zn(:,b(end-20:end),:),2));
 plotAVGSEM(resp',gca,'parameters',params,'ms',true,'baseline',3500:3999,'col',[.5 1 0])
 
 %%
-[spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
-    templatePositionsAmplitudes(sp.temps, sp.winv, sp.ycoords, sp.spikeTemplates, sp.tempScalingAmps);
-depth=zeros(1,size(zn,1));
-for iC=1:size(zn,1)
-    depth(iC)=mean(spikeDepths(sp.clu==sp.cids(iC)));
-end
-
-%%
-mean_fr_plot=squeeze(mean(zn,2));
-[a,~]=max(mean_fr_plot,[],2);
-ff_plot=bsxfun(@rdivide,mean_fr_plot,a);
-[ss,sort_idx]=sort(depth,'desc');
-figure;imagesc(ff_sort(sort_idx,:))
-%%
-
-figure
-plot(speed)
-hold on
-temp=squeeze(mean(adata,2));
-kernel=temp(150:250);
-speed_matched=conv(speed,kernel,'same');
-figure
-plot(speed_matched);hold on;
-%%
-[pks,locs]=findpeaks(speed_matched,'MinPeakProminence',4);
-figure
-plot(speed_matched)
-hold on
-plot(locs,speed_matched(locs),'ro');
-%plot(all_mm_trigs,speed_matched(all_mm_trigs),'ro')
-trigs=locs+50;
-[spike_mat2,win,adata2]=extract_triggered_spikes(sp,post(trigs),'win',[-4 4],'aux',[post'; [speed]],'aux_win',[-200 200]);
-%%
-kernel=reshape(gausswin(401),1,1,[]);
-zn2=convn(spike_mat2,kernel,'same');
-figure
-resp = squeeze(mean(zn2,2));
-plotAVGSEM(resp',gca,'parameters',params,'ms',true,'baseline',3500:3999)
+% [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
+%     templatePositionsAmplitudes(sp.temps, sp.winv, sp.ycoords, sp.spikeTemplates, sp.tempScalingAmps);
+% depth=zeros(1,size(zn,1));
+% for iC=1:size(zn,1)
+%     depth(iC)=mean(spikeDepths(sp.clu==sp.cids(iC)));
+% end
+% 
+% %%
+% cellIDX=sp.cgs>=2;
+% %cellIDX=true(1,size(zn,1));
+% mean_fr=squeeze(mean(zn(cellIDX,:,:),2));
+% 
+% [~,max_c]=max(mean_fr,[],2);
+% 
+% 
+% [a,~]=max(mean_fr,[],2);
+% ff_plot=bsxfun(@rdivide,mean_fr,a);
+% 
+% [ss,sort_idx]=sort(depth(cellIDX),'desc');
+% figure;imagesc(ff_sort(sort_idx,:))
+% %%
+% 
+% figure
+% plot(speed)
+% hold on
+% temp=squeeze(mean(adata,2));
+% kernel=temp(150:250);
+% speed_matched=conv(speed,kernel,'same');
+% figure
+% plot(speed_matched);hold on;
+% %%
+% [pks,locs]=findpeaks(speed_matched,'MinPeakProminence',4);
+% figure
+% plot(speed_matched)
+% hold on
+% plot(locs,speed_matched(locs),'ro');
+% %plot(all_mm_trigs,speed_matched(all_mm_trigs),'ro')
+% trigs=locs+50;
+% [spike_mat2,win,adata2]=extract_triggered_spikes(sp,post(trigs),'win',[-4 4],'aux',[post'; [speed]],'aux_win',[-200 200]);
+% %%
+% kernel=reshape(gausswin(401),1,1,[]);
+% zn2=convn(spike_mat2,kernel,'same');
+% figure
+% resp = squeeze(mean(zn2,2));
+% plotAVGSEM(resp',gca,'parameters',params,'ms',true,'baseline',3500:3999)
