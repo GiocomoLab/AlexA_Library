@@ -1,4 +1,4 @@
-trials=[1:44];
+trials=[15:55];
 spC=[];
 dwell_time=[];
 for iT=1:length(trials)
@@ -17,15 +17,16 @@ end
 % imagesc(spM)
 % subplot(2,1,2)
 % plot(dwell_time)
-
+spC=spC(sp.cgs>=1,:,:);
 %%
-
-smoothSigma = params.SmoothSigmaFR/params.SpatialBin;
-smoothWindow = floor(smoothSigma*5/2)*2+1;
-gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+% 
+% smoothSigma = params.SmoothSigmaFR/params.SpatialBin;
+% smoothWindow = floor(smoothSigma*5/2)*2+1;
+% gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+gauss_filter = gausswin(11)/sum(gausswin(11));
 
 %% get spatial firing rate
-iC=2;
+iC=8;
 fr=mean(spC(iC,:,:),3)/0.02;
 dwell_t=mean(dwell_time,1);
 
