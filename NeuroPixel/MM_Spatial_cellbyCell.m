@@ -83,5 +83,7 @@ window = [-1 4]; % look at spike times from 0.3 sec before each event to 1 sec a
 trialGroups = [ones(size(mm_trigs))];
 eventTimes=[post(mm_trigs)'];
 %%
-psthViewer(sp.st, sp.clu, eventTimes, window, trialGroups,spC);
 
+psthViewer_Alex(sp, eventTimes, window, trialGroups,spC);
+
+%cid=sp.cids(idx);plot(sp.st(sp.clu==cid),sp.tempScalingAmps(sp.clu==cid),'.')
