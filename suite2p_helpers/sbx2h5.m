@@ -17,7 +17,7 @@ end
 k = 0;
 done = 0;
  
-blksize = 200; % block size
+blksize = 1000; % block size
  
 to_read = min(blksize,N-k);
  
