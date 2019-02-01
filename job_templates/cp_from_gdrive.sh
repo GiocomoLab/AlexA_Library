@@ -5,6 +5,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=attialex@stanford.edu
+#SBATCH --mem-per-cpu=80G
 #SBATCH --mem 100 # memory pool for all cores
 #SBATCH -o slurm.%N.%j.out # STDOUT
 #SBATCH -e slurm.%N.%j.err # STDERR
