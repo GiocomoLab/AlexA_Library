@@ -6,7 +6,9 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=attialex@stanford.edu
 #SBATCH --mem 100 # memory pool for all cores
+#SBATCH -o slurm.%N.%j.out # STDOUT
+#SBATCH -e slurm.%N.%j.err # STDERR
 
 module load system rclone
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
-rclone copy rclone copy VRGDrive:attialex /oak/stanford/groups/giocomo/attialex/DATA -P
+rclone copy VRGDrive:attialex /oak/stanford/groups/giocomo/attialex/DATA -P
