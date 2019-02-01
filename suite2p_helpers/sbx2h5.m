@@ -40,11 +40,10 @@ h5write(fnh,'/data',q,[1 1 k+1],[602 512 to_read]);
 end
 catch
 done = 1;
-delete(f);
+
 end
 k = k+to_read;
 to_read = min(blksize,N-k);
-waitbar(k/N,f);
+
 end
  
-delete(f);
