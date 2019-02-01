@@ -1,17 +1,12 @@
 import sys
 import os
-os.sys.path.append('C:/code/suite2P_processing/')
-os.sys.path.append('C:/code/suite2P_processing/scratch')
 
-import s2p_preprocessing as pp
-import run_single_session as ss
-import suite2p
 from suite2p.run_s2p import run_s2p
 import numpy as np
 
 if __name__ == '__main__':
     ops = {
-            'fast_disk': os.path.join("F:","s2ptmp"), # used to store temporary binary file, defaults to save_path0 (set as a string NOT a list)
+            'fast_disk': os.path.join(os.environ['SCRATCH'],"s2ptmp"), # used to store temporary binary file, defaults to save_path0 (set as a string NOT a list)
             'save_path0': '', # stores results, defaults to first item in data_path
             'delete_bin': False, # whether to delete binary file after processing
             'h5py_key': 'data',
@@ -60,10 +55,10 @@ if __name__ == '__main__':
     db = {
     'h5py': [], # a single h5 file path
     'h5py_key': 'data',
-    'fast_disk': os.path.join("F:","s2ptmp"), # string which specifies where the binary file will be stored (should be an SSD)
+    'fast_disk': os.path.join(os.environ['SCRATCH'],"s2ptmp"), # string which specifies where the binary file will be stored (should be an SSD)
     }
-    f='F:/ImagingData/AA_190111_029/AA_190111_029_000_001.h5'
+    f=os.path.join(os.environ['SCRATCH'],'AA_190111_029_000_001.h5')
     db['h5py']=f
-    ops['save_path0']='F:/ImagingData/AA_190111_029/AA_190111_029_000_001'
+    ops['save_path0']=os.path.join(os.environ['SCRATCH'])
     # run one experiment
     opsEnd=run_s2p(ops=ops,db=db)
