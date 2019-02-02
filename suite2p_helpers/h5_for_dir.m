@@ -5,8 +5,10 @@ sbx_files = dir(fullfile(input_dir,'*.sbx'));
 for ii=1:length(sbx_files)
     fprintf('Now working on: %s \n',sbx_files(ii).name)
     [~,fn,~]=fileparts(sbx_files(ii).name);
+
     if ~exist(fullfile(input_dir,[fn, '.h5']))
-        sbx2h5(fullfile(input_dir,sbx_files(ii).name))
+
+        sbx2h5(fullfile(input_dir,fn))
         fprintf('done \n')
         clearvars info
     else
@@ -14,5 +16,6 @@ for ii=1:length(sbx_files)
     end
     
 end
+
 
 end
