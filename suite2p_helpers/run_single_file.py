@@ -68,34 +68,48 @@ def get_expID(filename = 'AA_190111_029_000_001.h5'):
     parts = h.split('_')
     return parts[-1]
 
+def run_for_single_file(animal_path,file):
+    expID=get_expID(file)
+    hf_path = os.path.join(animal_path,file)
+    savepath=os.path.join(animal_path,file[:-3])
+    tmp_path = os.path.join(os.environ['L_SCRATCH'],'suite2p',file[:-3])
+    
+    db = default_db()
+    db['h5py']=hf_path
+    db['fast_disk']=tmp_path
+    ops = default_ops()
+    ops['save_path0'] = savepath
+    ops['fast_disk'] = tmp_path
+    # run one experiment
+    if not os.path.isdir(ops['save_path0']):
+        start = time.time()
 
-if __name__ == '__main__':
-    rootpath=os.path.join(os.environ['OAK'],'attialex','TEST')
-    animal = 'AA_190110_023'
-    animal_path = os.path.join(rootpath,animal)
+        print('Running for: '+db['h5py']+'\n')
+        print('Saving on: '+ops['save_path0'])
+        print('Tmp saving:' + ops['fast_disk'])
+        #opsEnd=run_s2p(ops=ops,db=db)
+        #stop = time.time()
+        #timelog = open(os.path.join(os.environ['SCRATCH'],'suite2p_times.txt'),'a')
+        #timelog.write(db['h5py']+', ' +str(stop-start) +'\n')
+        #timelog.close()
+    else:
+        print(ops['save_path0'] + 'already exisits, skipping. \n')
+    return
+            
+
+def run_for_animalDir(animal_path):
     for file in os.listdir(animal_path):
         if file.endswith('.h5'):
-            expID=get_expID(file)
-            hf_path = os.path.join(animal_path,file)
-            savepath=os.path.join(animal_path,file[:-3])
-            tmp_path = os.path.join(os.environ['L_SCRATCH'],'suite2p',file[:-3])
-            
-            db = default_db()
-            db['h5py']=hf_path
-            #db['fast_disk']=tmp_path
-            ops = default_ops()
-            ops['save_path0'] = savepath
-            ops['fast_disk'] = tmp_path
-            # run one experiment
-            start = time.time()
+            run_for_single_file(animal_path,file)
+    return
 
-            #print('Running for: '+db['h5py']+'\n')
-            #print('Saving on: '+ops['save_path0'])
-            #print('Tmp saving:' + ops['fast_disk'])
-            opsEnd=run_s2p(ops=ops,db=db)
-            stop = time.time()
-            timelog = open(os.path.join(os.environ['SCRATCH'],'suite2p_times.txt'),'a')
-            timelog.write(db['h5py']+', ' +str(stop-start) +'\n')
-            timelog.close()
-            
-            
+
+
+if __name__ == '__main__':
+    rootpath = sys.argv[1]
+    animal = sys.argv[2]
+    #rootpath=os.path.join(os.environ['OAK'],'attialex','TEST')
+    #animal = 'AA_190110_023'
+    animal_path = os.path.join(rootpath,animal)
+    run_for_animalDir(animal_path)
+    
