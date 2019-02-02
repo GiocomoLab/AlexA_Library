@@ -1,7 +1,7 @@
 %function create_h5_files(DATADIR)
 addpath('~/AlexA_Library/suite2p_helpers')
 
-DATADIR = '/oak/groups/giocomo/attialex/DATA/TEST';
+DATADIR = '/oak/stanford/groups/giocomo/attialex/DATA/TEST';
 
 
 content = dir(DATADIR);
