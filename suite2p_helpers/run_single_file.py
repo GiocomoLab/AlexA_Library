@@ -4,9 +4,9 @@ import os
 from suite2p.run_s2p import run_s2p
 import numpy as np
 
-if __name__ == '__main__':
+def default_ops(animal='',expid=''):
     ops = {
-            'fast_disk': os.path.join(os.environ['SCRATCH'],"s2ptmp"), # used to store temporary binary file, defaults to save_path0 (set as a string NOT a list)
+            'fast_disk': '', # used to store temporary binary file, defaults to save_path0 (set as a string NOT a list)
             'save_path0': '', # stores results, defaults to first item in data_path
             'delete_bin': False, # whether to delete binary file after processing
             'h5py_key': 'data',
@@ -26,7 +26,7 @@ if __name__ == '__main__':
             # registration settings
             'do_registration': True, # whether to register data
             'nimg_init': 200, # subsampled frames for finding reference image
-            'batch_size': 200, # number of frames per batch
+            'batch_size': 1000, # number of frames per batch
             'maxregshift': 0.1, # max allowed registration shift, as a fraction of frame max(width and height)
             'align_by_chan' : 1, # when multi-channel, you can align by non-functional channel (1-based)
             'reg_tif': False, # whether to save registered tiffs
@@ -51,14 +51,42 @@ if __name__ == '__main__':
             'prctile_baseline': 8.,# optional (whether to use a percentile baseline)
             'neucoeff': .7,  # neuropil coefficient
         }
+    return ops
 
+def default_db():
     db = {
-    'h5py': [], # a single h5 file path
-    'h5py_key': 'data',
-    'fast_disk': os.path.join(os.environ['SCRATCH'],"s2ptmp"), # string which specifies where the binary file will be stored (should be an SSD)
+        'h5py': filename, # a single h5 file path
+        'h5py_key': 'data',
+        'fast_disk':''
+        #'fast_disk': os.path.join(os.environ['L_SCRATCH'],"s2ptmp"), # string which specifies where the binary file will be stored (should be an SSD)
     }
-    f=os.path.join(os.environ['SCRATCH'],'AA_190111_029_000_001.h5')
-    db['h5py']=f
-    ops['save_path0']=os.path.join(os.environ['SCRATCH'])
-    # run one experiment
-    opsEnd=run_s2p(ops=ops,db=db)
+    return db
+
+def get_expID(filename = 'AA_190111_029_000_001.h5'):
+    h,t = filename.split('.')
+    parts = h.split('_')
+    return parts[-1]
+
+
+if __name__ == '__main__':
+    rootpath=os.path.join(os.environ['OAK'],'attialex','TEST')
+    animal = 'AA_190110_023'
+    animal_path = os.path.join(rootpath,animal)
+    for file in os.listdir(animal_path):
+        if file.endswith('.h5'):
+            expID=get_expID(file)
+            hf_path = os.path.join(animal_path,file)
+            savepath=os.path.join(animal_path,file[:-3])
+            tmp_path = os.path.join(os.environ['SCRATCH'],'suite2p',file[:-3])
+            
+            db = default_db()
+            db['h5py']=hf_path
+            #db['fast_disk']=tmp_path
+            ops = default_ops()
+            ops['save_path0'] = savepath
+            ops['fast_disk'] = tmp_path
+            # run one experiment
+            #opsEnd=run_s2p(ops=ops,db=db)
+            print('Running for: '+db['h5py']+'\n')
+            print('Saving on: '+ops['save_path0'])
+            print('Tmp saving:' + ops['fast_disk'])
