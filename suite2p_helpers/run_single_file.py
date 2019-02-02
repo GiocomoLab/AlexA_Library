@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 from suite2p.run_s2p import run_s2p
 import numpy as np
@@ -55,7 +56,7 @@ def default_ops(animal='',expid=''):
 
 def default_db():
     db = {
-        'h5py': filename, # a single h5 file path
+        'h5py': '', # a single h5 file path
         'h5py_key': 'data',
         'fast_disk':''
         #'fast_disk': os.path.join(os.environ['L_SCRATCH'],"s2ptmp"), # string which specifies where the binary file will be stored (should be an SSD)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
             expID=get_expID(file)
             hf_path = os.path.join(animal_path,file)
             savepath=os.path.join(animal_path,file[:-3])
-            tmp_path = os.path.join(os.environ['SCRATCH'],'suite2p',file[:-3])
+            tmp_path = os.path.join(os.environ['L_SCRATCH'],'suite2p',file[:-3])
             
             db = default_db()
             db['h5py']=hf_path
@@ -86,7 +87,15 @@ if __name__ == '__main__':
             ops['save_path0'] = savepath
             ops['fast_disk'] = tmp_path
             # run one experiment
-            #opsEnd=run_s2p(ops=ops,db=db)
-            print('Running for: '+db['h5py']+'\n')
-            print('Saving on: '+ops['save_path0'])
-            print('Tmp saving:' + ops['fast_disk'])
+            start = time.time()
+
+            #print('Running for: '+db['h5py']+'\n')
+            #print('Saving on: '+ops['save_path0'])
+            #print('Tmp saving:' + ops['fast_disk'])
+            opsEnd=run_s2p(ops=ops,db=db)
+            stop = time.time()
+            timelog = open(os.path.join(os.environ['SCRATCH'],'suite2p_times.txt'),'a')
+            timelog.write(db['h5py']+', ' +str(stop-start) +'\n')
+            timelog.close()
+            
+            
