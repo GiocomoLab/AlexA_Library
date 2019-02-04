@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=attialex@stanford.edu
-#SBATCH --mem-per-cpu=40G
+#SBATCH --mem-per-cpu=80G
 #SBATCH -o /scratch/users/attialex/slurm.%N.%j.out # STDOUT
 #SBATCH -e /scratch/users/attialex/slurm.%N.%j.err # STDERR
 
