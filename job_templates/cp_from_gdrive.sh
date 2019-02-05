@@ -12,4 +12,4 @@
 module load system rclone
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
 rclone copy VRGDrive:attialex /oak/stanford/groups/giocomo/attialex/DATA
-#rclone check VRGDrive:attialex /oak/stanford/groups/giocomo/attialex
+rclone check VRGDrive:attialex /oak/stanford/groups/giocomo/attialex --size-only
