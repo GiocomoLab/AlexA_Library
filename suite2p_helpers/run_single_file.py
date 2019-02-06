@@ -101,7 +101,10 @@ def run_for_single_file(animal_path,file):
 def run_for_animalDir(animal_path):
     for file in os.listdir(animal_path):
         if file.endswith('.h5'):
-            run_for_single_file(animal_path,file)
+            try:
+                run_for_single_file(animal_path,file)
+            except:
+                sys.stderr('There was an error with %s' %file)
     return
 
 def mkdir_p(dir):
