@@ -290,7 +290,7 @@ if plotit
     sig_con = bz_PlotMonoSyn(ccgR,sig_con,Pred,Bounds,completeIndex,binSize,duration);
 end
 nCel = size(completeIndex,1);
-n = histc(spikeIDs(:,3),1:length(allID));
+n = histc(spikeIDs(:,3),1:max(allID));
 [nn1,nn2] = meshgrid(n);
 
 temp = ccgR - Pred;
