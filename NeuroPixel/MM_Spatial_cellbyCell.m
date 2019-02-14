@@ -18,7 +18,7 @@ addpath(genpath('C:\Users\giocomolab\Dropbox\Work\neuropixels\spikes'));
 % these are the sessions with histology
 data_dir = 'C:\Users\giocomolab\Dropbox\Work\neuropixels\data\';
 %%
-session_num =1;
+session_num =4;
 session_name = {'npG2_1211_gain_1',...
     'npG2_1212_gaincontrast_1',...
     'npG5_1207_gain_1',...
@@ -74,7 +74,7 @@ possibles=strfind(run_periods',ones(1,length(run_window)))+floor(.5*length(run_w
 
 mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
 
-window = [-1 4]; % look at spike times from 0.3 sec before each event to 1 sec after
+window = [-2 3]; % look at spike times from 0.3 sec before each event to 1 sec after
 
 % if your events come in different types, like different orientations of a
 % visual stimulus, then you can provide those values as "trial groups",
@@ -83,7 +83,10 @@ window = [-1 4]; % look at spike times from 0.3 sec before each event to 1 sec a
 trialGroups = [ones(size(mm_trigs))];
 eventTimes=[post(mm_trigs)'];
 %%
-
-psthViewer_Alex(sp, eventTimes, window, trialGroups,spC);
+sp.post=post;
+sp.trial=trial;
+sp.posx=posx;
+window = [-3 3];
+psthViewer2_Alex(sp, eventTimes, window, trialGroups,spC);
 
 %cid=sp.cids(idx);plot(sp.st(sp.clu==cid),sp.tempScalingAmps(sp.clu==cid),'.')

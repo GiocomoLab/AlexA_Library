@@ -58,7 +58,7 @@ for session_num = 1:4
     end
     
     stability_all{session_num} = stability;
-    spike_depth_all{session_num} = spike_depth;
+    %spike_depth_all{session_num} = spike_depth;
     
 end
 
@@ -100,3 +100,9 @@ end
 % xlabel('ML'); ylabel('AP'); zlabel('DV (from MEC border)');
 % view(3);
 % %%
+%%
+aggregateData.Stability=NaN(nnz(aggregateData.AID==1),1);
+for ii=1:4
+    ff=nanmean(stability_all{ii},2);
+    aggregateData.Stability=cat(1,aggregateData.Stability,ff);
+end
