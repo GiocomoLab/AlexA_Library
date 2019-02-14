@@ -27,7 +27,7 @@ def default_ops(animal='',expid=''):
             # registration settings
             'do_registration': True, # whether to register data
             'nimg_init': 200, # subsampled frames for finding reference image
-            'batch_size': 1000, # number of frames per batch
+            'batch_size': 200, # number of frames per batch
             'maxregshift': 0.1, # max allowed registration shift, as a fraction of frame max(width and height)
             'align_by_chan' : 1, # when multi-channel, you can align by non-functional channel (1-based)
             'reg_tif': False, # whether to save registered tiffs
@@ -72,7 +72,8 @@ def run_for_single_file(animal_path,file):
     expID=get_expID(file)
     hf_path = os.path.join(animal_path,file)
     savepath=os.path.join(animal_path,file[:-3])
-    tmp_path = os.path.join(os.environ['L_SCRATCH'],'suite2p',file[:-3])
+    tmp_path = os.path.join(os.environ['SCRATCH'],'register_jobs','bin_files',file[:-3])
+    mkdir_p(tmp_path)
     
     db = default_db()
     db['h5py']=hf_path
@@ -87,11 +88,11 @@ def run_for_single_file(animal_path,file):
         print('Running for: '+db['h5py']+'\n')
         print('Saving on: '+ops['save_path0'])
         print('Tmp saving:' + ops['fast_disk'])
-        #opsEnd=run_s2p(ops=ops,db=db)
-        #stop = time.time()
-        #timelog = open(os.path.join(os.environ['SCRATCH'],'suite2p_times.txt'),'a')
-        #timelog.write(db['h5py']+', ' +str(stop-start) +'\n')
-        #timelog.close()
+        opsEnd=run_s2p(ops=ops,db=db)
+        stop = time.time()
+        timelog = open(os.path.join(os.environ['SCRATCH'],'suite2p_times.txt'),'a')
+        timelog.write(db['h5py']+', ' +str(stop-start) +'\n')
+        timelog.close()
     else:
         print(ops['save_path0'] + 'already exisits, skipping. \n')
     return
@@ -100,10 +101,16 @@ def run_for_single_file(animal_path,file):
 def run_for_animalDir(animal_path):
     for file in os.listdir(animal_path):
         if file.endswith('.h5'):
-            run_for_single_file(animal_path,file)
+            try:
+                run_for_single_file(animal_path,file)
+            except:
+                sys.stderr('There was an error with %s' %file)
     return
 
-
+def mkdir_p(dir):
+    '''make a directory (dir) if it doesn't exist'''
+    if not os.path.exists(dir):
+        os.mkdir(dir)
 
 if __name__ == '__main__':
     rootpath = sys.argv[1]
@@ -111,5 +118,6 @@ if __name__ == '__main__':
     #rootpath=os.path.join(os.environ['OAK'],'attialex','TEST')
     #animal = 'AA_190110_023'
     animal_path = os.path.join(rootpath,animal)
+    print("Now starting for: " + animal_path +"\n")
     run_for_animalDir(animal_path)
     
