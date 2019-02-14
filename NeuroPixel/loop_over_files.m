@@ -15,18 +15,23 @@ filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
 
 root_dir='F:\';
 aggregateData=struct();
-avgMM=[];
-avgRunOn=[];
-avgRunOff=[];
-
-AID=[];
-CGS=[];
-DEPTH=[];
+aggregateBeh=struct();
+beh_varlist={'AID_B','MMRun','RunOFF'};
 varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff'};
+for ii =1:length(varlist)
+    aggregateData.(varlist{ii}) = [];
+    eval([varlist{ii} '= [];'])
+end
+for ii=1:length(beh_varlist)
+    aggregateBeh.(beh_varlist{ii})={};
+end
+
 for iF=1:5
     %clear all
     load([root_dir filenames{iF}]);
     tic;plot_mismatch_sequence;toc;
+    aggregateBeh.MMRun{iF}=(squeeze(adata));
+    aggregateBeh.RunOff{iF} =squeeze(adataROFF(1,:,:));
     resp = squeeze(mean(mm_rate,2));
     tmpRON=squeeze(mean(rON_rate,2));
     tmpRON=tmpRON(:,1:20:end);
@@ -68,12 +73,19 @@ params.masterTime=params.winIDX/50;
 params.xLim=[-1 3];
 figure
 
-plotAVGSEM(aggregateData.avgMM(aggregateData.CGS==2,:)',gca,'parameters',params,'ms',true,'baseline',165:190)
+plotAVGSEM(aggregateData.avgMM(aggregateData.CGS>1,:)',gca,'parameters',params,'ms',true,'baseline',165:190)
+xlabel('time [s]')
+ylabel('Firing rate change [Hz]')
+grid on
 
 [a,b]=sort(aggregateData.DEPTH);
 figure
-plotAVGSEM(aggregateData.avgMM(b(1:round(length(b)/2)),:)',gca,'parameters',params,'ms',true,'baseline',165:190)
-plotAVGSEM(aggregateData.avgMM(b(round(length(b)/2)):end,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[1 0 0])
+plotAVGSEM(aggregateData.avgMM(b(1:200),:)',gca,'parameters',params,'ms',true,'baseline',165:190)
+plotAVGSEM(aggregateData.avgMM(b(end-200:end),:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[1 0 0])
+xlabel('time [s]')
+ylabel('Firing rate change [Hz]')
+grid on
+legend({'ventral','Dorsal'})
 
 
 %%
@@ -82,12 +94,20 @@ plotAVGSEM(aggregateData.avgRunOff(aggregateData.CGS==2,:)',gca,'parameters',par
 hold on
 plotAVGSEM(aggregateData.avgMM(aggregateData.CGS==2,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[1 0 0])
 legend({'Run Off','MM'})
+xlabel('time [s]')
+ylabel('Firing rate change [Hz]')
+grid on
 
 %%
-[a,~]=max(aggregateData.avgMM,[],2);
-ff_plot=bsxfun(@rdivide,aggregateData.avgMM,a);
+[a,~]=max(aggregateData.avgMM(aggregateData.CGS==2,150:350),[],2);
+ff_plot=bsxfun(@rdivide,aggregateData.avgMM(aggregateData.CGS==2,150:350),a);
 figure
 imagesc(ff_plot)
+set(gca,'XTick',[0:50:200])
+set(gca,'XTickLabel',[-1:1:4])
+colormap summer
+colorbar
+%set(gca,'
 %%
 CID=aggregateData.CGS==2 & ~isnan(aggregateData.Stability);
 [a,b]=sort(aggregateData.Stability(CID),'desc');
@@ -96,8 +116,44 @@ tmpMM=aggregateData.avgMM(CID,:);
 
 figure
 
-plotAVGSEM(tmpMM(b(1:300),:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[1 0 0])
-plotAVGSEM(tmpMM(b(301:end),:)',gca,'parameters',params,'ms',true,'baseline',165:190)
+plotAVGSEM(tmpMM(b(1:100),:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[1 0 0])
+plotAVGSEM(tmpMM(b(end-100:end),:)',gca,'parameters',params,'ms',true,'baseline',165:190)
 
-
-
+legend({'Low Stabilitly','High Stability'})
+xlabel('time [s]')
+ylabel('Firing rate change [Hz]')
+grid on
+%%
+figure
+legs={};
+run_mat = [];
+mm_mat = [];
+for ii=1:5
+    %size(aggregateBeh.RunOff{ii})
+    plot([-4:0.02:4],mean(aggregateBeh.MMRun{ii}))
+    run_mat=cat(1,run_mat,mean(aggregateBeh.MMRun{ii}));
+    IDX=aggregateData.AID==ii & aggregateData.CGS==2;
+    mm_mat=cat(1,mm_mat,mean(aggregateData.avgMM(IDX,:)));
+    hold on
+    tmp = strsplit(filenames{ii},'/');
+    legs{ii}=tmp{1};
+end
+legend(legs)
+grid on
+ylabel('run speed')
+xlabel('time')
+figure
+subplot(1,2,1)
+imagesc(run_mat)
+set(gca,'XTick',[0:50:400])
+set(gca,'XTickLabel',[-4:1:4])
+title('MM Behavior')
+colorbar
+xlabel('time')
+subplot(1,2,2)
+imagesc(mm_mat)
+set(gca,'XTick',[0:50:400])
+set(gca,'XTickLabel',[-4:1:4])
+title('MM Response')
+colorbar
+xlabel('time')

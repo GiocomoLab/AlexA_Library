@@ -159,6 +159,8 @@ plotAVGSEM(resp',gca,'parameters',params,'ms',true,'baseline',3500:3999)
 plotAVGSEM(roffResp',gca,'parameters',params,'ms',true,'baseline',3500:3999,'col',[.8 .8 0])
 plotAVGSEM(ronResp',gca,'parameters',params,'ms',true,'baseline',3500:3999,'col',[1 0 0])
 legend({'MM','Run Off','Run On'});
+xlabel('time [s]')
+ylabel('Change in Firing Rate [Hz]')
 
 
 subplot(2,1,2)
@@ -169,6 +171,8 @@ plotAVGSEM(squeeze(adataRON(1,:,:))',gca,'parameters',paramsAdata,'ms',false,'co
 plotAVGSEM(squeeze(adata_random)',gca,'parameters',paramsAdata,'ms',false,'col',[0 0 0])
 legend({'MM','Run Off','Run On','Random'});
 title('Run Traces')
+xlabel('time [s]')
+ylabel('Run speed')
 
 %% 
 figure('Name',filenames{iF});

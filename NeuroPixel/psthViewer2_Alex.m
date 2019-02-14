@@ -45,7 +45,7 @@ end
 
 myData.eventTimes = eventTimes(:);
 myData.trGroups = trGroups(:);
-myData.clusterIDs = sp.cids;
+myData.clusterIDs = sp.cids(sp.cgs==2);
 myData.trGroupLabels = unique(myData.trGroups);
 myData.nGroups = length(myData.trGroupLabels);
 myData.plotAxes = [];
@@ -139,41 +139,48 @@ end
 
 colors = myData.params.colors;
 % subplot(3,1,1);
+
 axes(myData.plotAxes(1));
 hold off;
-% if myData.params.showAllTraces
-%     for g = 1:nGroups
-%         plot(bins, psthSm(g,:), 'Color', colors(g,:), 'LineWidth', 2.0);
-%         hold on;
-%     end
-% else
-%     plot(bins, psthSm);
-% end
-% xlim(myData.params.window);
-%title(['cluster ' num2str(myData.clusterIDs(myData.params.clusterIndex))]);
-% xlabel('time (sec)');
-% ylabel('firing rate (Hz)');
-% yl = ylim();
-% hold on;
-% plot(myData.params.startRange*[1 1], yl, 'k--');
-% plot(myData.params.stopRange*[1 1], yl, 'k--');
-spike_t = myData.sp.st(myData.sp.clu==myData.clusterIDs(myData.params.clusterIndex));
-[~,~,idx] = histcounts(spike_t,myData.sp.post);
-plot(myData.sp.trial(idx),myData.sp.posx(idx),'k.','MarkerSize',1);
+plot(rasterX,rasterY, 'k');
+xlim(myData.params.window);
+ylim([0 length(myData.eventTimes)+1]);
+ylabel('event number');
+xlabel('time [s]');
 title(['cluster ' num2str(myData.clusterIDs(myData.params.clusterIndex))]);
-ylim([0 400]);
-xlim([0 max(myData.sp.trial)+1]);
-%makepretty;
+
+makepretty;
+box off;
+
+axes(myData.plotAxes(2));
+hold off;
+if myData.params.showAllTraces
+    for g = 1:nGroups
+        plot(bins, psthSm(g,:), 'Color', colors(g,:), 'LineWidth', 2.0);
+        hold on;
+    end
+else
+    plot(bins, psthSm);
+end
+xlim(myData.params.window);
+xlabel('time [s]');
+ylabel('firing rate [Hz]');
+yl = ylim();
+hold on;
+plot(myData.params.startRange*[1 1], yl, 'k--');
+plot(myData.params.stopRange*[1 1], yl, 'k--');
+% spike_t = myData.sp.st(myData.sp.clu==myData.clusterIDs(myData.params.clusterIndex));
+% [~,~,idx] = histcounts(spike_t,myData.sp.post);
+% plot(myData.sp.trial(idx),myData.sp.posx(idx),'k.','MarkerSize',1);
+% title(['cluster ' num2str(myData.clusterIDs(myData.params.clusterIndex))]);
+% ylim([0 400]);
+% xlim([0 max(myData.sp.trial)+1]);
+makepretty;
 box off;
 
 % subplot(3,1,2);
-idx = myData.clusterIDs(myData.params.clusterIndex);
-axes(myData.plotAxes(2));
-plot(myData.spikeTimes(myData.clu==idx),myData.sp.tempScalingAmps(myData.clu==idx),'.')
-xlim([min(myData.spikeTimes), max(myData.spikeTimes)])
-hold off;
-makepretty;
-box off;
+
+
 
 % subplot(3,1,3);
 axes(myData.plotAxes(3));
@@ -183,8 +190,8 @@ fr=squeeze(myData.spC(idx,:,:))';
 
 imagesc(fr');
 %errorbar(trGroupLabels, tuningCurve(:,1), tuningCurve(:,2), 'o-');
-xlabel('grouping variable value');
-ylabel('average firing rate (Hz)');
+xlabel('trial #');
+ylabel('Position in tunnel');
 makepretty;
 box off;
 
