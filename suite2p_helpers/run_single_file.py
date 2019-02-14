@@ -2,7 +2,7 @@ import sys
 import os
 import time
 
-from suite2p.run_s2p import run_s2p
+#from suite2p.run_s2p import run_s2p
 import numpy as np
 
 def default_ops(animal='',expid=''):
