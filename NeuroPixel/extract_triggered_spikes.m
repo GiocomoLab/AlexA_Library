@@ -1,4 +1,4 @@
-function [spike_mat,win,aux_mat] = extract_triggered_spikes(sp_struct,time_idx, varargin)
+function [spike_mat,win,aux_mat,mean_response] = extract_triggered_spikes(sp_struct,time_idx, varargin)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 p = inputParser;
@@ -49,4 +49,12 @@ if ~isempty(aux)
         aux_IDX=idx+idx_win;
         aux_mat(:,iT,:)=aux(2:end,aux_IDX);
     end
+end
+
+if nargout == 4
+    kernel=reshape(gausswin(401),1,1,[]);
+    binsize=0.001;
+    kernel=kernel/sum(kernel(:))/binsize;
+    rate=convn(spike_mat,kernel,'same');
+    mean_response=squeeze(mean(rate,2));
 end

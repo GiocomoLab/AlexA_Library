@@ -4,6 +4,9 @@
 %     'npF3_1019_contrasttrack_gainchanges_contrast_1.mat',...
 %     'npF4_1023_gaincontrast_1.mat',...
 %     'npF4_1025_gaincontrast_2.mat '};
+restoredefaultpath
+addpath(genpath('C:\code\AlexA_Library'));
+addpath(genpath('C:\code\boundedline'));
 
 filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
     'G2/1211_mismatch_1/1211_mismatch_1.mat',...
@@ -14,10 +17,12 @@ filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
 
 
 root_dir='F:\';
+
+beh_varlist={'AID_B','MMRun','RunOFF'};
+varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID'};
+%%
 aggregateData=struct();
 aggregateBeh=struct();
-beh_varlist={'AID_B','MMRun','RunOFF'};
-varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff'};
 for ii =1:length(varlist)
     aggregateData.(varlist{ii}) = [];
     eval([varlist{ii} '= [];'])
@@ -25,7 +30,7 @@ end
 for ii=1:length(beh_varlist)
     aggregateBeh.(beh_varlist{ii})={};
 end
-
+%%
 for iF=1:5
     %clear all
     load([root_dir filenames{iF}]);
@@ -43,6 +48,7 @@ for iF=1:5
     avgRunOff = cat(1,avgRunOff,tmpROFF);
     AID = cat(1,AID,ones(length(sp.cgs),1)*iF);
     CGS = cat(1,CGS,sp.cgs');
+    CID = cat(1,CID,sp.cids');
     [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
         templatePositionsAmplitudes(sp.temps, sp.winv, sp.ycoords, sp.spikeTemplates, sp.tempScalingAmps);
     depth=zeros(length(sp.cgs),1);
@@ -73,7 +79,7 @@ params.masterTime=params.winIDX/50;
 params.xLim=[-1 3];
 figure
 
-plotAVGSEM(aggregateData.avgMM(aggregateData.CGS>1,:)',gca,'parameters',params,'ms',true,'baseline',165:190)
+plotAVGSEM(aggregateData.avgMM(aggregateData.CGS>1,:)',gca,'parameters',params,'ms',false,'baseline',165:190)
 xlabel('time [s]')
 ylabel('Firing rate change [Hz]')
 grid on
@@ -97,17 +103,47 @@ legend({'Run Off','MM'})
 xlabel('time [s]')
 ylabel('Firing rate change [Hz]')
 grid on
+%figure
+
 
 %%
-[a,~]=max(aggregateData.avgMM(aggregateData.CGS==2,150:350),[],2);
-ff_plot=bsxfun(@rdivide,aggregateData.avgMM(aggregateData.CGS==2,150:350),a);
+% [a,~]=max(aggregateData.avgMM(aggregateData.CGS==2,150:350),[],2);
+% ff_plot=bsxfun(@rdivide,aggregateData.avgMM(aggregateData.CGS==2,150:350),a);
+% figure
+% imagesc(ff_plot)
+% set(gca,'XTick',[0:50:200])
+% set(gca,'XTickLabel',[-1:1:4])
+% colormap summer
+% colorbar
+%set(gca,'
+%%
+[a,b]=sort(aggregateData.DEPTH(aggregateData.CGS==2));
+%ff_plot=bsxfun(@rdivide,aggregateData.avgMM(aggregateData.CGS==2,150:350),a);
+ff_plot=aggregateData.avgMM-mean(aggregateData.avgMM(:,170:195),2);
+ff_plot=ff_plot(aggregateData.CGS==2,:);
 figure
-imagesc(ff_plot)
+imagesc(ff_plot(:,150:350),[-10 10])
 set(gca,'XTick',[0:50:200])
 set(gca,'XTickLabel',[-1:1:4])
-colormap summer
+colormap jet
 colorbar
-%set(gca,'
+xlabel('Time, [s]')
+ylabel('Unit #')
+%%
+[a,b]=sort(aggregateData.DEPTH(aggregateData.CGS==2));
+%ff_plot=bsxfun(@rdivide,aggregateData.avgMM(aggregateData.CGS==2,150:350),a);
+ff_plot=aggregateData.avgMM-mean(aggregateData.avgMM(:,170:195),2);
+ff_plot=ff_plot(aggregateData.CGS==2,:);
+figure
+imagesc(ff_plot(b,150:350),[-10 10])
+set(gca,'XTick',[0:50:200])
+set(gca,'XTickLabel',[-1:1:4])
+set(gca,'YTick',[0:100:1000],'YTickLabel',[3000:-300:0])
+colormap jet
+colorbar
+xlabel('Time, [s]')
+ylabel('Distance from Tip')
+%ylabel('a')
 %%
 CID=aggregateData.CGS==2 & ~isnan(aggregateData.Stability);
 [a,b]=sort(aggregateData.Stability(CID),'desc');
@@ -157,3 +193,39 @@ set(gca,'XTickLabel',[-4:1:4])
 title('MM Response')
 colorbar
 xlabel('time')
+
+%%
+figure
+legs={};
+run_mat = [];
+mm_mat = [];
+for ii=1:5
+    %size(aggregateBeh.RunOff{ii})
+    plot(mean(aggregateBeh.MMRun{ii}))
+    run_mat=cat(1,run_mat,mean(aggregateBeh.MMRun{ii}));
+    IDX=aggregateData.AID==ii & aggregateData.CGS==2;
+    mm_mat=cat(1,mm_mat,mean(aggregateData.avgMM(IDX,:)));
+    hold on
+    tmp = strsplit(filenames{ii},'/');
+    legs{ii}=tmp{1};
+end
+legend(legs)
+figure
+subplot(1,2,1)
+imagesc(run_mat)
+subplot(1,2,2)
+imagesc(mm_mat)
+%%
+figure
+legs={};
+run_mat = [];
+mm_mat = [];
+colors = winter(5);
+for ii=1:5
+    %figure
+    IDX=aggregateData.AID==ii & aggregateData.CGS>=1;
+    nnz(IDX)
+    plotAVGSEM(aggregateData.avgMM(IDX,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',colors(ii,:))
+end
+ylabel('Change in Firing Rate [Hz]')
+xlabel('Time [s]')
