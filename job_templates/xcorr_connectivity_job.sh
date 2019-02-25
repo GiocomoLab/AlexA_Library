@@ -7,8 +7,8 @@
 #SBATCH --mail-user=attialex@stanford.edu
 #SBATCH --mem-per-cpu=80G
 #SBATCH --time=12:00:00
-#SBATCH -o /scratch/users/attialex/slurm.%N.%j.out # STDOUT
-#SBATCH -e /scratch/users/attialex/slurm.%N.%j.err # STDERR
+#SBATCH -o /scratch/users/attialex/xcorr.%N.%j.out # STDOUT
+#SBATCH -e /scratch/users/attialex/xcorr.%N.%j.err # STDERR
 
 module load matlab
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"

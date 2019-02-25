@@ -15,7 +15,7 @@ mkdir_p(job_directory)
 #mkdir_p(data_dir)
 
 
-mice=["AA_190110_022", "AA_190111_026","AA_190111_027","AA_190111_029"]
+mice=["AA_190110_022","AA_190110_023", "AA_190111_026","AA_190111_027","AA_190111_029"]
 root_dir=os.path.join(os.environ['OAK'],'attialex','DATA')
 for mouse in mice:
     log_dir =os.path.join(job_directory,mouse)
@@ -28,7 +28,7 @@ for mouse in mice:
 
     with open(job_file,'w') as fh:
         fh.writelines("#!/bin/bash\n")
-        fh.writelines("#SBATCH -p giocomo\n")
+        fh.writelines("#SBATCH -p owners\n")
         fh.writelines("#SBATCH --ntasks-per-node=1\n")
         fh.writelines("#SBATCH --cpus-per-task=4\n")
         fh.writelines("#SBATCH --job-name=%s.job\n" % mouse)

@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=cp_from_gdrive
-#SBATCH -p giocomo
+#SBATCH -p owners
+#SBATCH --time=04:00:00
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -12,4 +13,4 @@
 module load system rclone
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
 rclone copy VRGDrive:attialex /oak/stanford/groups/giocomo/attialex/DATA
-rclone check VRGDrive:attialex /oak/stanford/groups/giocomo/attialex --size-only
+rclone check VRGDrive:attialex /oak/stanford/groups/giocomo/attialex --size-only --one-way

@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=h5_files
+#SBATCH --time=06:00:00
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-type=BEGIN,END,FAIL
