@@ -5,10 +5,12 @@ sbx_files = dir(fullfile(input_dir,'*.sbx'));
 for ii=1:length(sbx_files)
     fprintf('Now working on: %s \n',sbx_files(ii).name)
     [~,fn,~]=fileparts(sbx_files(ii).name);
-    sbxread(fullfile(input_dir,fn),1,1)            % read one frame to read the header of the image sequence
+    sbxread(fullfile(input_dir,fn),1,1);            % read one frame to read the header of the image sequence
     global info;
+    fprintf('Loading data \n')
     data=sbxread(fullfile(input_dir,fn),0,info.max_idx);
     for iL=1:2
+        fprintf('Running registration for layer %d \n',iL)
         [dx,dy,template]=rigid_registration(squeeze(data(1,:,100:690,iL:2:end)));
         dX{iL}=dx;
         dY{iL}=dy;
@@ -17,7 +19,7 @@ for ii=1:length(sbx_files)
     registration.dX=dX;
     registration.dY=dY;
     registration.templates=templates;
-    save(fullfile(input_dir,fn),registration,'-append')
+    save(fullfile(input_dir,fn),'registration','-append')
 
 
 end
