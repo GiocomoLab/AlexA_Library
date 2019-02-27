@@ -1,10 +1,10 @@
-function [dx,dy,template,tmpdat] = rigid_registration(data)
+function [dx,dy,template,registered_data] = rigid_registration(data)
 template_frames=11:30;
 fprintf('...registering...\n')
 [dx,dy]=register_frames(data,mean(data(:,:,template_frames),3));
 fprintf('...shifting data and correcting line shift...\n')
-tmpdat=shift_data(data,dx,dy);
-tmpdat=correct_line_shift(tmpdat,mean(tmpdat,3));
-template=mean(tmpdat,3);
+registered_data=shift_data(data,dx,dy);
+registered_data=correct_line_shift(tmpdat,mean(tmpdat,3));
+template=mean(registered_data,3);
 
 end
