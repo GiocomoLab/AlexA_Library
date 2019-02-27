@@ -4,7 +4,7 @@ fprintf('...registering...\n')
 [dx,dy]=register_frames(data,mean(data(:,:,template_frames),3));
 fprintf('...shifting data and correcting line shift...\n')
 registered_data=shift_data(data,dx,dy);
-registered_data=correct_line_shift(tmpdat,mean(tmpdat,3));
+registered_data=correct_line_shift(registered_data,mean(registered_data,3));
 template=mean(registered_data,3);
 
 end
