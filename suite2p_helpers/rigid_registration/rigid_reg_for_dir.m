@@ -9,9 +9,10 @@ for ii=1:length(sbx_files)
     global info;
     fprintf('Loading data \n')
     data=sbxread(fullfile(input_dir,fn),0,info.max_idx);
+    %data=sbxread(fullfile(input_dir,fn),0,200);
     for iL=1:2
         fprintf('Running registration for layer %d \n',iL)
-        [dx,dy,template]=rigid_registration(squeeze(data(1,:,100:690,iL:2:end)));
+        [dx,dy,template]=rigid_registration(squeeze(data(1,:,99:700,iL:2:end)));
         dX{iL}=dx;
         dY{iL}=dy;
         templates{iL}=template;
