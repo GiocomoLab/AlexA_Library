@@ -220,8 +220,8 @@ for refcellID=1:max(IDindex)
         sig = cch>hiBound;
         
         % Find if significant periods falls in monosynaptic window +/- 4ms
-        prebins = round(length(cch)/2 - .0032/binSize):round(length(cch)/2);
-        postbins = round(length(cch)/2 + .0008/binSize):round(length(cch)/2 + .004/binSize);
+        prebins = round(length(cch)/2 - .0072/binSize):round(length(cch)/2);
+        postbins = round(length(cch)/2 + .0008/binSize):round(length(cch)/2 + .008/binSize);
         cchud  = flipud(cch);
         sigud  = flipud(sig);
         sigpost=max(cch(postbins))>poissinv(1-alpha,max(cch(prebins)));
