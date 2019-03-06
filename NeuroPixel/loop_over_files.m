@@ -7,6 +7,7 @@
 restoredefaultpath
 addpath(genpath('C:\code\AlexA_Library'));
 addpath(genpath('C:\code\boundedline'));
+addpath(genpath('C:\code\spikes'));
 
 filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
     'G2/1211_mismatch_1/1211_mismatch_1.mat',...
@@ -18,7 +19,7 @@ filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
 
 root_dir='F:\';
 
-beh_varlist={'AID_B','MMRun','RunOFF'};
+beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
 varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID'};
 %%
 aggregateData=struct();
@@ -30,19 +31,23 @@ end
 for ii=1:length(beh_varlist)
     aggregateBeh.(beh_varlist{ii})={};
 end
+MM_snps={};
 %%
 for iF=1:5
     %clear all
     load([root_dir filenames{iF}]);
-    tic;plot_mismatch_sequence;toc;
+    plot_mismatch_sequence;
     aggregateBeh.MMRun{iF}=(squeeze(adata));
+    aggregateBeh.MMAllRun{iF}=squeeze(adata_all);
     aggregateBeh.RunOff{iF} =squeeze(adataROFF(1,:,:));
     resp = squeeze(mean(mm_rate,2));
     tmpRON=squeeze(mean(rON_rate,2));
     tmpRON=tmpRON(:,1:20:end);
     tmpROFF=squeeze(mean(rOFF_rate,2));
     tmpROFF=tmpROFF(:,1:20:end);
-    
+    for ii=1:length(sp.cgs)
+        MM_snps{iF}=spike_mat_all;
+    end
     avgMM = cat(1,avgMM,resp(:,1:20:end));
     avgRunOn = cat(1,avgRunOn,tmpRON);
     avgRunOff = cat(1,avgRunOff,tmpROFF);
@@ -65,6 +70,7 @@ end
 for ii =1:length(varlist)
     aggregateData.(varlist{ii}) = eval(varlist{ii});
 end
+aggregateData.MM_snps=MM_snps;
 % aggregateData.avgMM=avgMM;
 % aggregateData.avgRun=
 % aggregateData.AID=AID;
