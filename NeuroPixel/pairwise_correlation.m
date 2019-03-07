@@ -96,5 +96,5 @@ set(gca,'XTick',[],'YTick',[])
 subplot('Position',[0.05 0.1 .05 0.8 ])
 imagesc(tc)
 set(gca,'XTick',[],'YTick',[])
-print(gcf,fullfile('C:','tmp',[Files(iF).name(1:end-4) '_heatmap.png']),'-dpng')
+%print(gcf,fullfile('C:','tmp',[Files(iF).name(1:end-4) '_heatmap.png']),'-dpng')
 %ca
