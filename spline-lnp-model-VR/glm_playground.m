@@ -6,6 +6,9 @@ speed(speed > max_speed) = max_speed;
 % take position mod length of track (AFTER computing speed)
 posx(posx<0)=0;
 posx(posx>params.TrackEnd)=params.TrackEnd;
+
+glmData=struct();
+keep_data={};
 %% create A
 
 var_name = {'position','speed'};
@@ -30,7 +33,8 @@ all_control_points{2} = ctl_pts_speed;
 
 %%
 good_cells = sp.cids(sp.cgs==2);
-spike_t = sp.st(sp.clu==good_cells(2));
+for cellIDX=1:2
+spike_t = sp.st(sp.clu==good_cells(cellIDX));
 [~,~,spike_idx] = histcounts(spike_t,post);
 
 spiketrain = histc(spike_t,post);
@@ -44,6 +48,14 @@ numPts = 3*round(1/params.TimeBin); % 3 seconds. i've tried #'s from 1-10 second
 
 %%%%%%%% FORWARD SEARCH PROCEDURE %%%%%%%%%
 [allModelTestFits, allModelTrainFits, bestModels, bestModelFits, parameters, pvals, final_pval] = forward_search_kfold(A,spiketrain,train_ind,test_ind);
+
+    glmData.allModelTestFits = allModelTestFits;
+    glmData.bestModels = bestModels;
+    glmData.bestModelFits = bestModelFits;
+    glmData.parameters = parameters;
+    glmData.pvals = pvals;
+    glmData.all_control_points = all_control_points;
+    glmData.var_name = var_name;
 
 %% some plotting
 num_plot_columns=3;
@@ -104,5 +116,8 @@ ylabel('bits/spike')
 axis([0.5  2.5 -inf inf])
 
 % save fig and close
+saveas(fig1,sprintf('test_%d.png',good_cells(cellIDX)));
+close(1)
+end
     %saveas(fig1, sprintf('images/glm/%s/%d.png',session_name,good_cells(i)), 'png'); 
     %close(1);
