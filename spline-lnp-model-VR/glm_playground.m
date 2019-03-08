@@ -1,11 +1,22 @@
+%% restrict trials
+gaintrials=find(trial_gain<1);
+contrasttrials=find(trial_contrast<100);
+trial_num =1:max(trial);
+
+blt=trial_num(trial_gain==1 & trial_contrast==100);
+bl_idx=ismember(trial,blt);
+bl_posx=posx(bl_idx)
+%TODO: adjust sp.st, sp.clu
+bl_posx=posx;
+
 %% preprocess variables
-speed = calcSpeed(posx,params);
+speed = calcSpeed(bl_posx,params);
 speed(speed<0) = 0;
 max_speed=ceil(prctile(speed,99));
 speed(speed > max_speed) = max_speed;
 % take position mod length of track (AFTER computing speed)
-posx(posx<0)=0;
-posx(posx>params.TrackEnd)=params.TrackEnd;
+bl_posx(bl_posx<0)=0;
+bl_posx(bl_posx>params.TrackEnd)=params.TrackEnd;
 
 glmData=struct();
 keep_data={};
@@ -19,7 +30,7 @@ s = 0.5; % spline parameter
 numctrlpoints_pos=30;
 x_vec = linspace(params.TrackStart,params.TrackEnd,numctrlpoints_pos);
 x_vec(1) = x_vec(1)-0.01;
-[posgrid,ctl_pts_pos] = spline_1d(posx,x_vec,s);
+[posgrid,ctl_pts_pos] = spline_1d(bl_posx,x_vec,s);
 A{1} = posgrid;
 all_control_points{1} = ctl_pts_pos;
 
