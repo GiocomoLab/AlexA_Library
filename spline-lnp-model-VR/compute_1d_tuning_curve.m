@@ -1,4 +1,4 @@
-function [tuning_curve,occupancy] = compute_1d_tuning_curve(variable,fr,numBin,minVal,maxVal)
+function [tuning_curve,occupancy,var_vec] = compute_1d_tuning_curve(variable,fr,numBin,minVal,maxVal)
 
 %bin it
 var_vec = linspace(minVal,maxVal,numBin+1);
