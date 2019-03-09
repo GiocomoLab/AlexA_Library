@@ -37,8 +37,8 @@ end
 
 tuning_curves = {};
 
-if plotfig
-    figure(1)
+if ishandle(plotfig)
+    figure(plotfig)
     
     var_k = 1;
     if ismember(var_k,variables)
