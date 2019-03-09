@@ -5,7 +5,12 @@ trial_num =1:max(trial);
 
 blt=trial_num(trial_gain==1 & trial_contrast==100);
 bl_idx=ismember(trial,blt);
-bl_posx=posx(bl_idx)
+bl_posx=posx(bl_idx);
+
+onsets = strfind(bl_idx',[1 0])
+onset_t=post(onsets);
+manip_spikes = sp.st>onset_t' & sp.st<offset_t';
+
 %TODO: adjust sp.st, sp.clu
 bl_posx=posx;
 
@@ -44,7 +49,7 @@ all_control_points{2} = ctl_pts_speed;
 
 %%
 good_cells = sp.cids(sp.cgs==2);
-for cellIDX=1:2
+for cellIDX=1:length(good_cells)
 spike_t = sp.st(sp.clu==good_cells(cellIDX));
 [~,~,spike_idx] = histcounts(spike_t,post);
 
@@ -60,18 +65,18 @@ numPts = 3*round(1/params.TimeBin); % 3 seconds. i've tried #'s from 1-10 second
 %%%%%%%% FORWARD SEARCH PROCEDURE %%%%%%%%%
 [allModelTestFits, allModelTrainFits, bestModels, bestModelFits, parameters, pvals, final_pval] = forward_search_kfold(A,spiketrain,train_ind,test_ind);
 
-    glmData.allModelTestFits = allModelTestFits;
-    glmData.bestModels = bestModels;
-    glmData.bestModelFits = bestModelFits;
-    glmData.parameters = parameters;
-    glmData.pvals = pvals;
-    glmData.all_control_points = all_control_points;
-    glmData.var_name = var_name;
+    glmData(cellIDX).allModelTestFits = allModelTestFits;
+    glmData(cellIDX).bestModels = bestModels;
+    glmData(cellIDX).bestModelFits = bestModelFits;
+    glmData(cellIDX).parameters = parameters;
+    glmData(cellIDX).pvals = pvals;
+    glmData(cellIDX).all_control_points = all_control_points;
+    glmData(cellIDX).var_name = var_name;
 
 %% some plotting
 num_plot_columns=3;
 numVar=length(var_name);
-figure
+ff=figure;
 %spatial firing map
 subplot(4,3,[2 5 8]);
 plot(posx(spike_idx),trial(spike_idx),'k.');
@@ -126,9 +131,7 @@ set(gca,'xticklabel',var_name)
 ylabel('bits/spike')
 axis([0.5  2.5 -inf inf])
 
-% save fig and close
-saveas(fig1,sprintf('test_%d.png',good_cells(cellIDX)));
-close(1)
+
+    saveas(fig1, fullfile(plot_path,sprintf('glm_baseline_%d.png',good_cells(cellIDX)))); 
+    close(ff);
 end
-    %saveas(fig1, sprintf('images/glm/%s/%d.png',session_name,good_cells(i)), 'png'); 
-    %close(1);
