@@ -34,6 +34,18 @@ if ismember(2,variables)
     scale(2) = mean(exp(A{2}*param1'));
     [speed_y,speed_x] = spline_1d_plot(param1,ctl_pts_all{2},s);
 end
+total_ind = 0;
+
+for iv=1:max(variables)
+    if ismember(iv,variables)
+    param_ind = size(A{iv},2);
+    total_ind = total_ind + param_ind;
+    param1 = param(total_ind - param_ind + 1:total_ind);
+    scale(iv) = mean(exp(A{iv}*param1'));
+    else
+        scale(iv)=NaN;
+    end
+end
 
 tuning_curves = {};
 
