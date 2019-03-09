@@ -6,13 +6,18 @@ trial_num =1:max(trial);
 blt=trial_num(trial_gain==1 & trial_contrast==100);
 bl_idx=ismember(trial,blt);
 bl_posx=posx(bl_idx);
+bl_post=post(bl_idx);
 
-onsets = strfind(bl_idx',[1 0])
+onsets = strfind(bl_idx',[1 0]);
 onset_t=post(onsets);
-manip_spikes = sp.st>onset_t' & sp.st<offset_t';
 
+offsets= strfind(bl_idx',[0 1]);
+offset_t=post(offsets);
+manip_spikes = sp.st>onset_t' & sp.st<offset_t';
+manip_spike_idx=any(manip_spikes,2);
+bl_spike_idx=~manip_spike_idx;
 %TODO: adjust sp.st, sp.clu
-bl_posx=posx;
+
 
 %% preprocess variables
 speed = calcSpeed(bl_posx,params);
@@ -50,10 +55,10 @@ all_control_points{2} = ctl_pts_speed;
 %%
 good_cells = sp.cids(sp.cgs==2);
 for cellIDX=1:length(good_cells)
-spike_t = sp.st(sp.clu==good_cells(cellIDX));
+spike_t = sp.st(sp.clu==good_cells(cellIDX) & bl_spike_idx);
 [~,~,spike_idx] = histcounts(spike_t,post);
 
-spiketrain = histc(spike_t,post);
+spiketrain = histc(spike_t,bl_post);
 numFolds = 10;
 T = numel(spiketrain);
 numPts = 3*round(1/params.TimeBin); % 3 seconds. i've tried #'s from 1-10 seconds.. not sure what is best
@@ -76,7 +81,7 @@ numPts = 3*round(1/params.TimeBin); % 3 seconds. i've tried #'s from 1-10 second
 %% some plotting
 num_plot_columns=3;
 numVar=length(var_name);
-ff=figure;
+fighandle=figure;
 %spatial firing map
 subplot(4,3,[2 5 8]);
 plot(posx(spike_idx),trial(spike_idx),'k.');
@@ -84,14 +89,14 @@ ylim([0 max(trial)+1]); xlim([params.TrackStart params.TrackEnd]);
 xlabel('pos'); ylabel('trial');
 %posbins = linspace(params.TrackStart,params.TrackEnd,40);
 %[a,b,c]=histcounts(po
-[pos_tuning_curve,pos_occupancy,bins] = compute_1d_tuning_curve(posx,spiketrain,30,params.TrackStart,params.TrackEnd);
+[pos_tuning_curve,pos_occupancy,bins] = compute_1d_tuning_curve(bl_posx,spiketrain,30,params.TrackStart,params.TrackEnd);
 xbincent=0.5 * (bins(1:end-1) + bins(2:end));
-fig1 = subplot(4,num_plot_columns,1);
+subplot(4,num_plot_columns,1);
 plot(xbincent,pos_occupancy.*params.TimeBin)
 title('position occupancy')
 axis tight
 
-fig1 = subplot(4,num_plot_columns,1+num_plot_columns);
+subplot(4,num_plot_columns,1+num_plot_columns);
 plot(xbincent,pos_tuning_curve./params.TimeBin)
 title('position tuning curve')
 ylabel('spikes/s')
@@ -99,14 +104,14 @@ axis tight
 
 [speed_tuning_curve,speed_occupancy,bins] = compute_1d_tuning_curve(speed,spiketrain,10,0,max_speed);
 
-fig1 = subplot(4,num_plot_columns,3);
+subplot(4,num_plot_columns,3);
 plot(linspace(0,max_speed,10),speed_occupancy.*params.TimeBin,'k','linewidth',2)
 box off
 title('speed occupancy')
 axis tight
 ylabel('seconds')
 
-fig1 = subplot(4,num_plot_columns,3+num_plot_columns);
+subplot(4,num_plot_columns,3+num_plot_columns);
 plot(.5*bins(1:end-1)+.5*bins(2:end),speed_tuning_curve./params.TimeBin,'k','linewidth',2)
 box off
 title('speed tuning curve')
@@ -116,7 +121,7 @@ ylabel('spikes/s')
 
 plotfig = 1;
 final_param = parameters{end};
-[tuning_curves,fig1] = plot_all_tuning(A,bestModels,final_param,all_control_points,s,plotfig,params.TimeBin);
+[tuning_curves,fig1] = plot_all_tuning(A,bestModels,final_param,all_control_points,s,fighandle,params.TimeBin);
 
 
 firstModelFit = allModelTestFits{1};
@@ -132,6 +137,6 @@ ylabel('bits/spike')
 axis([0.5  2.5 -inf inf])
 
 
-    saveas(fig1, fullfile(plot_path,sprintf('glm_baseline_%d.png',good_cells(cellIDX)))); 
-    close(ff);
+    saveas(fighandle, fullfile(plot_path,sprintf('glm_baseline_%d.png',good_cells(cellIDX)))); 
+    close(fighandle);
 end
