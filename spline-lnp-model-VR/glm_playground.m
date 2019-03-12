@@ -79,7 +79,8 @@ for cellIDX=1:length(good_cells)
     [train_ind,test_ind] = compute_test_train_ind(numFolds,numPts,T);
     
     %%%%%%%% FORWARD SEARCH PROCEDURE %%%%%%%%%
-    try
+    try 
+        fprintf('\t Fitting model  for cell %d \n', cellIDX);
         [allModelTestFits, allModelTrainFits, bestModels, bestModelFits, parameters, pvals, final_pval] = forward_search_kfold(A,spiketrain,train_ind,test_ind);
     catch ME
         fprintf('Model fitting failed for %d \n',cellIDX)

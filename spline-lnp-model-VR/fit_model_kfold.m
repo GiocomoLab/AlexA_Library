@@ -23,7 +23,7 @@ paramMat = nan(numFolds,numCol);
 
 %% perform k-fold cross validation
 for k = 1:numFolds
-    fprintf('\t\t- Cross validation fold %d of %d\n', k, numFolds);
+    %fprintf('\t\t- Cross validation fold %d of %d\n', k, numFolds);
     
     test_spikes = spiketrain(test_ind{k}); %test spiking
     test_A = A(test_ind{k},:);

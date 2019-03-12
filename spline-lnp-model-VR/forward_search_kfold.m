@@ -40,7 +40,7 @@ while pval < 0.05 && numel(variables) < num_var
     for m = var_vec
         
         
-        fprintf('Fitting model  %d \n', m);
+        %fprintf('Fitting model  %d \n', m);
         
         % create matrix of variables in model currently
         X  = ones(length(spiketrain),1);
