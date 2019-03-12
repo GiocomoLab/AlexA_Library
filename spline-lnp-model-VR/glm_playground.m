@@ -111,5 +111,5 @@ for cellIDX=1:length(good_cells)
     
     
     saveas(fighandle, fullfile(plot_path,sprintf('glm_baseline_%d.png',good_cells(cellIDX))));
-    %close(fighandle);
+    close(fighandle);
 end
