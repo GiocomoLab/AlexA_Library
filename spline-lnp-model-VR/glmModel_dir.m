@@ -11,13 +11,13 @@ for iF=1:length(Files)
     mkdir(fullfile(root,'Plots'),session);
     plot_path=fullfile(root,'Plots',session);
     try
-    fprintf('Now working on %s \n',Files(iF).name )
-    load(fullfile(root,Files(iF).name));
-    glm_playground
-    fprintf('Done for %s, now saving. \n',Files(iF).name)
-    save(fullfile(root,Files(iF).name),'glmData','-append')
+        fprintf('Now working on %s \n',Files(iF).name )
+        load(fullfile(root,Files(iF).name));
+        glm_playground
+        fprintf('Done for %s, now saving. \n',Files(iF).name)
+        save(fullfile(root,Files(iF).name),'glmData','-append')
     catch ME
-    fprintf('Failed for %s \n',Files(iF).name)
-    warning(ME.message)
+        fprintf('Failed for %s \n',Files(iF).name)
+        warning(ME.message)
     end
 end

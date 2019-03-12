@@ -1,4 +1,4 @@
-function [tuning_curves, fig1] = plot_all_tuning(A,variables,parameters,ctl_pts_all,s,plotfig,dt)
+function [tuning_curves] = plot_all_tuning(A,variables,parameters,ctl_pts_all,s,plotfig,dt)
 
 %% Description
 % Given the variables, A, and the parameters,
