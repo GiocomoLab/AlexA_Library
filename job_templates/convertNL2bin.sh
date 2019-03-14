@@ -13,4 +13,4 @@
 module load matlab
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
 
-matlab -nodisplay -nosplash -r "run $HOME/AlexA_Library/Neuropixel/convertNL2binScript.m, exit"
+matlab -nodisplay -nosplash -r "run $HOME/AlexA_Library/NeuroPixel/convertNL2binScript.m, exit"
