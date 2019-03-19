@@ -5,7 +5,7 @@ addpath('../NeuroPixel')
 params = readtable('UniversalParams.xlsx');
 close all;
 
-for iF=1:length(Files)
+for iF=[9 12 17]%1:length(Files)
     mkdir(root,'Plots');
     [~,session,~]=fileparts(Files(iF).name);
     mkdir(fullfile(root,'Plots'),session);
