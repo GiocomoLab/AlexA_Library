@@ -1,11 +1,11 @@
-fnNIDAQ='H:\Data\myRun2_g0_t0.nidq.bin';
+fnNIDAQ='F:\H5\npH5_0326_gaincontrast_g0\npH5_0326_gaincontrast_g0_t0.nidq.bin';
 fpNIDAQ=fopen(fnNIDAQ);
 datNIDAQ=fread(fpNIDAQ,[2,Inf],'*int16');
 fclose(fpNIDAQ);
 figure
 plot(datNIDAQ(1,:));
 %%
-fnAP='H:\Data\myRun2_g0_imec0\myRun2_g0_t0.imec0.ap.bin';
+fnAP='F:\H5\npH5_0326_gaincontrast_g0\npH5_0326_gaincontrast_g0_imec0\npH5_0326_gaincontrast_g0_t0.imec0.ap.bin';
 fpAP=fopen(fnAP);
 %datAP=fread(fpAP,[385,Inf],'*int16');
 fseek(fpAP,384*2,0);
@@ -19,6 +19,7 @@ plot(datAP);
 figure
 t_AP=linspace(0,1,size(datAP,2));
 t_NIDAQ=linspace(0,1,size(datNIDAQ,2));
+%%
 plot(t_NIDAQ,datNIDAQ(1,:)>5000);
 hold on
 plot(t_AP,datAP>50,'--');

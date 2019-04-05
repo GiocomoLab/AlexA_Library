@@ -119,6 +119,8 @@ hold on
 for session_num = 1:numel(session_name)
     clear histology
     load(fullfile(root_dir,session_name{session_num}));
+    IDX=aggregateData.AID==session_num;
+
     if exist('histology','var')
     vec1 = histology.MEC_entry-histology.probe_term;
     vec1(3) = -vec1(3); % flip Z coord
@@ -127,15 +129,79 @@ for session_num = 1:numel(session_name)
     vec2(3) = -vec2(3); % flip Z coord
     unit_vector(session_num,:) = vec1;
     origin(session_num,:) = vec2;
-    end
+    
 
     
-    IDX=aggregateData.AID==session_num;
     spike_depth = aggregateData.DEPTH(IDX);
     
     
-    
+    nnz(IDX)
     pos3D = origin(session_num,:)+spike_depth.*unit_vector(session_num,:);
     aggregateData.Hist_Depth = cat(1,aggregateData.Hist_Depth,pos3D(:,3));
-  
+    else
+        aggregateData.Hist_Depth = cat(1,aggregateData.Hist_Depth,NaN(nnz(IDX),1));
+    end
 end
+%%
+[a,b]=sort(aggregateData.Hist_Depth(aggregateData.CGS==2));
+%ff_plot=bsxfun(@rdivide,aggregateData.avgMM(aggregateData.CGS==2,150:350),a);
+ff_plot=aggregateData.avgMM-mean(aggregateData.avgMM(:,170:195),2);
+ff_plot=ff_plot(aggregateData.CGS==2,:);
+figure
+imagesc(ff_plot(b,150:350),[-10 10])
+set(gca,'XTick',[0:50:200])
+set(gca,'XTickLabel',[-1:1:4])
+colormap jet
+colorbar
+xlabel('Time, [s]')
+ylabel('Unit #')
+%% on hist depth
+IDX=aggregateData.CGS==2 & ~isnan(aggregateData.Hist_Depth) & aggregateData.AID>=1;
+[a,b]=sort(aggregateData.Hist_Depth(IDX));
+MM=aggregateData.avgMM(IDX,:);
+n_slice=4;
+junk_size=floor(size(MM,1)/n_slice);
+params=struct();
+params.winIDX=-200:200;
+params.masterTime=params.winIDX/50;
+params.xLim=[-1 3];
+figure
+cmap=jet(n_slice);
+avgD={};
+for ii=1:n_slice
+    iidx=(ii-1)*junk_size+1:ii*junk_size;
+    
+    subplot(2,1,1)
+    plotAVGSEM(MM(b(iidx),:)',gca,'parameters',params,'ms',false,'baseline',165:190,'col',cmap(ii,:))
+    subplot(2,1,2)
+    plotAVGSEM(MM(b(iidx),:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',cmap(ii,:))
+
+    avgD{end+1}=sprintf('%.2f.',mean((a(iidx))));
+end
+legend(avgD)
+
+%%
+IDX=aggregateData.CGS==2 & ~isnan(aggregateData.Hist_Depth) & aggregateData.AID>=1;
+[a,b]=sort(aggregateData.DEPTH(IDX));
+MM=aggregateData.avgMM(IDX,:);
+n_slice=4;
+junk_size=floor(size(MM,1)/n_slice);
+params=struct();
+params.winIDX=-200:200;
+params.masterTime=params.winIDX/50;
+params.xLim=[-1 3];
+figure
+cmap=jet(n_slice);
+avgD={};
+for ii=1:n_slice
+    iidx=(ii-1)*junk_size+1:ii*junk_size;
+    
+    subplot(2,1,1)
+    plotAVGSEM(MM(b(iidx),:)',gca,'parameters',params,'ms',false,'baseline',165:190,'col',cmap(ii,:))
+    subplot(2,1,2)
+    plotAVGSEM(MM(b(iidx),:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',cmap(ii,:))
+
+    avgD{end+1}=sprintf('%.2f.',mean((a(iidx))));
+end
+legend(avgD)
+

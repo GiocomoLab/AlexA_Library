@@ -2,7 +2,7 @@ addpath('Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\Analysis
 addpath('C:\code\spikes\preprocessing\phyHelpers');
 addpath('C:\code\npy-matlab');
 %eventsPath='F:\H1\2019-03-12_10-21-28\Events.nev';
-eventsPath='F:\H4\2019-03-19_12-25-58\Events.nev';
+eventsPath='F:\H1\2019-03-14_10-03-20\Events.nev';
 %cscPath ='Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\H1\CambridgeNeurotech\2019-03-11_12-23-58\CSC1.ncs';
 
 %[ev_times, EventIDs, TTLs, Extras, EventStrings, Header] = Nlx2MatEV(eventsPath, [1 1 1 1 1], 1, 1, [] );
@@ -11,8 +11,8 @@ ev_times=ev_times-ev_times(1); %bc it starts at some weird non zero value
 %[sample_times,samples,header]=Nlx2MatCSC(cscPath, [1 0 0 0 1], 1, 1, [] );
 %sample_times=sample_times-sample_times(1);
 %%
-data_dir = 'F:\H4\2019-03-19_12-25-58';
-session_name = '0319_contrast_2';
+data_dir = 'F:\H1\2019-03-14_10-03-20';
+session_name = '0314_playback_2';
 
 % fid = fopen(fullfile(data_dir,strcat(session_name,'_position.txt')),'r');
 % vr_position_data = fscanf(fid, '%f', [3,inf])';
@@ -52,7 +52,7 @@ lickt = vr_lick_data(:,2);
 frame_times_nl=ev_times(find(TTLs==1,1,'first'):find(TTLs==1,1,'last'))/1000000; %finds first up ttl and last up ttl and takes all timestamps in between (up and down)
 frame_times_vr=vr_time;
 %%
-[mm,step_idx]=find(diff(frame_times_nl)>2);
+[mm,step_idx]=find(diff(frame_times_nl)>3);
 %step_idx=step_idx+1;
 frametimes_nlOld = frame_times_nl;
 if length(mm)>=1
@@ -138,4 +138,8 @@ sp.clu = sp.clu(keep);
 sp.tempScalingAmps = sp.tempScalingAmps(keep);
 
 % save processed data
-save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain','true_speed','mismatch_trigger');
+if is_mismatch == 0
+save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain');
+else
+ save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain','true_speed','mismatch_trigger');
+end   

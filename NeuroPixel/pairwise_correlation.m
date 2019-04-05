@@ -1,5 +1,5 @@
 trials=[1:max(trial)];
-trials = trials(trial_gain == 1 & trial_contrast == 100);
+%trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
 edges=[0:10:410];

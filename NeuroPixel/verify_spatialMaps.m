@@ -12,14 +12,14 @@ for iT=1:length(trials)
     t_time=post(idxVR);
     start=min(t_time);
     stop=max(t_time);
-    idxNP=sp.st<stop & sp.st>=start;
+    idxNP=sp.st<stop & sp.st>=start;zqw
     [spM, dT]=getSpikeMatPosition(sp.st(idxNP),sp.clu(idxNP),posx(idxVR),post(idxVR),'edges',edges,'max_clust',max(sp.cids)+1);
     spatialMap=cat(3,spatialMap,spM);
     dwell_time=cat(1,dwell_time,dT);
 end
 %cellIDX=find(sp.cgs>=1);
 spatialMap=spatialMap(sp.cids+1,:,:);
-spatialMap=spatialMap(sp.cgs==2,:,:);
+spatialMap=spatialMap(sp.cgs>1,:,:);
 spatialMap=spatialMap(:,1:end-1,:);
 dwell_time=dwell_time(:,1:end-1);
 %normalize by dwell time in each bin

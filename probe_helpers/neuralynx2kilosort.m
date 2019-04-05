@@ -10,7 +10,7 @@ function neuralynx2kilosort(directoryPath,target_dir)
     numOfChannels = 64;
     dataMatrix = zeros(numOfChannels,100,'int16');
     for csc = 1:numOfChannels
-        cscPath = fullfile(directoryPath, ['CSC_HP_' num2str(csc) '_0001.ncs']);
+        cscPath = fullfile(directoryPath, ['CSC_HP_' num2str(csc) '.ncs']);
         %cscPath = fullfile(directoryPath, ['CSC' num2str(csc) '.ncs']);
         [Samples,header]=Nlx2MatCSC(cscPath, [0 0 0 0 1], 1, 1, [] );
         tmp=split(header{17}); %assuming conversion factor is in here;
