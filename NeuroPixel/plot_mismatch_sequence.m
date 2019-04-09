@@ -1,9 +1,14 @@
 %load('F:\G5\1207_mismatch_1\1207_mismatch_1.mat')
 PLOT=true;
-speed=true_speed;
 speed_t=0.05;
 % figure('Name',filenames{iF});; plot(speed)
 %
+if size(mismatch_trigger,1) ~=1
+    mismatch_trigger=mismatch_trigger';
+end
+
+
+
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
 run_periods=smooth(speed,25)>speed_t;
 run_window=-30:30;
