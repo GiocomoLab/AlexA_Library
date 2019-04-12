@@ -209,11 +209,6 @@ def main():
     #plt.savefig('contours.png')
     # %% VIEW TRACES (accepted and rejected)
 
-    if display_images:
-        cnm2.estimates.view_components(images, img=Cn,
-                                      idx=cnm2.estimates.idx_components)
-        cnm2.estimates.view_components(images, img=Cn,
-                                      idx=cnm2.estimates.idx_components_bad)
     #%% update object with selected components
     cnm2.estimates.select_components(use_object=True)
     #%% Extract DF/F values
@@ -223,11 +218,6 @@ def main():
     #cnm2.estimates.view_components(img=Cn)
 
     #%% reconstruct denoised movie (press q to exit)
-    if display_images:
-        cnm2.estimates.play_movie(images, q_max=99.9, gain_res=2,
-                                  magnification=2,
-                                  bpx=border_to_0,
-                                  include_bck=False)  # background not shown
 
     #%% STOP CLUSTER and clean up log files
     cnm2.save('/oak/stanford/groups/giocomo/attialex/TEST/cnm2out')
