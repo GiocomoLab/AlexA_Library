@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=cp_from_oak
-#SBATCH -p owners
+#SBATCH -p owners,giocomo
 #SBATCH --time=04:00:00
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
