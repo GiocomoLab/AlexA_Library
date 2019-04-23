@@ -6,8 +6,7 @@ speed_t=0.05;
 if size(mismatch_trigger,1) ~=1
     mismatch_trigger=mismatch_trigger';
 end
-
-
+speed=true_speed';
 
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
 run_periods=smooth(speed,25)>speed_t;
@@ -84,7 +83,7 @@ if PLOT
     ff_sort=bsxfun(@rdivide,mean_fr_sort,max(mean_fr_sort,[],2));
     
     %ff_rand=bsxfun(@rdivide,mean_fr_rand,max(mean_fr_rand,[],2));
-    ff_roff=bsxfun(@rdivide,mean_fr_roff,max(mean_fr_roff,[],2));
+    %ff_roff=bsxfun(@rdivide,mean_fr_roff,max(mean_fr_roff,[],2));
     
     %figure('Name',filenames{iF});('Name',filenames{iF})
     try

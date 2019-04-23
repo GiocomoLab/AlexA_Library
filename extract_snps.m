@@ -14,7 +14,7 @@ p = inputParser;
    %addParameter(p,'layer',defaultLayer);
    %addParameter(p,'fields',defaultFields);
   
-
+    fields={'velM','MM'};
    parse(p,varargin{:});
 
 trigs=trigs(:)';
@@ -28,16 +28,13 @@ trigIDX=true(size(trigs));
 trigIDX(toDel)=false;
 trigs(toDel)=[];
 
-if ~isempty(auxData) && size(AuxData,2) ~= length(trace)
-    Error
-end
 
-snps=reshape(trace(:,[win(1):win(2)]'*ones(length(trigs),1)'+ones(sum(abs(win))+1,1)*trigs),[size(act,1),sum(abs(win))+1,length(trigs)]);
+snps=reshape(trace(:,[win(1):win(2)]'*ones(length(trigs),1)'+ones(sum(abs(win))+1,1)*trigs),[size(trace,1),sum(abs(win))+1,length(trigs)]);
 
 
 for iF=1:length(fields)
-    if isfield(proj_meta(siteID).rd(masterLayer,tp),fields{iF})
-        tmp=proj_meta(siteID).rd(masterLayer,tp).(fields{iF})([win(1):win(2)]'*ones(length(trigs),1)'+ones(sum(abs(win))+1,1)*trigs);
+    if isfield(auxData,fields{iF})
+        tmp=auxData.(fields{iF})([win(1):win(2)]'*ones(length(trigs),1)'+ones(sum(abs(win))+1,1)*trigs);
     else
         disp(['no field: ' fields{iF} ', replace with nans'])
         tmp=nan(length(win(1):win(2)),length(trigs));
