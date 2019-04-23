@@ -1,4 +1,4 @@
-root = 'Y:\giocomo\attialex\NP_DATA\';
+root = 'Z:\giocomo\attialex\NP_DATA\';
 matfiles = dir([root '*.mat']);
 
 pairs = [];
@@ -22,16 +22,19 @@ for iF=1:length(matfiles)
         end
         
         idx=ismember(sp.clu,connected(:));
-        [CGR,b]=CCG(sp.st(idx),double(sp.clu(idx)),'binSize',[0.0004],'duration',[0.2]);
+        [CGR,b]=CCG(sp.st(idx),double(sp.clu(idx))+1,'binSize',[0.0004],'duration',[0.2]);
         pairs = cat(1,pairs,connected);
         for ii=1:length(connected)
             depth_pre(end+1)=depth(good_cells==connected(ii,1));
             depth_post(end+1) = depth(good_cells==connected(ii,2));
             AID(end+1)=iF;
-            CGRs=cat(2,CGRs,squeeze(CGR(:,connected(ii,1),connected(ii,2))));
+            CGRs=cat(2,CGRs,squeeze(CGR(:,connected(ii,1)+1,connected(ii,2)+1)));
             
         end
+    else
+        sprintf('%s does not contain connected',matfiles(iF).name)
     end
+    
     
 end
 %%
