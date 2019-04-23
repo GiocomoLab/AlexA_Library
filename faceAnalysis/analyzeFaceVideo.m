@@ -11,20 +11,26 @@ se = strel('disk',1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Process relevant frames
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%vid.CurrentTime = 10;
 
 ii = 0;  % python is zero-indexed...this saves trouble later
+h2=figure;
+ax2=axes('Parent',h2);
 while hasFrame(vid)
     ii=ii+1;
     frame = rgb2gray(readFrame(vid));
     %frame = rgb2gray(frame);
     % using the first VR frame, set the ROIs for pupil and whisk
     if ii == 1
+        ct=vid.CurrentTime;
+        vid.CurrentTime = 10;
+        template = rgb2gray(readFrame(vid));
+        vid.CurrentTime = ct;
         
         % make fig
         h = figure();
         ax = axes('Parent', h);
-        imshow(frame, 'Parent', ax);
+        imshow(template, 'Parent', ax);
         title(ax, sprintf('Frame #%d', 1));
         set(gcf,'Units','normalized')
         ax.Position = [0,0,1,1];
@@ -35,17 +41,20 @@ while hasFrame(vid)
         [~, eye_corners] = makeROI(frame, h);
         disp('Ready to identify pupil? (press any key to continue)')
         pause
-        ex = frame(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
+        ex = template(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
         imshow(ex,'Parent',ax)
         [~,center_corners] = makeROI(ex, h);
         level=thresh_tool(ex);
         clf
         [bwm,xi,yi]=roipoly(ex');
+        close(h);
         disp('Processing video data (this may take awhile)...')
-    else
-        ex=frame(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
+        figure(h2)
+        axes(ax2)
+%     else
+%         ex=frame(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
     end
-    
+    ex=frame(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
     %threshold image
     bw=ex<level;
     bw=bw&bwm';
