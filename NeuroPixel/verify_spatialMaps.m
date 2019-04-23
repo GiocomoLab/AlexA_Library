@@ -12,8 +12,8 @@ for iT=1:length(trials)
     t_time=post(idxVR);
     start=min(t_time);
     stop=max(t_time);
-    idxNP=sp.st<stop & sp.st>=start;zqw
-    [spM, dT]=getSpikeMatPosition(sp.st(idxNP),sp.clu(idxNP),posx(idxVR),post(idxVR),'edges',edges,'max_clust',max(sp.cids)+1);
+    idxNP=sp.st<stop & sp.st>=start;
+    [spM, dT]=getSpikeMatPosition(sp.st(idxNP),sp.clu(idxNP),posx(idxVR),post(idxVR),'edges',edges,'max_clust',max(sp.clu)+1);
     spatialMap=cat(3,spatialMap,spM);
     dwell_time=cat(1,dwell_time,dT);
 end
@@ -43,7 +43,7 @@ for iT=1:length(trials)
     start=min(t_time);
     stop=max(t_time);
     idxNP=sp.st<stop & sp.st>=start;
-    [spM, dT]=getSpikeMatPosition(sp.st(idxNP),sp.clu(idxNP),posx(idxVR),post(idxVR),'edges',edges,'max_clust',max(sp.cids)+1);
+    [spM, dT]=getSpikeMatPosition(sp.st(idxNP),sp.clu(idxNP),posx(idxVR),post(idxVR),'edges',edges,'max_clust',max(sp.clu)+1);
     spatialMap=cat(3,spatialMap,spM);
     dwell_time=cat(1,dwell_time,dT);
 end
