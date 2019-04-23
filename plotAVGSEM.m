@@ -7,7 +7,7 @@ params.winIDX=-100:100;
 params.masterTime=params.winIDX/15;
 params.xLim=[-1 4];
 
-
+avg=double(avg);
 
 
 p = inputParser;
