@@ -52,8 +52,8 @@ template=template(boundary+1:end-boundary,boundary+1:end-boundary);
 high_pass_thresh=3;
 low_pass_thresh=60;
 
-upper_lim=round(prctile(template(:),95));
-template(template>upper_lim)=upper_lim;
+%upper_lim=round(prctile(template(:),95));
+%template(template>upper_lim)=upper_lim;
 fft2_template = fft2(template); %fft2(mean(im2double(data_chunk(:,:,1:nbim_temp)),3));
 fft2_template([1:high_pass_thresh size(fft2_template,1)-high_pass_thresh+2:size(fft2_template,1)],:)=0;
 fft2_template(:,[1:high_pass_thresh size(fft2_template,2)-high_pass_thresh+2:size(fft2_template,2)])=0;
