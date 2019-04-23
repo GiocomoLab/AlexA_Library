@@ -3,16 +3,19 @@ addpath(genpath('C:\code\spikes'));
 addpath(genpath('C:\code\npy-matlab'));
 
 % location of data
-data_dir = 'F:\H3\npH3_0401_gain_1_g0';
+data_dir = 'E:\npI1_0418_mismatch_g0';
+
 [~,main_name]=fileparts(data_dir);
+animal_name = strsplit(main_name,'_');
+animal_name = animal_name{1};
 NIDAQ_file = fullfile(data_dir,strcat(main_name,'_t0.nidq.bin'));
 NIDAQ_config = fullfile(data_dir,strcat(main_name,'_t0.nidq.meta'));
-session_name = '0401_dark_3';
+session_name = '0418_dark_1';
 spike_dir = fullfile(data_dir,strcat(main_name,'_imec0'));
 
 % get neuropixels sync pulse times
 fpNIDAQ=fopen(NIDAQ_file);
-datNIDAQ=fread(fpNIDAQ,[2,Inf],'*int16');
+datNIDAQ=fread(fpNIDAQ,[3,Inf],'*int16');
 fclose(fpNIDAQ);
 syncDat=datNIDAQ(2,:)>1000;
 
@@ -58,19 +61,26 @@ lickt = vr_lick_data(:,2);
 %%
 tmp_diff=diff(frame_times_np);
 [mm,step_idx]=find(tmp_diff>2);
+sess_length=diff([0 step_idx length(frame_times_np)]);
+midpoint = ([0 step_idx] + [step_idx length(frame_times_np)])/2;
 %step_idx=step_idx+1;
 frametimes_nlOld = frame_times_np;
+[~,ml]=min(abs(sess_length-numel(frame_times_vr)));
 if length(mm)>=1
     figure;
     subplot(2,1,1)
     plot(frame_times_np)
     subplot(2,1,2)
     plot(tmp_diff)
-    title(sprintf('found %d blocks',numel(step_idx)))
+    title(sprintf('found %d blocks',numel(step_idx+2)))
     hold on
     plot(step_idx,tmp_diff(step_idx),'ro')
     
-    sess=input('Which session do you want to extract?');
+    for im=1:numel(midpoint)
+    text(midpoint(im),max(tmp_diff),sprintf('%d',sess_length(im)))
+    end
+    
+    sess=input(sprintf('Which session do you want to extract (suggesting %d)',ml));
     is_mismatch = input('Is this a MM or PB sesion [0/1]?');
     step_idx = [0 step_idx length(frame_times_np)];
     %frame_times_np=frame_times_np(ii+2:end);
@@ -111,6 +121,7 @@ sp.st = sp.st - offset;
 
 % resample position to have constant time bins
 posx = interp1(post,posx,(0:0.02:max(post))');
+vr_data_downsampled=interp1(post,vr_position_data,(0:0.02:max(post)));
 post = (0:0.02:max(post))';
 posx([false;diff(posx)<-2])=round(posx([false;diff(posx)<-2])/400)*400; % handle teleports
 
@@ -118,6 +129,9 @@ posx([false;diff(posx)<-2])=round(posx([false;diff(posx)<-2])/400)*400; % handle
 trial = [1; cumsum(diff(posx)<-100)+1];
 
 % throw out bins after the last trial
+if is_mismatch
+    num_trials = max(trial);
+end
 keep = trial<=num_trials;
 trial = trial(keep);
 posx = posx(keep);
@@ -137,7 +151,9 @@ sp.tempScalingAmps = sp.tempScalingAmps(keep);
 
 % save processed data
 if is_mismatch == 0
-save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain');
+save(fullfile(data_dir,strcat(animal_name,'_',session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain');
 else
- save(fullfile(data_dir,strcat(session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain','true_speed','mismatch_trigger');
+ true_speed= vr_data_downsampled(:,2);
+ mismatch_trigger = vr_data_downsampled(:,3);
+ save(fullfile(data_dir,strcat(animal_name,'_',session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain','true_speed','mismatch_trigger');
 end
