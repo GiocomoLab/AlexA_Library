@@ -9,15 +9,15 @@ size_horiz = 250;
 numrow = 8; % number of rows in final image
 
 % session names
-session_name = {'npH3_0401_gain_1'};
+session_name = {'npH3_0404_mismatch_1'};
 
 % where to save images
-image_save_dir = 'C:\Users\malcolmc\Dropbox\Work\neuropixels\images\pretty_rasters_whole_session_combined';
-
+image_save_dir = 'F:\Data\npAna\images\pretty_rasters_whole_session_combined';
+mkdir(image_save_dir)
 %% iterate over sessions
 for k = 1:numel(session_name)
     
-    image_dir = fullfile('C:\Users\malcolmc\Dropbox\Work\neuropixels\images\',session_name{k},'\pretty_rasters\');
+    image_dir = fullfile('F:\Data\npAna\images\',session_name{k},'\pretty_rasters\');
 
     % get png file names
     png_files = dir(sprintf('%s\\*.png',image_dir));
