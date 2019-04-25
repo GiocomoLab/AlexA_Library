@@ -6,6 +6,13 @@ pupilData=nan(floor(nFrames)+100,3);
 
 se = strel('disk',1);
 
+if exist([fn(1:end-4) '_pupilData.mat'],'file')
+    fprintf('now working on %s',fn)
+    s=input('PupilData file for this already exists, skip [0/1]:');
+    if s==1
+        return
+    end
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -14,7 +21,7 @@ se = strel('disk',1);
 %vid.CurrentTime = 10;
 
 ii = 0;  % python is zero-indexed...this saves trouble later
-h2=figure;
+h2=figure('Name',fn);
 ax2=axes('Parent',h2);
 while hasFrame(vid)
     ii=ii+1;
@@ -28,16 +35,13 @@ while hasFrame(vid)
         vid.CurrentTime = ct;
         
         % make fig
-        h = figure();
+        h = figure('Name',fn);
         ax = axes('Parent', h);
         imshow(template, 'Parent', ax);
         title(ax, sprintf('Frame #%d', 1));
         set(gcf,'Units','normalized')
         ax.Position = [0,0,1,1];
         
-        % draw pupil ROI, corners at eyelids
-        disp('Ready to draw pupil ROI? (press any key to continue)')
-        pause
         [~, eye_corners] = makeROI(frame, h);
         disp('Ready to identify pupil? (press any key to continue)')
         pause
@@ -81,12 +85,16 @@ while hasFrame(vid)
         hold on
         plot(xunit,yunit)
         plot(outline{1}(idx,1),outline{1}(idx,2),'r')
-        %pause
+        title(sprintf('%d',ii))
+            %keyboard
     end
 end
 pupilData=pupilData(1:ii,:);
 try
-save([fn(1:end-4) '_pupilData.mat'],'pupilData');
+    figure('Name',fn)
+    plot(pupilData(:,3))
+    title(sprintf('using level %.1f',level))
+save([fn(1:end-4) '_pupilData.mat'],'pupilData','level');
 catch ME
     disp('something went wrong while saving')
 end
