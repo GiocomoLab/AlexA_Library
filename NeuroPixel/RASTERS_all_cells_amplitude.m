@@ -83,7 +83,7 @@ for iF =1:length(features)
     eval(['cf = ' features{iF} ';'])
 subplot(1,length(features),iF)
 scatter(posx(spike_idx),trial(spike_idx),2,cf(spike_id))
-colormap parula
+colormap winter
 if nnz(unique(cf(spike_id)))>10
 set(gca,'CLim',prctile(cf(spike_id),[25 75]))
 end
