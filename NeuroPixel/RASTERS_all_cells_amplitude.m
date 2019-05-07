@@ -42,7 +42,7 @@ for session_num = 1:numel(session_name)
     % make image dir if it doesn't exist
     if ispc()
     image_save_dir = strcat('F:\images\',...
-        session_name{session_num},'\rasters_amplitude\');
+        session_name{session_num},'\rasters_amplitudeParula\');
     else
         image_save_dir = fullfile('/oak/stanford/groups/giocomo','attialex','images',session_name{session_num},'rasters_amplitude');
     end
@@ -83,7 +83,7 @@ for iF =1:length(features)
     eval(['cf = ' features{iF} ';'])
 subplot(1,length(features),iF)
 scatter(posx(spike_idx),trial(spike_idx),2,cf(spike_id))
-colormap winter
+colormap parula
 if nnz(unique(cf(spike_id)))>10
 set(gca,'CLim',prctile(cf(spike_id),[25 75]))
 end
