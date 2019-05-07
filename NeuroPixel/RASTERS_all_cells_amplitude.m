@@ -5,6 +5,11 @@
 %% params
 % make sure paths are correct
 %restoredefaultpath
+if ~ispc()
+    addpath(genpath('AlexA_Library'))
+    addpath(genpath('spikes'))
+end
+
 %addpath(genpath('C:\Users\malcolmc\Dropbox\Work\neuropixels\functions'));
 %addpath(genpath('C:\Users\malcolmc\Dropbox\Work\neuropixels\spikes'));
 
