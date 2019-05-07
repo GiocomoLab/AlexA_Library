@@ -6,8 +6,8 @@
 % make sure paths are correct
 %restoredefaultpath
 if ~ispc()
-    addpath(genpath('AlexA_Library'))
-    addpath(genpath('spikes'))
+    addpath(genpath('home/users/attialex/AlexA_Library'))
+    addpath(genpath('home/users/attialex/spikes'))
 end
 
 %addpath(genpath('C:\Users\malcolmc\Dropbox\Work\neuropixels\functions'));
