@@ -6,8 +6,8 @@
 % make sure paths are correct
 %restoredefaultpath
 if ~ispc()
-    addpath(genpath('home/users/attialex/AlexA_Library'))
-    addpath(genpath('home/users/attialex/spikes'))
+    addpath(genpath('/home/users/attialex/AlexA_Library')) 
+    addpath(genpath('/home/users/attialex/spikes'))
 end
 
 %addpath(genpath('C:\Users\malcolmc\Dropbox\Work\neuropixels\functions'));
@@ -24,8 +24,8 @@ if ispc()
 else
     data_dir = fullfile('/oak/stanford/groups/giocomo','attialex','NP_DATA');
 end
-session_name = {'npI5_0417_baseline_1','npF4_1025_gaincontrast_2'};
-
+%session_name = {'npI5_0417_baseline_1','npF4_1025_gaincontrast_2'};
+session_name = dir(fullfile(data_dir,'*baseline*'));
 
 
 %% iterate over sessions
