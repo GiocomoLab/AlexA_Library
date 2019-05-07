@@ -28,7 +28,7 @@ end
 session_names = dir(fullfile(data_dir,'*baseline*'));
 session_name = {};
 for iF=1:numel(session_names)
-    session_name{iF}=session_names(iF).name;
+    session_name{iF}=session_names(iF).name(1:end-4);
 end
 
 
