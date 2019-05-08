@@ -3,28 +3,34 @@ addpath(genpath('C:\code\spikes'));
 addpath(genpath('C:\code\npy-matlab'));
 
 % location of data
-data_dir = 'E:\npI1_0418_mismatch_g0';
+data_dir = 'F:\J3\npJ3_0505_gain_g0';
 
 [~,main_name]=fileparts(data_dir);
 animal_name = strsplit(main_name,'_');
 animal_name = animal_name{1};
 NIDAQ_file = fullfile(data_dir,strcat(main_name,'_t0.nidq.bin'));
 NIDAQ_config = fullfile(data_dir,strcat(main_name,'_t0.nidq.meta'));
-session_name = '0418_dark_1';
+session_name = '0505_dark_1';
 spike_dir = fullfile(data_dir,strcat(main_name,'_imec0'));
 
-% get neuropixels sync pulse times
-fpNIDAQ=fopen(NIDAQ_file);
-datNIDAQ=fread(fpNIDAQ,[3,Inf],'*int16');
-fclose(fpNIDAQ);
-syncDat=datNIDAQ(2,:)>1000;
+%
 
-%get the nidaq sample rate
+%get the nidaq sample rate & get number of recorded nidaq channels
 dat=textscan(fopen(NIDAQ_config),'%s %s','Delimiter','=');
 names=dat{1};
 vals=dat{2};
 loc=contains(names,'niSampRate');
 sync_sampling_rate=str2double(vals{loc});
+
+loc2=contains(names,'nSavedChans');
+n_channels_nidaq=str2double(vals{loc2});
+
+% get neuropixels sync pulse times
+fpNIDAQ=fopen(NIDAQ_file);
+datNIDAQ=fread(fpNIDAQ,[n_channels_nidaq,Inf],'*int16');
+fclose(fpNIDAQ);
+syncDat=datNIDAQ(2,:)>1000;
+
 
 frame_times_np = find(abs(diff(syncDat))==1)+1;
 frame_times_np = frame_times_np/sync_sampling_rate;
@@ -36,7 +42,9 @@ fid = fopen(fullfile(data_dir,strcat(session_name,'_position.txt')),'r');
 dataArray = textscan(fid, formatSpec, 'Delimiter', delimiter, 'TextType', 'string', 'EmptyValue', NaN,  'ReturnOnError', false);
 fclose(fid);
 vr_position_data = cat(2,dataArray{1:5});
+%vr_position_data = vr_position_data(1:49334,:);
 nu_entries = nnz(~isnan(vr_position_data(1,:)));
+%vr_position_data=vr_position_data(49335:end,:);
 vr_ttl=vr_position_data(:,nu_entries); %assuming TTL in last and timestamp in second last column
 frame_times_vr=vr_position_data(:,nu_entries-1);
 
@@ -104,7 +112,7 @@ else
     disp('ERROR: number of sync pulses does not match number of frames.')
 end
 figure
-plot(diff(post),diff(frame_times_vr(idx)),'.')
+scatter(diff(post),diff(frame_times_vr(idx)),2,1:length(idx)-1)
 %%
 % load spike times
 sp = loadKSdir(spike_dir);
