@@ -3,14 +3,15 @@ addpath(genpath('C:\code\spikes'));
 addpath(genpath('C:\code\npy-matlab'));
 
 % location of data
-data_dir = 'F:\J5\npJ5_0507_gaincontrast_g0';
+data_dir = 'Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\I4\neuropixels_data\npI4_0424_gaincontrast_g0';
+adata_dir = 'Y:\giocomo\attialex\NP_DATA';
 
 [~,main_name]=fileparts(data_dir);
 animal_name = strsplit(main_name,'_');
 animal_name = animal_name{1};
 NIDAQ_file = fullfile(data_dir,strcat(main_name,'_t0.nidq.bin'));
 NIDAQ_config = fullfile(data_dir,strcat(main_name,'_t0.nidq.meta'));
-session_name = '0507_baseline_1';
+session_name = '0424_baseline_2';
 spike_dir = fullfile(data_dir,strcat(main_name,'_imec0'));
 
 %
@@ -115,54 +116,11 @@ figure
 scatter(diff(post),diff(frame_times_vr(idx)),2,1:length(idx)-1)
 %%
 % load spike times
-sp = loadKSdir(spike_dir);
-%% dirty hack for when kilosort2 used wrong sampling rate
-% st=sp.st;
-% in_samples=st*32000;
-% sp.st=in_samples/30000;
-%%
-% shift everything to start at zero
+%sp = loadKSdir(spike_dir);
+load(fullfile(adata_dir,strcat(animal_name,'_',session_name,'.mat')),'sp');
+
 offset = post(1);
-post = post - offset;
-lickt = lickt - offset;
-sp.st = sp.st - offset;
+
 sp.vr_session_offset = offset;
 
-% resample position to have constant time bins
-posx = interp1(post,posx,(0:0.02:max(post))');
-vr_data_downsampled=interp1(post,vr_position_data,(0:0.02:max(post)));
-post = (0:0.02:max(post))';
-posx([false;diff(posx)<-2])=round(posx([false;diff(posx)<-2])/400)*400; % handle teleports
-
-% compute trial number for each time bin
-trial = [1; cumsum(diff(posx)<-100)+1];
-
-% throw out bins after the last trial
-if is_mismatch
-    num_trials = max(trial);
-end
-keep = trial<=num_trials;
-trial = trial(keep);
-posx = posx(keep);
-post = post(keep);
-
-% throw out licks before and after session
-keep = lickt>min(post) & lickt<max(post);
-lickx = lickx(keep);
-lickt = lickt(keep);
-
-% cut off all spikes before and after vr session
-keep = sp.st >= 0 & sp.st <= post(end);
-sp.st = sp.st(keep);
-sp.spikeTemplates = sp.spikeTemplates(keep);
-sp.clu = sp.clu(keep);
-sp.tempScalingAmps = sp.tempScalingAmps(keep);
-
-% save processed data
-if is_mismatch == 0
-save(fullfile(data_dir,strcat(animal_name,'_',session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain');
-else
- true_speed= vr_data_downsampled(:,2);
- mismatch_trigger = vr_data_downsampled(:,3);
- save(fullfile(data_dir,strcat(animal_name,'_',session_name,'.mat')),'sp','post','posx','lickt','lickx','trial','trial_contrast','trial_gain','true_speed','mismatch_trigger');
-end
+save(fullfile(adata_dir,strcat(animal_name,'_',session_name,'.mat')),'sp');
