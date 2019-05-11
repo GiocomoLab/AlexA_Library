@@ -123,4 +123,4 @@ offset = post(1);
 
 sp.vr_session_offset = offset;
 
-save(fullfile(adata_dir,strcat(animal_name,'_',session_name,'.mat')),'sp');
+save(fullfile(adata_dir,strcat(animal_name,'_',session_name,'.mat')),'sp','-append');
