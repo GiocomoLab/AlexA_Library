@@ -24,7 +24,7 @@ if ispc()
 else
     data_dir = fullfile('/oak/stanford/groups/giocomo','attialex','NP_DATA');
 end
-session_name = {'npJ2_0511_baseline_playback_1'};
+session_names = {'npJ2_0511_baseline_playback_1'};
 %session_names = dir(fullfile(data_dir,'*baseline*'));
 session_name = {};
 for iF=1:numel(session_names)
