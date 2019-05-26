@@ -1,11 +1,12 @@
 function [snps,aux,trigIDX]=extract_snps(trace,trigs,varargin)
 % calculate snps matrix of trig responses per cell
-% usage snps=get_trig_response(proj_meta,1,1,trigs,[-50 200]);
-% GK 04.11.2016
+% usage snps=extract_snps(cell_activity,trigs,'win',[-50 200]);
+% cell_activity: neurons x frames, trigs: frame idx of onset, win: extracts frames from win(1) to win(2) around trigger
+% 'aux': a struct containing aux data to extract. E.g. adata.running, adata.stimID (1 x frames)
 
 p = inputParser;
    defaultwin = [-100 100];
-   defaultAux=[];
+   defaultAux=struct();
    %defaultLayer = 1:4;
    %defaultFields = {'velM_smoothed','velP_smoothed'};
 
@@ -14,13 +15,14 @@ p = inputParser;
    %addParameter(p,'layer',defaultLayer);
    %addParameter(p,'fields',defaultFields);
   
-    fields={'velM','MM'};
+   
    parse(p,varargin{:});
 
 trigs=trigs(:)';
 
 win=p.Results.win;
 auxData=p.Results.aux;
+fields = fieldnames(auxData);
 
 % remove any trigger too close to start, finish, or stack transition
 toDel=find(sum(abs(bsxfun(@minus,[0 length(trace)]',trigs))<=max(abs(win))));
