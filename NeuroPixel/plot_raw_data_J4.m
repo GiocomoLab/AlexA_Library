@@ -1,8 +1,8 @@
 addpath(genpath('C:/code/neuropixel-utils'))
 addpath(genpath('C:/code/AlexA_Library'))
-session_name = 'npI4_0414_baseline_2';
-load('Y:\giocomo\attialex\NP_DATA\npI4_0424_baseline_2.mat')
-ks_dir = 'I:\npI4_0424_gaincontrast_g0\npI4_0424_gaincontrast_g0_imec0';
+session_name = 'npJ4_0515_gain_1';
+load('F:\J4\npJ4_0515_gaincontrast_g0\npJ4_0515_gain_1.mat')
+ks_dir = 'F:\J4\npJ4_0515_gaincontrast_g0\npJ4_0515_gaincontrast_g0_imec0';
 channelMapFile = 'C:\code\KiloSort2\configFiles\neuropixPhase3B1_kilosortChanMap.mat';
 ks = Neuropixel.KiloSortDataset(ks_dir,'channelMap',channelMapFile);
 ks.load()

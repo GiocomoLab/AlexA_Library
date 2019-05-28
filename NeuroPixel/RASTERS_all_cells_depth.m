@@ -7,7 +7,6 @@
 %restoredefaultpath
 if ~ispc()
     addpath(genpath('/home/users/attialex/AlexA_Library')) 
-    addpath(genpath('/home/users/attialex/spikes'))
 end
 
 %addpath(genpath('C:\Users\malcolmc\Dropbox\Work\neuropixels\functions'));
@@ -45,22 +44,21 @@ for session_num = 1:numel(session_name)
     else
         image_save_dir = fullfile('/oak/stanford/groups/giocomo','attialex');
     end
-    image_save_dir = fullfile(image_save_dir,'images',session_name{session_num},'rasters_amplitudeParula');
+    image_save_dir = fullfile(image_save_dir,'images',session_name{session_num},'rasters_Depth');
     if exist(image_save_dir,'dir')~=7
         mkdir(image_save_dir);
     end
 
-    % compute some useful information (like spike depths)
-    [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
-        templatePositionsAmplitudes(sp.temps, sp.winv, sp.ycoords, sp.spikeTemplates, sp.tempScalingAmps);
+    idx_time= double(metrics.spike_times)/30000 > sp.vr_session_offset & double(metrics.spike_times)/30000<=(sp.vr_session_offset+max(post));
 
-    
+    spikeDepths = metrics.spike_depth;
     % get spike depths
     spike_depth = nan(numel(cells_to_plot),1);
     for k = 1:numel(cells_to_plot)
-        spike_depth(k) = median(spikeDepths(sp.clu==cells_to_plot(k)));
+        idx2=idx_time & metrics.spike_clusters==cells_to_plot(k);
+        spike_depth(k) = median(spikeDepths(idx2));
     end
-
+    spikeDepths = spikeDepths(idx_time);
     % sort cells_to_plot by spike_depth (descending)
     [spike_depth,sort_idx] = sort(spike_depth,'descend');
     cells_to_plot = cells_to_plot(sort_idx);
@@ -78,7 +76,7 @@ for session_num = 1:numel(session_name)
         [~,~,spike_idx] = histcounts(spike_t,post);
 
         % make figure
-features={'spikeAmps'};
+features={'spikeDepths'};
 for iF =1:length(features)
     eval(['cf = ' features{iF} ';'])
 subplot(1,length(features),iF)

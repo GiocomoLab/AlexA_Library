@@ -66,7 +66,7 @@ for iC=1:size(spatialMap,1)
     correlation_All(:,:,iC)=tmp;
     diagAll(iC,:)=diag(tmp,1);
 end
-
+%%
 figure
 pp=nanmean(correlation_All,3);
 imagesc(nanmean(correlation_All,3),[-.1 0.3])

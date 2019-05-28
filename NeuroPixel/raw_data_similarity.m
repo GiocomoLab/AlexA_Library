@@ -57,6 +57,8 @@ colorbar
 title('Spatial Similarity')
 xlabel('Trial #')
 ylabel('Trial #')
+set(gca,'XTick',[1:5:40],'XTickLabel',[trial_pre(1):5:trial_post(end)])
+set(gca,'YTick',[1:5:40],'YTickLabel',[trial_pre(1):5:trial_post(end)])
 axis image
 subplot(1,2,2)
 cc=cat(3,similarity_map{:});
