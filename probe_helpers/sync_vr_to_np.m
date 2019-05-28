@@ -3,14 +3,14 @@ addpath(genpath('C:\code\spikes'));
 addpath(genpath('C:\code\npy-matlab'));
 
 % location of data
-data_dir = 'F:\J5\npJ5_0507_gaincontrast_g0';
+data_dir = 'F:\J3\npJ3_0509_gaincontrast_g0';
 
 [~,main_name]=fileparts(data_dir);
 animal_name = strsplit(main_name,'_');
 animal_name = animal_name{1};
 NIDAQ_file = fullfile(data_dir,strcat(main_name,'_t0.nidq.bin'));
 NIDAQ_config = fullfile(data_dir,strcat(main_name,'_t0.nidq.meta'));
-session_name = '0507_baseline_1';
+session_name = '0509_dark_1';
 spike_dir = fullfile(data_dir,strcat(main_name,'_imec0'));
 
 %

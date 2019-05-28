@@ -68,11 +68,7 @@ ylabel('spike #')
 colorbar
 axis image
 %%
-image_save_dir = strcat('Y:\giocomo\attialex\');
-image_save_dir = fullfile(image_save_dir,'images',session_name,'rasters_waveforms_similarity');
-if exist(image_save_dir,'dir')~=7
-    mkdir(image_save_dir);
-end
+
 
 h=figure();
 for k=1:numel(good_cells)
