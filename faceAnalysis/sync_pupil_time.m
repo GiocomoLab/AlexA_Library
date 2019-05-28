@@ -12,7 +12,8 @@ formatSpec = '%f%f%f%f%f%[^\n\r]';
 delimiter = '\t';
 fid=fopen(vrData_name);
 dataArray = textscan(fid, formatSpec, 'Delimiter', delimiter, 'TextType', 'string', 'EmptyValue', NaN,  'ReturnOnError', false);
-
+vr_time = dataArray{2};
+vr_time = vr_time-vr_time(1);
 %%
 % NIDAQ_file = 'Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\I1\neuropixels_data\npI1_0415_gain_g0\npI1_0415_gain_g0_t0.nidq.bin';
 % fpNIDAQ=fopen(NIDAQ_file);
@@ -20,28 +21,31 @@ dataArray = textscan(fid, formatSpec, 'Delimiter', delimiter, 'TextType', 'strin
 % fclose(fpNIDAQ);
 %% verify alignement, unfortnunately, the framedata.times seems to be lacking the last few frames
 dpt=diff(framedata.times);
-dvr=diff(dataArray{2}(3:3:end));
+dvr=diff(vr_time(3:3:end));
 figure
-plot(dpt,dvr(1:numel(dpt)),'.')
-pause
-close(gcf)
+scatter(dpt,dvr(1:numel(dpt)),2,1:length(dpt))
+title(sprintf('# diff: %i',numel(dvr)-numel(dpt)))
+xlabel(session_name)
+%pause
+%close(gcf)
 %%if good, extend pupil dat
 %%
 % if abs(numel(frame_times_np) - numel(frame_times_vr)) <= 1
 %     idx=1:min(numel(frame_times_np),numel(frame_times_vr)); %use shorter index
 
 %%
-pupilTime = (0:0.02:max(dataArray{2}));
-vr_stamps = dataArray{2}(3:3:end);
-pupilData_upsampled = interp1(vr_stamps,pupilData,pupilTime);
+pupilTime = (0:0.02:max(vr_time));
+vr_stamps = vr_time(3:3:end); 
+idx=1:min(numel(vr_stamps),size(pupilData,1));
+pupilData_upsampled = interp1(vr_stamps(idx),pupilData(idx,:),pupilTime);
 
-figure
-plot(dataArray{2}(3:3:end),pupilData(:,3))
-hold on
+%figure
+%plot(vr_stamps,pupilData(:,3))
+%hold on
  
-plot((0:0.02:max(dataArray{2})),pupilData_upsampled(:,3))
-pause
-close(gcf)
+%plot(pupilTime,pupilData_upsampled(:,3))
+%pause
+%close(gcf)
 save(pupilData_name,'pupilData_upsampled','pupilTime','-append');
 
 end
