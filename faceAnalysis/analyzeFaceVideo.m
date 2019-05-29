@@ -43,7 +43,7 @@ while hasFrame(vid)
         ax.Position = [0,0,1,1];
         
         [~, eye_corners] = makeROI(frame, h);
-        disp('Ready to identify pupil? (press any key to continue)')
+        disp('Ready to identify pupil? (press any key to continue) (subselect valid pupil area) \n only point within area will be considered for circle fitting')
         pause
         ex = template(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
         imshow(ex,'Parent',ax)
@@ -76,17 +76,19 @@ while hasFrame(vid)
         yunit = a(3) * sin(th) + a(2);
         pupilData(ii,:)=a;
     end
-    if mod(ii,200)==1
+    if mod(ii,100)==1
         cla
         subplot(2,1,1)
-        imagesc(bw2');
+        %imagesc(bw2');
+        plot(pupilData(1:ii,1))
         subplot(2,1,2)
         imagesc(ex')
         hold on
         plot(xunit,yunit)
         plot(outline{1}(idx,1),outline{1}(idx,2),'r')
         title(sprintf('%d',ii))
-            %keyboard
+        
+         %keyboard
     end
 end
 pupilData=pupilData(1:ii,:);
