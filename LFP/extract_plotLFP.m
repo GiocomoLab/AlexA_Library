@@ -6,7 +6,7 @@ lfpFs = 2500;  % neuropixels phase3a
 nChansInFile = 385;  % neuropixels phase3a, from spikeGLX
 
 nClips = 10;
-clipDur = 10; % seconds
+clipDur = 50; % seconds
 
 % load nClips one-sec samples
 d = dir(lfpFilename); 
