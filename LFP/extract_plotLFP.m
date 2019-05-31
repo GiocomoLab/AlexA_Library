@@ -24,8 +24,21 @@ thisDat = bsxfun(@minus, thisDat, mean(thisDat,2));
 L = size(thisDat',1);
 NFFT = 2^nextpow2(L);
 [Pxx,F] = pwelch(thisDat',[],[],NFFT,lfpFs);
+%%
+
 thetaPower = mean(Pxx(F>3 & F<13,:));
+%%
 [a,maxChan]=max(thetaPower);
+figure;plot(ks.channelMap.ycoords,thetaPower(1:384))
+hold on
+ff=ks.cluster_groups=='good' | ks.cluster_groups =='mua';
+[a,b]=histcounts(metrics.cluster_centerOfMass(ff,2),30);
+yyaxis right
+plot(b(1:end-1),a)
+legend({'LFP Theta Power','N Units'})
+xlabel('distance from tip')
+%%
+
 %%
 bp = bandpass(thisDat(maxChan,:),[8 13],2500);
 
