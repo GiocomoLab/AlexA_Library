@@ -1,5 +1,5 @@
 root = 'Z:\giocomo\attialex\NP_DATA\';
-matfiles = dir([root '*.mat']);
+matfiles = dir(fullfile(root,'npI1_0417_dark_1.mat'));
 
 pairs = [];
 AID = [];
@@ -11,7 +11,7 @@ for iF=1:length(matfiles)
     load(fullfile(root,matfiles(iF).name),'connected')
     
     if exist('connected','var')
-        load(fullfile(root,matfiles(iF).name),'sp')
+        %load(fullfile(root,matfiles(iF).name),'sp')
         good_cells = sp.cids(sp.cgs==2);
         
         [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
@@ -28,7 +28,7 @@ for iF=1:length(matfiles)
             depth_pre(end+1)=depth(good_cells==connected(ii,1));
             depth_post(end+1) = depth(good_cells==connected(ii,2));
             AID(end+1)=iF;
-            CGRs=cat(2,CGRs,squeeze(CGR(:,connected(ii,1)+1,connected(ii,2)+1)));
+            CGRs=cat(2,CGRs,squeeze(CGR(:,connected(ii,2)+1,connected(ii,1)+1)));
             
         end
     else
@@ -60,3 +60,4 @@ for iS=1:slices
     dd{iS}=sprintf('%d',mean(distance(idx)));
 end
 legend(dd)
+%%

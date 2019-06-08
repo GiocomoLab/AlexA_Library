@@ -1,0 +1,2 @@
+TimeBin = 0.02
+SpatialBin = 2
