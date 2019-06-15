@@ -1,11 +1,12 @@
-root=fullfile('/oak','stanford','groups','giocomo','attialex','NP_DATA');
-Files= dir(fullfile(root,'*.mat'));
+%root=fullfile('/oak','stanford','groups','giocomo','attialex','NP_DATA');
+root = fullfile('Z:\giocomo\attialex\NP_DATA');
+Files= dir(fullfile(root,'npJ4_0512_contrast_1.mat'));
 addpath('..')
 addpath('../NeuroPixel')
 params = readtable('UniversalParams.xlsx');
 close all;
 
-for iF=[9 12 17]%1:length(Files)
+for iF=1:length(Files)
     mkdir(root,'Plots');
     [~,session,~]=fileparts(Files(iF).name);
     mkdir(fullfile(root,'Plots'),session);

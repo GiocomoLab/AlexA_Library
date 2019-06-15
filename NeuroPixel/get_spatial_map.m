@@ -3,13 +3,14 @@ sp = dataset.sp;
 trial = dataset.trial;
 post = dataset.post;
 posx = dataset.posx;
+posx(posx>400)=400;
 if nargin ==1
 trialset=[1:max(trial)];
 end
 
 spatialMap=[];
 dwell_time=[];
-edges=[0:4:404];
+edges=[0:4:400];
 edges(1)=-.01;
 posx(posx<0)=0;
 for iT=1:length(trialset)
@@ -25,8 +26,8 @@ end
 %cellIDX=find(sp.cgs>=1);
 spatialMap=spatialMap(sp.cids+1,:,:);
 spatialMap=spatialMap(sp.cgs==2,:,:);
-spatialMap=spatialMap(:,1:end-1,:);
-dwell_time=dwell_time(:,1:end-1);
+%spatialMap=spatialMap(:,1:end-1,:);
+%dwell_time=dwell_time(:,1:end-1);
 %normalize by dwell time in each bin
 dt=dwell_time';
 dt=reshape(dt,[1 size(dt,1),size(dt,2)]);
@@ -38,7 +39,7 @@ if nnz(isnan(spatialMap))>0
     spatialMap = fillmissing(spatialMap,'linear',2);
 end
 %smooth
- win = gausswin(11);
+ win = gausswin(9);
  gauss_filter = win/sum(win);
  gauss_filter = reshape(gauss_filter,[1,numel(gauss_filter),]);
  spatialMap_smoothed = convn(spatialMap,gauss_filter,'same');

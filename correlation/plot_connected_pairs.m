@@ -1,12 +1,12 @@
 %% verifying delay and xcorr
 
 
-pre_id = 27;
-post_id = 89;
-fr_post = histcounts(sp.st(sp.clu==post_id-1),0:0.001:max(sp.st));
+pre_id = 10;
+post_id = 26;
+fr_post = histcounts(sp.st(sp.clu==post_id),0:0.001:max(sp.st));
 
-fr_pre=histcounts(sp.st(sp.clu==pre_id-1),0:0.001:max(sp.st));
-fr_preShift=histcounts(sp.st(sp.clu==pre_id-1)+0.01,0:0.001:max(sp.st));
+fr_pre=histcounts(sp.st(sp.clu==pre_id),0:0.001:max(sp.st));
+fr_preShift=histcounts(sp.st(sp.clu==pre_id)+0.01,0:0.001:max(sp.st));
 
 [ax,bx]=xcorr(fr_pre,fr_post,100);
 [as,bs]=xcorr(fr_pre,fr_preShift,100);
@@ -14,14 +14,14 @@ figure
 plot(bs/1000,as)
 %peak should be at -10, inicating a 10 bin delay in fr_preShift
 
-idx = sp.clu == post_id-1 | sp.clu == pre_id-1;
+idx = sp.clu == post_id | sp.clu == pre_id;
 [CGR,b]=CCG(sp.st(idx),double(sp.clu(idx))+1,'binSize',[0.001],'duration',[0.2]);
 
 
 figure
 plot(bx/1000,ax)
 hold on
-plot(b,CGR(:,post_id,pre_id))
+plot(b,CGR(:,post_id+1,pre_id+1))
 grid on
 %this way, CCG output and xcorr output match. i.e. when peak is to the left
 %of 0, it means that spiking in pre is followed by spiking in post

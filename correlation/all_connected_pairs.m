@@ -11,7 +11,8 @@ for iF=1:length(matfiles)
     load(fullfile(root,matfiles(iF).name),'connected')
     
     if exist('connected','var')
-        %load(fullfile(root,matfiles(iF).name),'sp')
+        vars = {'sp','PCausal'};
+        load(fullfile(root,matfiles(iF).name),vars{:})
         good_cells = sp.cids(sp.cgs==2);
         
         [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
@@ -25,11 +26,12 @@ for iF=1:length(matfiles)
         [CGR,b]=CCG(sp.st(idx),double(sp.clu(idx))+1,'binSize',[0.0004],'duration',[0.2]);
         pairs = cat(1,pairs,connected);
         for ii=1:length(connected)
+            if PCausal(connected(ii,1)+1,connected(ii,2)+1)<0.05
             depth_pre(end+1)=depth(good_cells==connected(ii,1));
             depth_post(end+1) = depth(good_cells==connected(ii,2));
             AID(end+1)=iF;
             CGRs=cat(2,CGRs,squeeze(CGR(:,connected(ii,2)+1,connected(ii,1)+1)));
-            
+            end
         end
     else
         sprintf('%s does not contain connected',matfiles(iF).name)
@@ -40,6 +42,9 @@ end
 %%
 figure
 plot([depth_pre',depth_post']')
+set(gca,'XTick',[1 2],'XTickLabel',{'Pre', 'Post'})
+xlim([.9 2.1])
+ylabel('distance from tip')
 
 %%
 distance = abs(depth_pre-depth_post);
