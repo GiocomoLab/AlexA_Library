@@ -1,29 +1,51 @@
-load('Z:\giocomo\attialex\NP_DATA\mismatch\npH3_0404_playback_1.mat')
-open_loop=load('Z:\giocomo\attialex\NP_DATA\mismatch\npH3_0404_playback_1.mat')
-closed_loop=load('Z:\giocomo\attialex\NP_DATA\mismatch\npH3_0404_mismatch_1.mat')
+load('Z:\giocomo\attialex\NP_DATA\npH3_0401_dark_3.mat')
 %%
-session_name='npH3_0401_dark_3.mat';
-image_save_dir = strcat('Z:\Data\npAna\images\',session_name,'\pretty_rasters\');
+session_name='npH3_0401_dark_3';
+image_save_dir = strcat('Z:\giocomo\attialex\images\',session_name,'\glm_dark\');
 if ~isdir(image_save_dir)
     mkdir(image_save_dir);
 end
 
 %%
-run_speed = gauss_smoothing(true_speed/params.TimeBin,10);
-vis_speed = calcSpeed(posx,params);
+run_speed = gauss_smoothing([diff(total_distance)]/params.TimeBin,10);
+
 run_speed(run_speed<0) = 0;
-vis_speed(vis_speed<0) = 0;
 max_runspeed=ceil(prctile(run_speed,99));
-max_visspeed=ceil(prctile(vis_speed,99));
-vis_speed(vis_speed > max_visspeed) = max_visspeed;
 run_speed(run_speed > max_runspeed) = max_runspeed;
-% take position mod length of track (AFTER computing speed)
-posx(posx<0)=0;
-posx(posx>params.TrackEnd)=params.TrackEnd;
+
+run_bi = run_speed>1;
+transitions=find(diff([0;run_bi;0]));
+run_speed=[run_speed(1); run_speed];
+run_times=transitions(2:2:end)-transitions(1:2:end);
+%run_times(run_times<min_run)=[];
+onsets=transitions(1:2:end);
+offsets = transitions(2:2:end);
+
+[a,b]=sort(run_times);
+
+run_times_sorted = run_times(b);
+onsets_sorted = onsets(b);
+offsets_sorted = offsets(b);
+
+run_numbers = zeros(size(total_distance));
+time_since_onset = run_numbers;
+distance_since_onset = run_numbers;
+
+for iR=1:numel(run_times)
+    current_onset = onsets_sorted(iR);
+    current_length = run_times_sorted(iR);
+    
+
+        current_idx = current_onset:current_onset + current_length;
+        run_numbers(current_idx) = iR;
+        time_since_onset(current_idx) = post(current_idx)-post(current_idx(1));
+        distance_since_onset(current_idx)=total_distance(current_idx)-total_distance(current_idx(1));
+
+end
 
 %% create A
 
-var_name = {'position','run_speed','vis_speed'};
+var_name = {'position','run_speed','time_since_onset','distance_since_onset'};
 A={};
 all_control_points={};
 s = 0.5; % spline parameter

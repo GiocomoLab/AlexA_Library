@@ -1,6 +1,6 @@
 addpath(genpath('C:\code\AlexA_Library'))
-root=fullfile('Y:','giocomo','attialex','NP_DATA');
-Files= dir(fullfile(root,'*.mat'));
+root=fullfile('Z:','giocomo','attialex','NP_DATA');
+Files= dir(fullfile(root,'npI5_0417_baseline_1.mat'));
 
 for iF=1:length(Files)
     try

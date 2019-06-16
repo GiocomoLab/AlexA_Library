@@ -25,7 +25,8 @@ end
 %max_t=ceil(max(sp.st)*1000);
 
 av_spike_mat=zeros(n_units,length(edges)-1);
-post_idx=nearestpoint(spike_times,post);
+%post_idx=nearestpoint(spike_times,post);
+[~,~,post_idx] = histcounts(spike_times,post);
 spike_loc=discrete_pos(post_idx);
 
 for iC=1:length(spike_times)
