@@ -1,4 +1,4 @@
-root = 'Z:\giocomo\attialex\NP_DATA';
+root = 'Y:\giocomo\attialex\NP_DATA';
 Files = dir(fullfile(root,'*_contrast_*.mat'));
 MERGED=struct;
 for iF=1:15

@@ -30,6 +30,8 @@ mmf = memmapfile(lfpFilename, 'Format', {'int16', [nChansInFile nSamps], 'x'});
 n=1;
 thisDat = double(mmf.Data.x(:, (1:nClipSamps)+sampStarts(n)));
 thisDat = bsxfun(@minus, thisDat, mean(thisDat,2));
+%medianTrace = median(thisDat,1);
+%thisDat = thisDat-medianTrace;
 %% compute psd
 L = size(thisDat',1);
 NFFT = 2^nextpow2(L);
@@ -82,7 +84,9 @@ thetaPower_cut(idx)=0;
 bp = bandpass(thisDat(maxChan,:),theta_range,lfpFs);
 %% find peaks in bp signal, extract raw data from all other channels (raw data)
 [pks,locs] = findpeaks(bp);
+tvec_lfp = [-400:1:400]/lfpFs;
 snps=extract_snps(thisDat,locs,'win',[-400 400]);
+%snps=extract_snps(thisDat,locs_spikesLFP,'win',[-400 400]);
 aa_LFP=squeeze(mean(snps,3));
 
 % figure
@@ -102,7 +106,7 @@ tafig = figure('Position',[680   322   552   656]);
 
 subplot(1,2,1)
 hold on;idx =1;
-tvec = [-400:400]/lfpFs;
+tvec_lfp = [-400:400]/lfpFs;
 chans_2_plot = 1:step:mc;
 if chans_2_plot(end)<mc
     chans_2_plot = [chans_2_plot mc];
@@ -113,10 +117,10 @@ for ii=1:step:mc
     else
         lc=col(idx,:);
     end
-    plot(tvec,aa_LFP(ii,:)-aa_LFP(ii,1)+ii,'Color',lc);
+    plot(tvec_lfp,aa_LFP(ii,:)-aa_LFP(ii,1)+ii,'Color',lc);
     idx = idx+1;
 end
-plot(tvec,aa_LFP(maxChan,:)+maxChan,'k','LineWidth',2)
+plot(tvec_lfp,aa_LFP(maxChan,:)+maxChan,'k','LineWidth',2)
 title(sprintf('max channel: %d',maxChan))
 grid on
 xlabel('Time')
@@ -131,7 +135,7 @@ figure(tamapfig)
 subplot(1,3,1)
 imagesc(flipud(aa_LFP))
 set(gca,'YTick',linspace(1,385,10),'YTickLabel',round(linspace(3840,20,10)))
-set(gca,'XTick',linspace(1,numel(tvec),5),'XTickLabel',linspace(min(tvec),max(tvec),5))
+set(gca,'XTick',linspace(1,numel(tvec_lfp),5),'XTickLabel',linspace(min(tvec_lfp),max(tvec_lfp),5))
 yline(385-highest_channel,'k');
 title('LFP')
 %axis image
@@ -173,6 +177,19 @@ thetaPowerN = thetaPower./restPower;
 [a,maxChan_spikes]=max(thetaPowerN);
 bp_spikes = bandpass(spikeMat(maxChan_spikes,:),theta_range,1/time_bins);
 [pks,locs_spikes] = findpeaks(bp_spikes);
+locs_spikesLFP=locs_spikes*5; %turn spike time base (0.002bins) into LFP bins (*50)
+locs_spikesLFP(locs_spikesLFP>(clipDur*lfpFs))=[];
+% %%
+% snpsLFP=extract_snps(thisDat,locs_spikesLFP,'win',[-400 400]);
+% %snps=extract_snps(thisDat,locs_spikesLFP,'win',[-400 400]);
+% aa_LFP=squeeze(mean(snps,3));
+% figure;
+% hold on
+% plot(tvec_spikes,aa_spikesNorm(maxChan_spikes,:))
+% 
+% [ff,minloc]=min(abs(bins(maxChan_spikes)-ks.channelMap.ycoords));
+% plot(tvec_lfp,aa_LFP(minloc,:))
+
 %% plot a small excerpt
 
 % figure
@@ -183,7 +200,7 @@ bp_spikes = bandpass(spikeMat(maxChan_spikes,:),theta_range,1/time_bins);
 % plot(locs_spikes,bp_spikes(locs_spikes),'ro')
 
 snpsSpikes=extract_snps(spikeMat,locs_spikes,'win',[-100 100]);
-tvec = [-100:100]*time_bins;
+tvec_spikes = [-100:100]*time_bins;
 aa_spikes=squeeze(mean(snpsSpikes,3));
 aa_spikesNorm=bsxfun(@rdivide,aa_spikes,mean(aa_spikes));
 %aa_spikes=aa_spikes-mean(aa_spikes,2);
@@ -198,9 +215,9 @@ set(gca,'XTick',linspace(1,2000,10),'XTickLabel',round(linspace(1*0.002,2000*0.0
 subplot(1,4,1)
 imagesc(flipud(aa_spikesNorm),[.05 8])
 set(gca,'YTick',linspace(1,size(spikeMat,1),10),'YTickLabel',round(linspace(max(bins),min(bins),10)))
-set(gca,'XTick',linspace(1,numel(tvec),5),'XTickLabel',linspace(min(tvec),max(tvec),5))
+set(gca,'XTick',linspace(1,numel(tvec_spikes),5),'XTickLabel',linspace(min(tvec_spikes),max(tvec_spikes),5))
 %yline(385-highest_channel,'k');
-xline(numel(tvec)/2+.5)
+xline(numel(tvec_spikes)/2+.5)
 title('triggered spikes')
 %%
 figure(tamapfig)
@@ -208,9 +225,9 @@ subplot(1,3,2)
 %aa_spikes_norm = 
 imagesc(flipud(aa_spikesNorm),[.05 8])
 set(gca,'YTick',linspace(1,size(spikeMat,1),10),'YTickLabel',round(linspace(max(bins),min(bins),10)))
-set(gca,'XTick',linspace(1,numel(tvec),5),'XTickLabel',linspace(min(tvec),max(tvec),5))
+set(gca,'XTick',linspace(1,numel(tvec_spikes),5),'XTickLabel',linspace(min(tvec_spikes),max(tvec_spikes),5))
 %yline(385-highest_channel,'k');
-xline(numel(tvec)/2+.5)
+xline(numel(tvec_spikes)/2+.5)
 title('triggered spikes')
 
 %%
@@ -287,9 +304,12 @@ set(gca,'XTick',linspace(1,numel(ll),5),'XTickLabel',linspace(min(tvec),max(tvec
 yline(385-highest_channel,'k');
 title('triggered spikes')
 %% save figures
-saveas(spikefig,strcat(im_save_dir,'spikes.png'));
-saveas(tamapfig,strcat(im_save_dir,'heatmaps.png'));
-saveas(tafig,strcat(im_save_dir,'LFP.png'))
+% saveas(spikefig,strcat(im_save_dir,'spikes_CAR.png'));
+% close(spikefig)
+% saveas(tamapfig,strcat(im_save_dir,'heatmaps_CAR.png'));
+% close(tamapfig)
+% saveas(tafig,strcat(im_save_dir,'LFP_CAR.png'));
+% close(tafig)
 %%
 % if ishandle(tafig)
 % figure(tafig)
