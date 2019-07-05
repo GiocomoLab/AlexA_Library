@@ -9,17 +9,22 @@ for ii=1:length(sbx_files)
     global info;
     fprintf('Loading data \n')
     data=sbxread(fullfile(input_dir,fn),0,info.max_idx);
-    %data=sbxread(fullfile(input_dir,fn),0,200);
+    %data=sbxread(fullfile(input_dir,fn),0,2000);
     for iL=1:2
         fprintf('Running registration for layer %d \n',iL)
         [dx,dy,template]=rigid_registration(squeeze(data(1,:,99:700,iL:2:end)));
         dX{iL}=dx;
         dY{iL}=dy;
         templates{iL}=template;
+        fig=figure;
+        imagesc(template)
+        saveas(fig,fullfile(input_dir,sprintf([fn 'reg_L%d.png'],iL )))
+        close(fig)
     end
     registration.dX=dX;
     registration.dY=dY;
     registration.templates=templates;
+
     save(fullfile(input_dir,fn),'registration','-append')
 
 

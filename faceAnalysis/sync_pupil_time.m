@@ -1,5 +1,9 @@
 function sync_pupil_time(experiment_name,mouse_name,session_name)
+if ispc()
 root = 'Z:\giocomo\export\data\Projects\';
+else
+    root = '/oak/stanford/groups/giocomo/export/data/Projects/';
+end
 pupilData_name = fullfile(root,experiment_name,mouse_name,'videos',strcat(session_name,'_pupilData.mat'));
 pupilTimes_name = fullfile(root,experiment_name,mouse_name,'videos',strcat(session_name,'_framedata.mat'));
 vrData_name = fullfile(root,experiment_name,mouse_name,'VR',strcat(session_name,'_position.txt'));
@@ -36,9 +40,10 @@ xlabel(session_name)
 %%
 pupilTime = (0:0.02:max(vr_time));
 vr_stamps = vr_time(3:3:end); 
-idx=1:min(numel(vr_stamps),size(pupilData,1));
-pupilData_upsampled = interp1(vr_stamps(idx),pupilData(idx,:),pupilTime);
-
+%idx=1:min(numel(vr_stamps),size(pupilData,1));
+idx = 1:numel(framedata.times);
+%pupilData_upsampled = interp1(vr_stamps(idx),pupilData(idx,:),pupilTime);
+pupilData_upsampled = interp1(framedata.times,pupilData(idx,:),pupilTime,'linear',NaN);
 %figure
 %plot(vr_stamps,pupilData(:,3))
 %hold on

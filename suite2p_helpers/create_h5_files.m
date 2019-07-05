@@ -2,7 +2,7 @@
 addpath('~/AlexA_Library/suite2p_helpers')
 
 
-DATADIR = '/oak/stanford/groups/giocomo/attialex/DATA';
+DATADIR = '/oak/stanford/groups/giocomo/attialex/DATA/AA_190526_038';
 
 
 content = dir(DATADIR);

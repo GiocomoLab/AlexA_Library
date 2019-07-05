@@ -15,7 +15,7 @@ spike_times = double(spike_times);
 
 time_bins = 0.002; 
 discrete_time = round(spike_times/time_bins)+1;
-spikeMat = zeros(numel(bins),(ceil(max(spike_times))/time_bins)+1);
+spikeMat = zeros(numel(bins),(ceil(max(spike_times))/time_bins)+1,'single');
 for iS=1:numel(spike_times)
     time_idx=discrete_time(iS);
     d_idx = discrete_depth(iS);
@@ -44,26 +44,26 @@ bp_spikes = bandpass(spikeMat(maxChan_spikes,:),theta_range,1/time_bins);
 snpsSpikes=extract_snps(spikeMat,locs_spikes,'win',[-100 100]);
 tvec_spikes = [-100:100]*time_bins;
 aa_spikes=squeeze(mean(snpsSpikes,3));
-aa_spikesNorm=bsxfun(@rdivide,aa_spikes,sum(aa_spikes,2));
-%aa_spikes=aa_spikes-mean(aa_spikes,2);
-spikefig=figure('Position',[113         558        1127         420]);
-subplot(1,4,[2 4])
-imagesc(flipud(spikeMat(:,1:2000)))
-hold on
-plot(locs_spikes(1:100),size(spikeMat,1)-maxChan_spikes*ones(1,100),'ro')
-set(gca,'YTick',linspace(0,size(spikeMat,1),10),'YTickLabel',round(linspace(max(bins),min(bins),10)))
-set(gca,'XTick',linspace(1,2000,10),'XTickLabel',round(linspace(1*0.002,2000*0.002,11),2))
-
-subplot(1,4,1)
-imagesc(flipud(aa_spikesNorm),[.05 8])
-set(gca,'YTick',linspace(1,size(spikeMat,1),10),'YTickLabel',round(linspace(max(bins),min(bins),10)))
-set(gca,'XTick',linspace(1,numel(tvec_spikes),5),'XTickLabel',linspace(min(tvec_spikes),max(tvec_spikes),5))
-%yline(385-highest_channel,'k');
-xline(numel(tvec_spikes)/2+.5)
-title('triggered spikes')
-[~,max_loc]=max(aa_spikes,[],2);
-hold on
-plot((max_loc(end:-1:1)),1:numel(max_loc),'ro')
+% aa_spikesNorm=bsxfun(@rdivide,aa_spikes,sum(aa_spikes,2));
+% %aa_spikes=aa_spikes-mean(aa_spikes,2);
+% spikefig=figure('Position',[113         558        1127         420]);
+% subplot(1,4,[2 4])
+% imagesc(flipud(spikeMat(:,1:2000)))
+% hold on
+% plot(locs_spikes(1:100),size(spikeMat,1)-maxChan_spikes*ones(1,100),'ro')
+% set(gca,'YTick',linspace(0,size(spikeMat,1),10),'YTickLabel',round(linspace(max(bins),min(bins),10)))
+% set(gca,'XTick',linspace(1,2000,10),'XTickLabel',round(linspace(1*0.002,2000*0.002,11),2))
+% 
+% subplot(1,4,1)
+% imagesc(flipud(aa_spikesNorm),[.05 8])
+% set(gca,'YTick',linspace(1,size(spikeMat,1),10),'YTickLabel',round(linspace(max(bins),min(bins),10)))
+% set(gca,'XTick',linspace(1,numel(tvec_spikes),5),'XTickLabel',linspace(min(tvec_spikes),max(tvec_spikes),5))
+% %yline(385-highest_channel,'k');
+% xline(numel(tvec_spikes)/2+.5)
+% title('triggered spikes')
+% [~,max_loc]=max(aa_spikes,[],2);
+% hold on
+% plot((max_loc(end:-1:1)),1:numel(max_loc),'ro')
 
 
 

@@ -1,5 +1,5 @@
 root=fullfile('/oak','stanford','groups','giocomo','attialex','NP_DATA');
-Files= dir(fullfile(root,'*.mat'));
+Files= dir(fullfile(root,'*dark*.mat'));
 
 for iF=1:length(Files)
     clear connected
@@ -16,8 +16,9 @@ for iF=1:length(Files)
         mono=bz_MonoSynConvClick(double(tempSP),sp.st(idx),'plot',false);
         connected = mono.sig_con;
         connected = connected -1;%subtract 1 to make connected correspond to cluid
+        PCausal=mono.Pcausal;
         fprintf('Done for %s, now saving. \n',Files(iF).name)
-        save(fullfile(root,Files(iF).name),'connected','-append')
+        save(fullfile(root,Files(iF).name),'connected','PCausal','-append')
     catch ME
         fprintf('Failed for %s \n',Files(iF).name)
         warning(ME.message)

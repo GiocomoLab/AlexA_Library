@@ -24,21 +24,26 @@ to_read = min(blksize,N-k);
 while(~done && to_read>0)
 try
 q = sbxread(fname,k,to_read);
-q = squeeze(q(1,:,99:700,:)); % extract green channel only
+q = squeeze(q(1,:,:,:));
+%q = squeeze(q(1,:,99:700,:)); % extract green channel only
+
 q = permute(q,[2 1 3]);
 q = int16(q/2);
 %q32=int32(q);
 %q32=q32-2^15;
 %q=int16(q32);
 if(k==0)
-%h5create(fnh,'/data',[796 512 Inf],'DataType','uint16','ChunkSize',[796 512 to_read]);
-h5create(fnh,'/data',[602 512 Inf],'DataType','int16','ChunkSize',[601 512 to_read]);
-h5write(fnh,'/data',q,[1 1 1],[602 512 to_read]);
+h5create(fnh,'/data',[796 512 Inf],'DataType','int16','ChunkSize',[796 512 to_read]);
+h5write(fnh,'/data',q,[1 1 1],[796 512 to_read]);
+%h5create(fnh,'/data',[602 512 Inf],'DataType','int16','ChunkSize',[601 512 to_read]);
+
+%h5write(fnh,'/data',q,[1 1 1],[602 512 to_read]);
 f = waitbar(0,'Converting to hdf5');
 else
-h5write(fnh,'/data',q,[1 1 k+1],[602 512 to_read]);
+h5write(fnh,'/data',q,[1 1 k+1],[796 512 to_read]);
 end
-catch
+catch ME
+    disp(ME.message)
 done = 1;
 
 end

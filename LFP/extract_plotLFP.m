@@ -2,8 +2,8 @@
 % channelMapFile = 'C:\code\KiloSort2\configFiles\neuropixPhase3B1_kilosortChanMap.mat';
 % im_save_dir = 'Y:\giocomo\attialex\images\LFP';
 session = split(myKsDir,filesep);
-session = session{end-1};
-session = session(1:end-3);
+session = session{end};
+session = session(1:12);
 im_save_dir = fullfile(im_save_dir,session);
 ks = Neuropixel.KiloSortDataset(myKsDir,'channelMap',channelMapFile);
 ks.load()
@@ -15,7 +15,7 @@ lfpFs = 2500;  % neuropixels phase3a
 nChansInFile = 385;  % neuropixels phase3a, from spikeGLX
 
 nClips = 10;
-clipDur = 200; % seconds
+clipDur = 150; % seconds
 
 %% load data and mean subtract
 d = dir(lfpFilename); 
@@ -30,8 +30,8 @@ mmf = memmapfile(lfpFilename, 'Format', {'int16', [nChansInFile nSamps], 'x'});
 n=1;
 thisDat = double(mmf.Data.x(:, (1:nClipSamps)+sampStarts(n)));
 thisDat = bsxfun(@minus, thisDat, mean(thisDat,2));
-%medianTrace = median(thisDat,1);
-%thisDat = thisDat-medianTrace;
+medianTrace = median(thisDat,1);
+thisDat = thisDat-medianTrace;
 %% compute psd
 L = size(thisDat',1);
 NFFT = 2^nextpow2(L);
@@ -41,28 +41,32 @@ theta_range=[4 12];
 thetaPower = mean(Pxx(F>theta_range(1) & F<=theta_range(2),:));
 alphaPower = mean(Pxx(F>0.1 & F<=theta_range(1),:));
 omegaPower = mean(Pxx(F>theta_range(2) & F<=20,:));
-% figure
-% hold on
-% plot(10*log10(thetaPower))
-% hold on
-% plot(10*log10(alphaPower));
-% plot(10*log10(omegaPower));
-% xlabel('Channel')
-% ylabel('Power')
-% legend({'Theta','Below','Above'})
+psdfig=figure();
+hold on
+plot(10*log10(thetaPower))
+hold on
+plot(10*log10(alphaPower));
+plot(10*log10(omegaPower));
+xlabel('Channel')
+ylabel('Power')
+legend({'Theta','Below','Above'})
 %% plot psd across channels
-% figure
-% imagesc(10*log10(Pxx(F<40,:)'))
-% set(gca,'XTick',1:200:nnz(F<40),'XTickLabel',round(F(1:200:end)))
-% xlabel('Freq')
-% ylabel('channel')
+powerfig=figure();
+subplot(2,1,1)
+imagesc(10*log10(Pxx(F<70,:)'))
+set(gca,'XTick',1:200:nnz(F<70),'XTickLabel',round(F(1:200:end)))
+xlabel('Freq')
+ylabel('channel')
+subplot(2,1,2)
+mm=mean(Pxx,2);
+plot(F(F<70),10*log10(mm(F<70)))
 
 %%
 thetaPower_cut=thetaPower;
 ff=ks.cluster_groups=='good' | ks.cluster_groups =='mua';
 
 %% find highest channel containing any good or mua spikes
-highest_act = max(metrics.cluster_centerOfMass(ff,2));
+highest_act = max(metrics.cluster_centerOfMass(ks.cluster_groups=='good',2));
 idx = ks.channelMap.ycoords>highest_act;
 highest_channel= find(idx,1);
 thetaPower_cut(idx)=0;
@@ -88,7 +92,7 @@ tvec_lfp = [-400:1:400]/lfpFs;
 snps=extract_snps(thisDat,locs,'win',[-400 400]);
 %snps=extract_snps(thisDat,locs_spikesLFP,'win',[-400 400]);
 aa_LFP=squeeze(mean(snps,3));
-
+clear snps;
 % figure
 % plot(thisDat(maxChan,:))
 % hold on
@@ -120,7 +124,7 @@ for ii=1:step:mc
     plot(tvec_lfp,aa_LFP(ii,:)-aa_LFP(ii,1)+ii,'Color',lc);
     idx = idx+1;
 end
-plot(tvec_lfp,aa_LFP(maxChan,:)+maxChan,'k','LineWidth',2)
+plot(tvec_lfp,aa_LFP(maxChan,:)-aa_LFP(maxChan,1)+maxChan,'k','LineWidth',2)
 title(sprintf('max channel: %d',maxChan))
 grid on
 xlabel('Time')
@@ -143,7 +147,7 @@ title('LFP')
 
 %% extract spikes from raw data (for now, all detected spikes by kilosort
 %% and turn it into a firing rate map split by depth
-max_time = 400;
+max_time = 300;
 valid_idx = ks.spike_times>skip_seconds*30000 & ks.spike_times<(skip_seconds+max_time)*30000 & metrics.spike_is_localized & ismember(ks.spike_clusters,[ks.clusters_mua; ks.clusters_good]);
 dd=metrics.spike_depth(valid_idx);
 bins = 0:40:3840;
@@ -202,7 +206,8 @@ locs_spikesLFP(locs_spikesLFP>(clipDur*lfpFs))=[];
 snpsSpikes=extract_snps(spikeMat,locs_spikes,'win',[-100 100]);
 tvec_spikes = [-100:100]*time_bins;
 aa_spikes=squeeze(mean(snpsSpikes,3));
-aa_spikesNorm=bsxfun(@rdivide,aa_spikes,mean(aa_spikes));
+clear snpsSpikes;
+aa_spikesNorm=bsxfun(@rdivide,aa_spikes,mean(aa_spikes,2));
 %aa_spikes=aa_spikes-mean(aa_spikes,2);
 spikefig=figure('Position',[113         558        1127         420]);
 subplot(1,4,[2 4])
@@ -219,6 +224,41 @@ set(gca,'XTick',linspace(1,numel(tvec_spikes),5),'XTickLabel',linspace(min(tvec_
 %yline(385-highest_channel,'k');
 xline(numel(tvec_spikes)/2+.5)
 title('triggered spikes')
+
+
+hold on
+[~,max_loc]=max(aa_spikes,[],2);
+hold on
+plot((max_loc(end:-1:1)),1:numel(max_loc),'ro')
+%%
+snpsLFP=extract_snps(thisDat,locs_spikesLFP(1:100),'win',[-400 400]);
+%snps=extract_snps(thisDat,locs_spikesLFP,'win',[-400 400]);
+aa_LFP=squeeze(mean(snpsLFP,3));
+clear('snpsLFP')
+%%
+spikelfpfig=figure('Position',[1436         161         392         817]);
+chan_idx=[-20:5:20]+maxChan_spikes;
+chan_idx(chan_idx<1)=[];
+cntr=0;
+for ii=numel(chan_idx):-1:1
+    cntr = cntr+1;
+    try
+subplot(numel(chan_idx),1,cntr)
+hold on
+plot(tvec_spikes,aa_spikes(chan_idx(ii),:))
+title(bins(chan_idx(ii))-bins(maxChan_spikes))
+
+[ff,minloc]=min(abs(bins(chan_idx(ii))-ks.channelMap.ycoords));
+yyaxis right
+plot(tvec_lfp,aa_LFP(minloc,:))
+grid on
+axis tight
+    catch
+    end
+end
+legend({'spikes','LFP'})
+
+
 %%
 figure(tamapfig)
 subplot(1,3,2)
@@ -271,8 +311,8 @@ avg_ACG=zeros(numel(bins_xcorr),401);
 n_units = zeros(1,numel(bins_xcorr));
 cluster_ids = ks.spike_clusters(valid_idx);
 
-for iD=1:length(bins_xcorr)
-    cells = discrete_depth ==iD;
+for iDepth=1:length(bins_xcorr)
+    cells = discrete_depth ==iDepth;
     if nnz(cells)>1
         cluids = ks.cluster_ids(cells);
         for iC=1:numel(cluids)
@@ -280,8 +320,8 @@ for iD=1:length(bins_xcorr)
             if nnz(this_idx)>100
                 st_this = histcounts(spike_times(this_idx),0:time_bins:max_time);
                 [xc,ll]=xcorr(st_this,200,'coeff');
-                avg_ACG(iD,:)=xc+avg_ACG(iD,:);
-                n_units(iD)=n_units(iD)+1;
+                avg_ACG(iDepth,:)=xc+avg_ACG(iDepth,:);
+                n_units(iDepth)=n_units(iDepth)+1;
             else
                 %sprintf('few spikes: %d %d',nnz(this_idx),cluids(iC))
             end
@@ -304,12 +344,19 @@ set(gca,'XTick',linspace(1,numel(ll),5),'XTickLabel',linspace(min(tvec),max(tvec
 yline(385-highest_channel,'k');
 title('triggered spikes')
 %% save figures
-% saveas(spikefig,strcat(im_save_dir,'spikes_CAR.png'));
-% close(spikefig)
-% saveas(tamapfig,strcat(im_save_dir,'heatmaps_CAR.png'));
-% close(tamapfig)
-% saveas(tafig,strcat(im_save_dir,'LFP_CAR.png'));
-% close(tafig)
+suffix='_CAR';
+saveas(spikefig,strcat(im_save_dir,'spikes',suffix,'.png'));
+close(spikefig)
+saveas(tamapfig,strcat(im_save_dir,'heatmaps',suffix,'.png'));
+close(tamapfig)
+saveas(tafig,strcat(im_save_dir,'LFP',suffix,'.png'));
+close(tafig)
+saveas(powerfig,strcat(im_save_dir,'Power',suffix,'.png'));
+close(powerfig)
+saveas(spikelfpfig,strcat(im_save_dir,'spikeLFP',suffix,'.png'));
+close(spikelfpfig);
+saveas(psdfig,strcat(im_save_dir,'LFPPower',suffix,'.png'));
+close(psdfig)
 %%
 % if ishandle(tafig)
 % figure(tafig)

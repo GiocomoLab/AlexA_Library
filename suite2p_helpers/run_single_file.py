@@ -2,7 +2,7 @@ import sys
 import os
 import time
 
-#from suite2p.run_s2p import run_s2p
+from suite2p.run_s2p import run_s2p
 import numpy as np
 
 def default_ops(animal='',expid=''):
@@ -18,6 +18,8 @@ def default_ops(animal='',expid=''):
             'diameter':10, # this is the main parameter for cell detection, 2-dimensional if Y and X are different (e.g. [6 12])
             'tau':  1., # this is the main parameter for deconvolution
             'fs': 30.92,  # sampling rate (total across planes)
+            'do_biphase' : 1, #do phase correction
+            'bidiphase' : 0, #0 can be set to any int value for manual correction
             # output settings
             'save_mat': False, # whether to save output as matlab files
             'combined': True, # combine multiple planes into a single result /single canvas for GUI
@@ -68,7 +70,7 @@ def get_expID(filename = 'AA_190111_029_000_001.h5'):
     parts = h.split('_')
     return parts[-1]
 
-def run_for_single_file(animal_path,file):
+def run_for_single_file(animal_path,file,force=False):
     expID=get_expID(file)
     hf_path = os.path.join(animal_path,file)
     savepath=os.path.join(animal_path,file[:-3])
@@ -82,7 +84,7 @@ def run_for_single_file(animal_path,file):
     ops['save_path0'] = savepath
     ops['fast_disk'] = tmp_path
     # run one experiment
-    if not os.path.isdir(ops['save_path0']):
+    if not os.path.isdir(ops['save_path0']) or force:
         start = time.time()
 
         print('Running for: '+db['h5py']+'\n')
@@ -98,11 +100,11 @@ def run_for_single_file(animal_path,file):
     return
             
 
-def run_for_animalDir(animal_path):
+def run_for_animalDir(animal_path,force=False):
     for file in os.listdir(animal_path):
         if file.endswith('.h5'):
             try:
-                run_for_single_file(animal_path,file)
+                run_for_single_file(animal_path,file,force=force)
             except:
                 sys.stderr('There was an error with %s' %file)
     return
@@ -119,5 +121,5 @@ if __name__ == '__main__':
     #animal = 'AA_190110_023'
     animal_path = os.path.join(rootpath,animal)
     print("Now starting for: " + animal_path +"\n")
-    run_for_animalDir(animal_path)
+    run_for_animalDir(animal_path, force=True)
     

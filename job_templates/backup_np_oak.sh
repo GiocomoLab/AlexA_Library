@@ -12,5 +12,5 @@
 
 module load system rclone
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
-rclone copy /oak/stanford/groups/giocomo/export/data/Projects/ContrastExperiment_neuropixels/ myGDrive:ContrastExperiment_neuropixels
+rclone copy /oak/stanford/groups/giocomo/export/data/Projects/ContrastExperiment_neuropixels/ myGDrive:ContrastExperiment_neuropixels --exclude .phy/**
 rclone check /oak/stanford/groups/giocomo/export/data/Projects/ContrastExperiment_neuropixels/ myGDrive:ContrastExperiment_neuropixels --size-only --one-way

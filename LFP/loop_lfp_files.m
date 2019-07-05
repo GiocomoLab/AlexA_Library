@@ -1,9 +1,9 @@
-channelMapFile = 'C:\code\KiloSort2\configFiles\neuropixPhase3B1_kilosortChanMap.mat';
-%ksdirs = dir('F:\**\*ap.bin');
+channelMapFile = fullfile('/home/users/attialex/neuropixel-utils/map_files','neuropixPhase3B1_kilosortChanMap.mat');
+ksdirs = dir(fullfile('/oak/stanford/groups/giocomo','export','data','Projects','RandomForage_NPandH3','ProcessedData','/Hanover*/*ap.bin'));
 %ksdirs=dir('Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\**\*imec0.ap.bin');
-for iD = 3%1:length(ksdirs)
+for iD = 1:length(ksdirs)
     clearvars -except ksdirs channelMapFile iD 
-    im_save_dir = 'Y:\giocomo\attialex\images\LFP';
+    im_save_dir = fullfile('/oak/stanford/groups/giocomo','attialex','images','LFP');
     myKsDir=ksdirs(iD).folder;
     sprintf('now working on %s',myKsDir)
     try
