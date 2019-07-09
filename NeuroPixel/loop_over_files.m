@@ -4,23 +4,23 @@
 %     'npF3_1019_contrasttrack_gainchanges_contrast_1.mat',...
 %     'npF4_1023_gaincontrast_1.mat',...
 %     'npF4_1025_gaincontrast_2.mat '};
-restoredefaultpath
+%restoredefaultpath
 addpath(genpath('C:\code\AlexA_Library'));
 addpath(genpath('C:\code\boundedline'));
-addpath(genpath('C:\code\spikes'));
+addpath(genpath('F:\code\cortexlab_spikes'));
 
-filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
-    'G2/1211_mismatch_1/1211_mismatch_1.mat',...
-    'G2/1212_mismatch_1/1212_mismatch_1.mat',...
-    'G5/1207_mismatch_1/1207_mismatch_1.mat',...
-    'G5/1210_mismatch_1/1210_mismatch_1.mat'
-    };
+% filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
+%     'G2/1211_mismatch_1/1211_mismatch_1.mat',...
+%     'G2/1212_mismatch_1/1212_mismatch_1.mat',...
+%     'G5/1207_mismatch_1/1207_mismatch_1.mat',...
+%     'G5/1210_mismatch_1/1210_mismatch_1.mat'
+%     };
 
-
+filenames = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
 root_dir='F:\';
 
 beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
-varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID'};
+varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID','session_name','session_type'};
 %%
 aggregateData=struct();
 aggregateBeh=struct();
@@ -33,9 +33,16 @@ for ii=1:length(beh_varlist)
 end
 MM_snps={};
 %%
-for iF=1:5
+session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+session_names = session_table.SessionName;
+idx = strcmp(filenames(1).name(1:end-4),session_names);
+for iF=1:numel(filenames)
     %clear all
-    load([root_dir filenames{iF}]);
+
+    load(fullfile(filenames(iF).folder, filenames(iF).name));
+    session_name{iF} = filenames(iF).name;
+    idx = strcmp(filenames(1).name(1:end-4),session_names);
+    session_type{iF} = session_table.SessionType{idx};
     plot_mismatch_sequence;
     aggregateBeh.MMRun{iF}=(squeeze(adata));
     aggregateBeh.MMAllRun{iF}=squeeze(adata_all);
@@ -62,7 +69,6 @@ for iF=1:5
     end
     DEPTH = cat(1,DEPTH,depth);
     drawnow;
-    
     %sprintf('Now working on: %s',filenames{iF})
     %corrMbyDepth
     %plot_pause_sequence

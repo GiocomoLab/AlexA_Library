@@ -1,5 +1,5 @@
 %load('F:\G5\1207_mismatch_1\1207_mismatch_1.mat')
-PLOT=true;
+PLOT=false;
 speed_t=0.05;
 % figure('Name',filenames{iF});; plot(speed)
 %
@@ -15,7 +15,10 @@ possibles=strfind(run_periods',ones(1,length(run_window)))+floor(.5*length(run_w
 
 
 mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
-possibles=randsample(possibles,500);
+possibles=randsample(possibles,100);
+if all(size(post)==size(speed))
+    speed = speed';
+end
 %% MM
 [spike_mat,win,adata]=extract_triggered_spikes(sp,post(mm_trigs),'win',[-4 4],'aux',[post'; [speed]],'aux_win',[-200 200]);
 [spike_mat_random,~,adata_random]=extract_triggered_spikes(sp,post(possibles),'win',[-4 4],'aux',[post'; [speed]],'aux_win',[-200 200]);
