@@ -57,8 +57,8 @@ while hasFrame(vid)
         clf
         %[bwm,xi,yi]=roipoly(ex');
         bwm = true(size(ex'));
-        xi = [1 1 size(bwm,1) size(bwm,1)];
-        yi = [size(bwm,2), 1, size(bwm,2),1];
+        xi = [1 1 size(bwm,2) size(bwm,2),1];
+        yi = [1 size(bwm,1),size(bwm,1) 1,1];
         close(h);
         disp('Processing video data (this may take awhile)...')
         figure(h2)
