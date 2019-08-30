@@ -77,7 +77,7 @@ figure
 for iF=1:length(MERGED)
 sidx = MERGED(iF).stability;
 [a,b]=sort(sidx,'descend');
-frac = .3;
+frac = .5;
 n=floor(numel(b)*frac);
 tmp = [];
 
@@ -100,17 +100,17 @@ end
 figure
 plot(SIM_ALL','x')
 hold on
-plot(nanmean(SIM_ALL,1),'ok','MarkerSize',15)
+plot(nanmean(SIM_ALL,1),'xk','MarkerSize',15)
 set(gca,'XTickLabel',c_values)
  title(sprintf('Frac: %.2f',frac))
 xlabel('Contrast')
 
 SIM_norm = bsxfun(@rdivide,SIM_ALL,SIM_ALL(:,end));
 figure
-plot(SIM_norm','x')
+plot(SIM_norm(:,7:-1:1)','x')
 hold on
-plot(nanmean(SIM_norm,1),'ok','MarkerSize',15)
-set(gca,'XTickLabel',c_values)
+plot(nanmean(SIM_norm(:,7:-1:1),1),'.k','MarkerSize',15)
+set(gca,'XTickLabel',c_values(end:-1:1))
  title(sprintf('Frac: %.2f',frac))
 xlabel('Contrast')
 %% collapse maps to one map per 10 stimuli

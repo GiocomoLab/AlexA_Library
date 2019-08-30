@@ -4,20 +4,22 @@
 %% params
 
 % size of images
-size_vert = 781;
-size_horiz = 250;
+
 numrow = 8; % number of rows in final image
 
 % session names
-session_name = {'npH3_0404_mismatch_1'};
-
+sn = dir('F:\images\AA*');
+session_name = {};
+for iS=1:numel(sn)
+    session_name{iS}=sn(iS).name;
+end
 % where to save images
-image_save_dir = 'F:\Data\npAna\images\pretty_rasters_whole_session_combined';
+image_save_dir = 'F:\images\pretty_rasters_whole_session_combined';
 mkdir(image_save_dir)
 %% iterate over sessions
 for k = 1:numel(session_name)
     
-    image_dir = fullfile('F:\Data\npAna\images\',session_name{k},'\pretty_rasters\');
+    image_dir = fullfile('F:\images\',session_name{k},'\pretty_rasters\');
 
     % get png file names
     png_files = dir(sprintf('%s\\*.png',image_dir));
@@ -35,6 +37,9 @@ for k = 1:numel(session_name)
     end
     [cell_num,sort_idx] = sort(cell_num);
     png_files = png_files(sort_idx);
+    dat = imread(fullfile(image_dir,png_files{i}),'png');
+    [size_vert,size_horiz,~]=size(dat);
+
 
     % create empty matrix for holding final image
     numcol = ceil(numel(png_files)/numrow);

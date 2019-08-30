@@ -35,7 +35,7 @@ MM_snps={};
 %%
 session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
 session_names = session_table.SessionName;
-idx = strcmp(filenames(1).name(1:end-4),session_names);
+%idx = strcmp(filenames(1).name(1:end-4),session_names);
 for iF=1:numel(filenames)
     %clear all
 
@@ -91,7 +91,7 @@ params.masterTime=params.winIDX/50;
 params.xLim=[-1 3];
 figure
 
-plotAVGSEM(aggregateData.avgMM(aggregateData.CGS>1,:)',gca,'parameters',params,'ms',false,'baseline',165:190)
+plotAVGSEM(aggregateData.avgMM(aggregateData.CGS>1,:)',gca,'parameters',params,'ms',true,'baseline',165:190)
 xlabel('time [s]')
 ylabel('Firing rate change [Hz]')
 grid on

@@ -1,8 +1,8 @@
-addpath('Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\Analysis\MatlabImportExport_v6.0.0')
+addpath('Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\Analysis\MatlabImportExport_v6.0.0')
 addpath('C:\code\spikes\preprocessing\phyHelpers');
-addpath('C:\code\npy-matlab');
+addpath('F:\code\npy-matlab');
 %eventsPath='F:\H1\2019-03-12_10-21-28\Events.nev';
-eventsPath='F:\H1\2019-03-14_10-03-20\Events.nev';
+eventsPath='Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\H1\CambridgeNeurotech\2019-03-14_10-03-20\Events.nev';
 %cscPath ='Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\H1\CambridgeNeurotech\2019-03-11_12-23-58\CSC1.ncs';
 
 %[ev_times, EventIDs, TTLs, Extras, EventStrings, Header] = Nlx2MatEV(eventsPath, [1 1 1 1 1], 1, 1, [] );
@@ -11,8 +11,8 @@ ev_times=ev_times-ev_times(1); %bc it starts at some weird non zero value
 %[sample_times,samples,header]=Nlx2MatCSC(cscPath, [1 0 0 0 1], 1, 1, [] );
 %sample_times=sample_times-sample_times(1);
 %%
-data_dir = 'F:\H1\2019-03-14_10-03-20';
-session_name = '0314_playback_2';
+data_dir = 'Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\H1\CambridgeNeurotech\2019-03-14_10-03-20';
+session_name = '0314_mismatch_2';
 
 % fid = fopen(fullfile(data_dir,strcat(session_name,'_position.txt')),'r');
 % vr_position_data = fscanf(fid, '%f', [3,inf])';
