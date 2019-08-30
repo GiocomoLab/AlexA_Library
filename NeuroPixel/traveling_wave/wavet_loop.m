@@ -32,6 +32,7 @@ for iF=1:numel(Files)
     MERGED(cntr).average_triggered = aa_spikes;
     MERGED(cntr).max_depth = maxChan_spikes;
     MERGED(cntr).name = Files(iF).name;
+    MERGED(cntr).sp = dataset.sp; 
     cntr=cntr+1;
 %     if mod(iF,7) ~=0
 %         close(spikefig)
@@ -42,7 +43,7 @@ for iF=1:numel(Files)
     end
 
 end
-save(fullfile(root,'MERGED_FIRSTSESSIONS'),'MERGED');
+%save(fullfile(root,'MERGED_FIRSTSESSIONS_DandA'),'MERGED');
 %% scatter of max locations
 bins = 0:40:3840;
 time_bins = 0.002; 

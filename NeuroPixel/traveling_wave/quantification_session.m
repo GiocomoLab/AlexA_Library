@@ -5,8 +5,10 @@
     for iC=1:length(dataset.sp.cgs)
         depth(iC)=mean(spikeDepths(dataset.sp.clu==dataset.sp.cids(iC)));
     end
+    dataset.sp.spikeAmps = spikeAmps;
+dataset.spikeDepths = spikeDepths;
 %%
-valid_idx = ismember(dataset.sp.clu,dataset.sp.cids(dataset.sp.cgs>0));
+valid_idx = ismember(dataset.sp.clu,dataset.sp.cids(dataset.sp.cgs>1));
 bins = 0:40:3840;
 
 discrete_depth = discretize(spikeDepths(valid_idx),bins);

@@ -25,11 +25,13 @@ else
     data_dir = fullfile('/oak/stanford/groups/giocomo','attialex','NP_DATA');
 end
 session_name = {'npJ1_0520_baseline_2'};
+session_names = dir(fullfile(data_dir,'AA*gain*'));
 %session_names = dir(fullfile(data_dir,'*baseline*'));
-% session_name = {};
-% for iF=1:numel(session_names)
-%     session_name{iF}=session_names(iF).name(1:end-4);
-% end
+session_name = {};
+for iF=1:numel(session_names)
+    [a,b,c]=fileparts(session_names(iF).name);
+    session_name{iF}=b;
+end
 
 
 %% iterate over sessions

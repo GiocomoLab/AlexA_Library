@@ -5,9 +5,9 @@
 %     'npF4_1023_gaincontrast_1.mat',...
 %     'npF4_1025_gaincontrast_2.mat '};
 %restoredefaultpath
-addpath(genpath('C:\code\AlexA_Library'));
-addpath(genpath('C:\code\boundedline'));
-addpath(genpath('F:\code\cortexlab_spikes'));
+%addpath(genpath('C:\code\AlexA_Library'));
+%addpath(genpath('C:\code\boundedline'));
+%addpath(genpath('F:\code\cortexlab_spikes'));
 
 % filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
 %     'G2/1211_mismatch_1/1211_mismatch_1.mat',...
@@ -15,10 +15,12 @@ addpath(genpath('F:\code\cortexlab_spikes'));
 %     'G5/1207_mismatch_1/1207_mismatch_1.mat',...
 %     'G5/1210_mismatch_1/1210_mismatch_1.mat'
 %     };
-
-filenames = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
-root_dir='F:\';
-
+addpath(genpath('/home/users/attialex/AlexA_Library'))
+addpath(genpath('/home/users/attialex/spikes'))
+addpath(genpath('/home/users/attialex/boundedline-pkg'))
+%filenames = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
+root_dir='/oak/stanford/groups/giocomo/attialex/';
+filenames=dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/mismatch/*mismatch*.mat')
 beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
 varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID','session_name','session_type'};
 %%
@@ -33,16 +35,18 @@ for ii=1:length(beh_varlist)
 end
 MM_snps={};
 %%
-session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+%session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+session_table = readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/data_summary_June2019.xlsx');
 session_names = session_table.SessionName;
-idx = strcmp(filenames(1).name(1:end-4),session_names);
-for iF=1:numel(filenames)
+for iF=[1:numel(filenames)]
     %clear all
+        idx = strcmp(filenames(iF).name(1:end-4),session_names);
 
     load(fullfile(filenames(iF).folder, filenames(iF).name));
+    if nnz(idx)==1
     session_name{iF} = filenames(iF).name;
-    idx = strcmp(filenames(1).name(1:end-4),session_names);
     session_type{iF} = session_table.SessionType{idx};
+    end
     plot_mismatch_sequence;
     aggregateBeh.MMRun{iF}=(squeeze(adata));
     aggregateBeh.MMAllRun{iF}=squeeze(adata_all);
@@ -213,12 +217,12 @@ run_mat = [];
 mm_mat = [];
 for ii=1:5
     %size(aggregateBeh.RunOff{ii})
-    plot(mean(aggregateBeh.MMRun{ii}))
-    run_mat=cat(1,run_mat,mean(aggregateBeh.MMRun{ii}));
+    %plot(mean(aggregateBeh.MMRun{ii}))
+    %run_mat=cat(1,run_mat,mean(aggregateBeh.MMRun{ii}));
     IDX=aggregateData.AID==ii & aggregateData.CGS==2;
     mm_mat=cat(1,mm_mat,mean(aggregateData.avgMM(IDX,:)));
     hold on
-    tmp = strsplit(filenames{ii},'/');
+    tmp = strsplit(filenames(ii).name,'/');
     legs{ii}=tmp{1};
 end
 legend(legs)
@@ -233,11 +237,43 @@ legs={};
 run_mat = [];
 mm_mat = [];
 colors = winter(5);
-for ii=1:5
+for ii=1:numel(filenames)
     %figure
     IDX=aggregateData.AID==ii & aggregateData.CGS>=1;
-    nnz(IDX)
-    plotAVGSEM(aggregateData.avgMM(IDX,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',colors(ii,:))
+    nnz(IDX);
+    plot(mean(aggregateData.avgMM(IDX,:)))
+    hold on
+    %plotAVGSEM(aggregateData.avgMM(IDX,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',colors(ii,:))
 end
 ylabel('Change in Firing Rate [Hz]')
 xlabel('Time [s]')
+%%
+figure
+hold on
+AID=unique(aggregateData.AID);
+t_vec = [-200:200]/50;
+for iA=1:numel(AID)
+    aid = AID(iA);
+    IDX = aggregateData.AID==aid & aggregateData.CGS==2;
+    tmp = mean(aggregateData.avgMM(IDX,:));
+    tmp = tmp-mean(tmp(165:190));
+    if strcmp(aggregateData.session_type{iA},'Mismatch CL Towers')
+        plot(t_vec,tmp,'r')
+    elseif strcmp(aggregateData.session_type{iA},'Mismatch CL No Towers')
+        plot(t_vec,tmp,'b')
+        
+
+    end
+    xlim([-1 3]);
+end
+grid on
+
+%%
+towers = find(strcmp('Mismatch CL Towers',aggregateData.session_type));
+notowers = find(strcmp('Mismatch CL No Towers',aggregateData.session_type));
+IDX1 = ismember(aggregateData.AID,towers) & aggregateData.CGS==2;
+IDX2 = ismember(aggregateData.AID,notowers) & aggregateData.CGS ==2;
+figure
+plotAVGSEM(aggregateData.avgMM(IDX1,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[1 0 0])
+plotAVGSEM(aggregateData.avgMM(IDX2,:)',gca,'parameters',params,'ms',true,'baseline',165:190,'col',[.3 0 1])
+
