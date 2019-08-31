@@ -105,12 +105,15 @@ for session_num = 1:numel(session_name)
         title(sprintf('c%d, d=%d',cells_to_plot(k),round(spike_depth(k))));
         xticks(''); yticks('');
         %
-        if ~isfolder(fullfile(image_save_dir,regionID{k}))
-            mkdir(fullfile(image_save_dir,regionID{k}));
+        rID = regionID{k};
+        rID = strrep(rID,'/','_');
+        rID = strrep(rID,'\','_');
+        if ~isfolder(fullfile(image_save_dir,rID))
+            mkdir(fullfile(image_save_dir,rID));
         end
         % save fig
         if save_figs
-            saveas(h,fullfile(image_save_dir,regionID{k},sprintf('%s_%d.png',session_name{session_num},k)),'png');
+            saveas(h,fullfile(image_save_dir,rID,sprintf('%s_%d.png',session_name{session_num},k)),'png');
             %saveas(h,fullfile(image_save_dir,sprintf('%d.pdf',k)),'pdf');
         end
         cla;
