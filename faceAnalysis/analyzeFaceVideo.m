@@ -1,5 +1,9 @@
 function [pupilData] = analyzeFaceVideo(fn)
 %fn='Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\I1\videos\0416_baseline_1.avi';
+if nargin ==0
+    [file,path]=uigetfile('*.avi');
+    fn = fullfile(path,file);
+end
 vid = VideoReader(fn);
 nFrames = vid.Duration*vid.FrameRate;
 pupilData=nan(floor(nFrames)+100,3);
@@ -35,7 +39,7 @@ while hasFrame(vid)
         vid.CurrentTime = ct;
         
         % make fig
-        h = figure('Name',fn);
+        h = figure('Name','Draw rectangle around eye (drag)');
         ax = axes('Parent', h);
         imshow(template, 'Parent', ax);
         title(ax, sprintf('Frame #%d', 1));
@@ -43,14 +47,18 @@ while hasFrame(vid)
         ax.Position = [0,0,1,1];
         
         [~, eye_corners] = makeROI(frame, h);
-        disp('Ready to identify pupil? (press any key to continue) (subselect valid pupil area) \n only point within area will be considered for circle fitting')
-        pause
+        %disp('Ready to identify pupil? (press any key to continue) (subselect valid pupil area) \n only point within area will be considered for circle fitting')
+        %pause
         ex = template(eye_corners(1):eye_corners(2),eye_corners(3):eye_corners(4));
         imshow(ex,'Parent',ax)
+        set(h,'Name','Draw Large Rect around Pupil center')
         [~,center_corners] = makeROI(ex, h);
         level=thresh_tool(ex);
         clf
-        [bwm,xi,yi]=roipoly(ex');
+        %[bwm,xi,yi]=roipoly(ex');
+        bwm = true(size(ex'));
+        xi = [1 1 size(bwm,2) size(bwm,2),1];
+        yi = [1 size(bwm,1),size(bwm,1) 1,1];
         close(h);
         disp('Processing video data (this may take awhile)...')
         figure(h2)

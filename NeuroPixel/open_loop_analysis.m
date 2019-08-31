@@ -8,8 +8,8 @@
 %% combine rasters
 good_cells = mismatch.sp.cids(mismatch.sp.cgs==2);
 figure;
-for iC=1:length(good_cells)
-spike_id = mismatch.sp.clu==good_cells(iC);
+for iC=1:20%length(good_cells)
+spike_id = mismatch.sp.clu==good_cells(end-iC);
     spike_t = mismatch.sp.st(spike_id);
 [~,~,spike_idx] = histcounts(spike_t,mismatch.post);
      
@@ -20,7 +20,7 @@ spike_id = mismatch.sp.clu==good_cells(iC);
 [~,~,spike_idx] = histcounts(spike_t,playback.post);
      hold on
     scatter(playback.posx(spike_idx),playback.trial(spike_idx)+max(mismatch.trial),2,'r')
-    
+    axis tight
     pause
     cla;
 end
@@ -48,12 +48,12 @@ for ii = 1:max(mismatch.trial)
 end
 figure
 subplot(2,1,1)    
-scatter(mismatch.true_speed,run_speed_mismatch)
+scatter(mismatch.true_speed,run_speed_mismatch,2)
     xlim([-.5 3])
     ylim([-.5 3])
     title('correlation speed, diff pos baseline')
     subplot(2,1,2)
-    scatter(playback.true_speed,run_speed_playback)
+    scatter(playback.true_speed,run_speed_playback,2)
     xlim([-.5 3])
     ylim([-.5 3])
         title('playback')
@@ -63,7 +63,7 @@ scatter(mismatch.true_speed,run_speed_mismatch)
   difference_by_location_playback = zeros(max(playback.trial),100);
   difference_by_location_mismatch = zeros(max(mismatch.trial),100);
 
-  pos_bins =0:2:400;
+  pos_bins =0:4:400;
   pos_bins(1)=-Inf;
   pos_bins(end)=Inf;
   discrete_pos = discretize(playback.posx,pos_bins);
@@ -83,7 +83,7 @@ for iT=1:max(playback.trial)
 end
 figure
 imagesc(difference_by_location_playback,[-2 2])
-title('Difference run speed, visual speed')
+title('Difference run speed, visual speed OL')
 tmp_diff = mismatch.true_speed-[0;diff(mismatch.posx)];
   discrete_pos = discretize(mismatch.posx,pos_bins);
 
@@ -95,7 +95,7 @@ for iT=1:max(mismatch.trial)
 end
 figure
 imagesc(difference_by_location_mismatch,[-2 2])
-title('Difference run speed, visual speed baseline')
+title('Difference run speed, visual speed baseline CL')
 %% sort and rank trials from most similar to least similar
 [a,b]=sort(corrs_playback,'descend');
 ranking=1:numel(b);
@@ -103,7 +103,7 @@ ranking(b) = ranking;
 figure
 imagesc(difference_by_location_playback(b,:),[-2 2])
 title('Difference run speed, visual speed')
-
+xlim([1.5 100.5])
 %% plot for sanity check
 figure
 for iR=1:3
@@ -120,12 +120,16 @@ idx = playback.trial == b(iR);
     %idxCL = mismatch.trial == b(iR);
     t_pb = playback.post(idx)-playback.post(find(idx,1));
     ylim([0 3])
-
+xlabel('Position bins')
+ylabel('Speed')
     subplot(2,3,iR+3)
     plot(t_pb,playback.true_speed(idx))
 hold on
 plot(t_pb,[0;diff(playback.posx(idx))])
 ylim([0 3])
+legend({'run speed','vis speed'})
+xlabel('Position bins')
+ylabel('Speed')
 %plot(t_fb,[0;diff(mismatch.posx(idxCL))]);
 end
 
@@ -138,7 +142,7 @@ title('colored by similarity rank')
 %% combine rasters
 % good_cells = mismatch.sp.cids(mismatch.sp.cgs==2);
 figure;
-for iC=1:length(good_cells)
+for iC=41:length(good_cells)
 spike_id = mismatch.sp.clu==good_cells(iC);
     spike_t = mismatch.sp.st(spike_id);
 [~,~,spike_idx] = histcounts(spike_t,mismatch.post);
@@ -150,7 +154,9 @@ spike_id = mismatch.sp.clu==good_cells(iC);
 [~,~,spike_idx] = histcounts(spike_t,playback.post);
      hold on
     scatter(playback.posx(spike_idx),trials_ranked(spike_idx)+max(mismatch.trial),2,'r')
-    
+    axis tight
+    xlabel('Position')
+    ylabel('Trial')
     pause
     cla;
 end
@@ -158,28 +164,36 @@ end
 pb_ranked = playback;
 pb_ranked.trial = trials_ranked;
 [sim,sim_s]=compute_spatial_similarity(pb_ranked);
+figure
+imagesc(nanmean(sim_s,3),[0 .3])
+[~,sim_bl]=compute_spatial_similarity(mismatch);
+figure
+imagesc(nanmean(sim_bl,3),[0 .3])
+
 %% top bottom 20%
 
 %%
 [~,spatialMap_smoothed] = get_spatial_map(playback);
 [~,spatialMap_mm] = get_spatial_map(mismatch);
 %% stability in baseline
-tc_1=mean(spatialMap_mm(:,2:98,1:40),3);
-tc_2=mean(spatialMap_mm(:,2:98,41:end),3);
+n=size(spatialMap_mm,3);
+tc_1=mean(spatialMap_mm(:,2:98,1:floor(n/2)),3);
+tc_2=mean(spatialMap_mm(:,2:98,floor(n/2)+1:end),3);
 tmp = corr(tc_1',tc_2');
 stability=diag(tmp);
 [~,stability_sort]=sort(stability);
 
 figure
-plot(tc_1(stability_sort(end-3),:))
+plot(tc_1(stability_sort(end-15),:))
 hold on
-plot(tc_2(stability_sort(end-3),:))
+plot(tc_2(stability_sort(end-15),:))
 
 %%
 [a,b]=sort(corrs_playback,'descend');
 t_c_mm=mean(spatialMap_mm,3);
-similar_idx = b(1:10);
-diff_idx = b(end-9:end);
+n=round(.2*numel(b));
+similar_idx = b(1:n);
+diff_idx = b(end-n+1:end);
 t_c_similar = mean(spatialMap_smoothed(:,:,similar_idx),3);
 t_c_different = mean(spatialMap_smoothed(:,:,diff_idx),3);
 
@@ -198,6 +212,37 @@ for ii=1:10
     plot(t_c_different(cellIDX,:))
     legend({'baseline','similar','different'})
 end
+
+%%
+figure;
+for iC=1:length(good_cells)
+    subplot(4,1,[1:3])
+    cellIDX = stability_sort(end-iC+1);
+spike_id = mismatch.sp.clu==good_cells(cellIDX);
+    spike_t = mismatch.sp.st(spike_id);
+[~,~,spike_idx] = histcounts(spike_t,mismatch.post);
+     
+    scatter(mismatch.posx(spike_idx),mismatch.trial(spike_idx),2,'b')
+    
+    spike_id = playback.sp.clu==good_cells(cellIDX);
+    spike_t = playback.sp.st(spike_id);
+[~,~,spike_idx] = histcounts(spike_t,playback.post);
+     hold on
+    scatter(playback.posx(spike_idx),trials_ranked(spike_idx)+max(mismatch.trial),2,'r')
+    axis tight
+    xlabel('Position')
+    ylabel('Trial')
+    
+    subplot(4,1,4)
+     plot(t_c_mm(cellIDX,:))
+    hold on
+    plot(t_c_similar(cellIDX,:))
+    plot(t_c_different(cellIDX,:))
+    legend({'base.','sim.','diff.'},'Orientation','horizontal')
+    pause
+    clf;
+end
+
 %%
 score_similar = zeros(1,numel(good_cells));
 score_different = zeros(1,numel(good_cells));

@@ -1,6 +1,6 @@
 function [trace]=psmooth(trace,win,fps)
 % implementiert tanks prctile smoothing algorithm (dombeck2007)
-% subtract 8 percentile level as calculated on +/- 5 seconds window 
+% subtract 8 percentile level as calculated on +/- win  
 % from relative fluorescence signal
 
 prctile_level=8;
