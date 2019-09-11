@@ -17,10 +17,12 @@ addpath(genpath('F:\code\cortexlab_spikes'));
 %     };
 
 filenames = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
+filenames = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
+
 root_dir='F:\';
 
 beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
-varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID','session_name','session_type'};
+varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID','session_name','session_type','REGION','PARENT'};
 %%
 aggregateData=struct();
 aggregateBeh=struct();
@@ -36,13 +38,17 @@ MM_snps={};
 session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
 session_names = session_table.SessionName;
 %idx = strcmp(filenames(1).name(1:end-4),session_names);
-for iF=1:numel(filenames)
+for iF=12:numel(filenames)
     %clear all
-
+    clear anatomy
     load(fullfile(filenames(iF).folder, filenames(iF).name));
     session_name{iF} = filenames(iF).name;
     idx = strcmp(filenames(1).name(1:end-4),session_names);
+    if nnz(idx)==0
+        session_type{iF}='';
+    else
     session_type{iF} = session_table.SessionType{idx};
+    end
     plot_mismatch_sequence;
     aggregateBeh.MMRun{iF}=(squeeze(adata));
     aggregateBeh.MMAllRun{iF}=squeeze(adata_all);
@@ -72,6 +78,24 @@ for iF=1:numel(filenames)
     %sprintf('Now working on: %s',filenames{iF})
     %corrMbyDepth
     %plot_pause_sequence
+    if exist('anatomy','var')
+        if isfield(anatomy,'region_shifted')
+            tmp_region = anatomy.region_shifted;
+            tmp_parent = anatomy.parent_shifted;
+        else
+            tmp_region = anatomy.cluster_region;
+            tmp_parent = anatomy.cluster_parent;
+        end
+          if numel(tmp_region) ~= numel(depth)
+              error('anatomy and real clusters do not match')
+          end
+    else
+        tmp_region = cell(1,numel(depth));
+        tmp_parent = cell(1,numel(depth));
+    end
+    
+    PARENT=cat(2,PARENT,tmp_parent);
+    REGION = cat(2,REGION,tmp_region);
 end
 for ii =1:length(varlist)
     aggregateData.(varlist{ii}) = eval(varlist{ii});

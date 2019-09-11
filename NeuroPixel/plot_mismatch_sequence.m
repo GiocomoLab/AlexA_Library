@@ -6,6 +6,7 @@ speed_t=0.05;
 if size(mismatch_trigger,1) ~=1
     mismatch_trigger=mismatch_trigger';
 end
+
 if nnz(mismatch_trigger>.5)>nnz(mismatch_trigger<.5)
     warning('flipping mismatch trigger');
     all_mm_trigs=strfind(mismatch_trigger<0.1,[0 0 1 1])+2;

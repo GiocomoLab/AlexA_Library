@@ -22,6 +22,9 @@ time_idx(time_idx+win(2)>max(spike_times))=[];
 n_times = length(time_idx);
 cluster_ID=sp_struct.clu;
 n_units = max(cluster_ID)+1;
+tmp = max(sp_struct.cids)+1;
+n_units=max(n_units,tmp);
+
 n_aux = size(aux,1)-1;
 
 time_vec=win(1):0.001:win(2);
