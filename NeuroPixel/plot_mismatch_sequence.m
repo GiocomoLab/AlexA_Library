@@ -6,6 +6,11 @@ speed_t=0.05;
 if size(mismatch_trigger,1) ~=1
     mismatch_trigger=mismatch_trigger';
 end
+if nnz(mismatch_trigger==1)>nnz(mismatch_trigger==0)
+    %in some old files mismatch_trigger was actually the move variable,
+    %i.e. move ==0 is mismatch
+    mismatch_trigger = mismatch_trigger<0.1;
+end
 speed=true_speed';
 
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
