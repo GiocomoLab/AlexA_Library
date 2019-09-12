@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 import sys
-sys.path.append('../helpers')
+sys.path.append('./helpers')
 import loadmat as lm
 from sklearn import linear_model
 from scipy import signal
@@ -54,7 +54,7 @@ def score_baseline_model(model,test_data):
 
 
 files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain_*.mat')
-contrast_scores = []
+gain_scores = []
 baseline_scores = []
 for iF in files[0:3]:
     if not 'baseline' in iF:
