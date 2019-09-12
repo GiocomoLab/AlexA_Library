@@ -33,7 +33,7 @@ def score_baseline_model(model,test_data):
         
 
         bl_trials = np.nonzero(np.all([test_data['trial_contrast']==gain, test_data['trial_gain']==1],axis = 0))
-        trialidx = np.isin(test_data['trial_resampled'],bl_trials)
+        trialidx = np.in1d(test_data['trial_resampled'],bl_trials)
         if trialidx.sum()>0:
             #print(model.score(test_data['spikecount'][trialidx,:],test_data['posx_bin'][trialidx]))
             Yhat = model.predict(test_data['spikecount'][trialidx,:])
