@@ -14,7 +14,7 @@ from helpers import preprocess
 
 def eval_and_train(dataset):
     bl_trials = np.nonzero(np.all([dataset['trial_contrast']==100, dataset['trial_gain']==1],axis = 0))
-    trialidx = np.isin(dataset['trial_resampled'],bl_trials)
+    trialidx = np.in1d(dataset['trial_resampled'],bl_trials)
     scoring = {'prec_macro': 'precision_macro','mae_macro': make_scorer(mean_absolute_error)}
     model = linear_model.LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial', max_iter=10000, C = 0.1)
     #scores = cross_val_score(model, , cv=5)
