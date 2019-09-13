@@ -56,12 +56,19 @@ def score_baseline_model(model,test_data):
 files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain_*.mat')
 gain_scores = []
 baseline_scores = []
-for iF in files[0:3]:
-    if not 'baseline' in iF:
-        print('Now working on '+ iF)
-        dataset = lm.loadmat(iF)
-        dataset = preprocess(dataset)
-        (model, bl_scores) = eval_and_train(dataset)
-        tmp_scores = score_baseline_model(model,dataset)
-        gain_scores.append(tmp_scores)
-        baseline_scores.append(bl_scores)
+for iF in files:
+    try:
+         if not 'baseline' in iF:
+            print('Now working on '+ iF)
+            dataset = lm.loadmat(iF)
+            dataset = preprocess(dataset)
+            (model, bl_scores) = eval_and_train(dataset)
+            tmp_scores = score_baseline_model(model,dataset)
+            gain_scores.append(tmp_scores)
+            baseline_scores.append(bl_scores)
+    except:
+        print('not working')
+        pass
+   
+
+np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_out.npy',gain_scores)
