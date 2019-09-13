@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 def preprocess(data):
     track_start = 0
     track_end = 400
@@ -14,7 +15,10 @@ def preprocess(data):
     
     # resample post, posx, and trial according to desired dt
     post_resampled = post[0::every_nth_time_bin]
-    posx_resampled = posx[0::every_nth_time_bin]
+    posx_resampled=posx
+    posx_resampled[posx_resampled<track_start]=track_start
+    posx_resampled[posx_resampled>track_end]=track_end #now happening further down
+    #posx_resampled = posx[0::every_nth_time_bin]
     trial_resampled = trial[0::every_nth_time_bin]
 
     # get cell ids of "good" units
@@ -27,6 +31,8 @@ def preprocess(data):
 
     # posx categories for position decoding (binned)
     posx_bin = np.digitize(posx_resampled,posx_edges)
+    posx_bin = posx_bin[0::every_nth_time_bin]
+    posx_resampled = posx_resampled[0::every_nth_time_bin]
 
     # count spikes in each time bin for each cell
     spikecount = np.empty((len(good_cells),len(post_resampled),))

@@ -58,6 +58,7 @@ gain_scores = []
 baseline_scores = []
 for iF in files[0:3]:
     if not 'baseline' in iF:
+        print('Now working on '+ iF)
         dataset = lm.loadmat(iF)
         dataset = preprocess(dataset)
         (model, bl_scores) = eval_and_train(dataset)
