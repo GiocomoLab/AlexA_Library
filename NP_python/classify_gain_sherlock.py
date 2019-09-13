@@ -11,6 +11,8 @@ import os
 from sklearn.metrics import make_scorer, confusion_matrix, mean_absolute_error
 import glob
 from helpers import preprocess
+# ml python/3.6.1
+# ml py-scipystack/1.0_py36
 
 def eval_and_train(dataset):
     bl_trials = np.nonzero(np.all([dataset['trial_contrast']==100, dataset['trial_gain']==1],axis = 0))
@@ -32,7 +34,7 @@ def score_baseline_model(model,test_data):
     for gain in [1, 0.8, 0.7, 0.6, 0.5]:
         
 
-        bl_trials = np.nonzero(np.all([test_data['trial_contrast']==gain, test_data['trial_gain']==1],axis = 0))
+        bl_trials = np.nonzero(np.all([test_data['trial_contrast']==100, test_data['trial_gain']==gain],axis = 0))
         trialidx = np.in1d(test_data['trial_resampled'],bl_trials)
         if trialidx.sum()>0:
             #print(model.score(test_data['spikecount'][trialidx,:],test_data['posx_bin'][trialidx]))
