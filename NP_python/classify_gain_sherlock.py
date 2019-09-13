@@ -65,12 +65,15 @@ for iF in files:
             dataset = lm.loadmat(iF)
             dataset = preprocess(dataset)
             (model, bl_scores) = eval_and_train(dataset)
-            tmp_scores = score_baseline_model(model,dataset)
+            (ma_errors,m_errors,precision,conf_matrix) = score_baseline_model(model,dataset)
+            tmp_array = np.array([ma_errors,m_errors,precision])
+            name = os.path.basename(files[iF])[0:-4]
+            np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+ name + '_scores.npy',tmp_array)
+            np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+ name + '_confMatrix.npy',conf_matrix)
+
             gain_scores.append(tmp_scores)
             baseline_scores.append(bl_scores)
     except:
         print('not working')
         pass
    
-
-np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_out.npy',gain_scores)
