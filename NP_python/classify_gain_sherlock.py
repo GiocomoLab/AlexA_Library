@@ -18,8 +18,8 @@ def eval_and_train(dataset):
     scoring = {'prec_macro': 'precision_macro','mae_macro': make_scorer(mean_absolute_error)}
     model = linear_model.LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial', max_iter=10000, C = 0.1)
     #scores = cross_val_score(model, , cv=5)
-    scores = cross_validate(model,dataset['spikecount'][trialidx,:],dataset['posx_bin'][trialidx],scoring=scoring, cv=5,return_estimator=True)
-    
+    #scores = cross_validate(model,dataset['spikecount'][trialidx,:],dataset['posx_bin'][trialidx],scoring=scoring, cv=5,return_estimator=True)
+    scores = np.nan
     model = linear_model.LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial', max_iter=10000, C = 0.1)
     model.fit(dataset['spikecount'][trialidx,:],dataset['posx_bin'][trialidx])
     return model,scores
