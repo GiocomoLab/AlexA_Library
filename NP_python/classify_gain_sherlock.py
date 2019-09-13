@@ -67,11 +67,11 @@ for iF in files:
             (model, bl_scores) = eval_and_train(dataset)
             (ma_errors,m_errors,precision,conf_matrix) = score_baseline_model(model,dataset)
             tmp_array = np.array([ma_errors,m_errors,precision])
-            name = os.path.basename(files[iF])[0:-4]
+            name = os.path.basename(iF)[0:-4]
             np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+ name + '_scores.npy',tmp_array)
             np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+ name + '_confMatrix.npy',conf_matrix)
 
-            gain_scores.append(tmp_scores)
+            gain_scores.append(tmp_array)
             baseline_scores.append(bl_scores)
     except Exception as e:
         print(str(e))
