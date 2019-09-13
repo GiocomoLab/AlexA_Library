@@ -73,7 +73,8 @@ for iF in files:
 
             gain_scores.append(tmp_scores)
             baseline_scores.append(bl_scores)
-    except:
+    except Exception as e:
+        print(str(e))
         print('not working')
         pass
    
