@@ -1,11 +1,11 @@
 import numpy as np
 import scipy as sp
-def preprocess(data):
+def preprocess(data,nth_bin = 10):
     track_start = 0
     track_end = 400
     dx=5
     dt=0.2
-    every_nth_time_bin = 10
+    every_nth_time_bin = nth_bin
     numposbins = np.floor((track_end-track_start)/dx)
     posx_edges = np.linspace(track_start,track_end,numposbins+1)
     posx=data['posx']
