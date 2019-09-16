@@ -72,8 +72,8 @@ for iF in files:
                     group = anatomy['parent_shifted']
                 else:
                     group = anatomy['cluster_parent']
-            
-            idx = group=='VISp'
+            region = 'RSP'
+            idx = [region in ss for ss in group]
             idx = idx[dataset['sp']['cgs']==2]
 
             if idx.sum()==0:
@@ -85,8 +85,8 @@ for iF in files:
             (ma_errors,m_errors,precision,conf_matrix) = score_baseline_model(model,dataset)
             tmp_array = np.array([ma_errors,m_errors,precision])
             name = os.path.basename(iF)[0:-4]
-            np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+ name + '_scores.npy',tmp_array)
-            np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+ name + '_confMatrix.npy',conf_matrix)
+            np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+region +'_'+ name + '_scores.npy',tmp_array)
+            np.save('/oak/stanford/groups/giocomo/attialex/NP_DATA/classifier_output/'+region +'_'+ name + '_confMatrix.npy',conf_matrix)
 
             gain_scores.append(tmp_array)
             baseline_scores.append(bl_scores)
