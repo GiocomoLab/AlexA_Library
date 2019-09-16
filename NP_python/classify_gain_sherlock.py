@@ -72,7 +72,7 @@ for iF in files:
                     group = anatomy['parent_shifted']
                 else:
                     group = anatomy['cluster_parent']
-            region = 'RSP'
+            region = 'RHP'
             idx = [region in ss for ss in group]
             idx = np.array(idx)
             idx = idx[dataset['sp']['cgs']==2]
