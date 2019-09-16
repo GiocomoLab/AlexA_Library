@@ -73,8 +73,8 @@ for iF in files:
                 else:
                     group = anatomy['cluster_parent']
             
-            idx = anatomy['cluster_parent']=='VISp'
-            idx[dataset['sp']['cgs']==2]
+            idx = group=='VISp'
+            idx = idx[dataset['sp']['cgs']==2]
 
             if idx.sum()==0:
                 continue
