@@ -74,6 +74,7 @@ for iF in files:
                     group = anatomy['cluster_parent']
             region = 'RSP'
             idx = [region in ss for ss in group]
+            idx = np.array(idx)
             idx = idx[dataset['sp']['cgs']==2]
 
             if idx.sum()==0:
