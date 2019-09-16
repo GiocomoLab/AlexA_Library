@@ -55,7 +55,7 @@ def score_baseline_model(model,test_data):
     return (ma_errors,m_errors,precision,conf_matrix)
 
 
-files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain_*.mat')
+files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/AA*_gain_*.mat')
 gain_scores = []
 baseline_scores = []
 for iF in files:
@@ -64,6 +64,23 @@ for iF in files:
             print('Now working on '+ iF)
             dataset = lm.loadmat(iF)
             dataset = preprocess(dataset)
+            if 'anatomy' not in dataset.keys():
+                continue
+            else:
+                anatomy = dataset['anatomy']
+                if 'parent_shifted' in anatomy:
+                    group = anatomy['parent_shifted']
+                else:
+                    group = anatomy['cluster_parent']
+            
+            idx = anatomy['cluster_parent']=='VISp'
+            idx[dataset['sp']['cgs']==2]
+
+            if idx.sum()==0:
+                continue
+            
+            dataset['spikecount']=dataset['spikecount'][:,idx]
+
             (model, bl_scores) = eval_and_train(dataset)
             (ma_errors,m_errors,precision,conf_matrix) = score_baseline_model(model,dataset)
             tmp_array = np.array([ma_errors,m_errors,precision])

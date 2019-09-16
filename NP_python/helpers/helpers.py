@@ -43,4 +43,5 @@ def preprocess(data,nth_bin = 10):
     data['spikecount']=np.transpose(spikecount)
     data['posx_bin']=posx_bin
     data['trial_resampled']=trial_resampled
+    data['posx_resampled']=posx_resampled
     return data
