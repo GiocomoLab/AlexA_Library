@@ -11,12 +11,14 @@ save_figs = true;
 xbincent = params.TrackStart+params.SpatialBin/2:params.SpatialBin:params.TrackEnd-params.SpatialBin/2;
 
 % where to find data and save images
-data_dir = 'Z:\giocomo\attialex\NP_DATA\';
+%data_dir = 'Z:\giocomo\attialex\NP_DATA\';
+data_dir = '/oak/stanford/groups/giocomo/attialex/NP_DATA';
+
 %session_name = {'AA5_190809_gain_1'};
 session_name = {};
 sn = dir(fullfile(data_dir,'AA*.mat'));
 for iS = 1:numel(sn)
-    if ~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback'))
+    if contains(sn(iS).name,'gain')  %~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback'))
         session_name{end+1}=sn(iS).name(1:end-4);
     end
 end
@@ -30,23 +32,26 @@ for session_num = 1:numel(session_name)
     fprintf('session %d/%d: %s\n',session_num,numel(session_name),session_name{session_num});
     clear anatomy
     load(fullfile(data_dir,strcat(session_name{session_num},'.mat')));
+    
     cells_to_plot = sp.cids(sp.cgs==2); % all good cells
     
     % make image dir if it doesn't exist
-    image_save_dir = fullfile('F:','images','rastersRegion');
-    strcat('F:\images\','\pretty_rasters\');
-    if exist(image_save_dir,'dir')~=7
-        mkdir(image_save_dir);
+    %image_save_dir = fullfile('F:','images','rastersRegion');
+    image_save_dir = fullfile('/oak/stanford/groups/giocomo/attialex/images/rastersRegionParent');
+    if ~isfolder(image_save_dir)
+        mkdir(image_save_dir)
     end
-
-    if ~isvarname('anatomy')
+    
+    if ~exist('anatomy')
         continue
     end
     
     if isfield(anatomy,'region_shifted')
-        regionID=anatomy.region_shifted;
+        %regionID=anatomy.region_shifted;
+        regionID = anatomy.parent_shifted;
     else
-        regionID = anatomy.cluster_region;
+        %regionID = anatomy.cluster_region;
+        regionID = anatomy.cluster_parent;
     end
     regionID = regionID(sp.cgs==2);
 

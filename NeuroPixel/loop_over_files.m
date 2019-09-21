@@ -5,6 +5,7 @@
 %     'npF4_1023_gaincontrast_1.mat',...
 %     'npF4_1025_gaincontrast_2.mat '};
 %restoredefaultpath
+if ispc()
 addpath(genpath('C:\code\AlexA_Library'));
 addpath(genpath('C:\code\boundedline'));
 addpath(genpath('F:\code\cortexlab_spikes'));
@@ -20,6 +21,10 @@ filenames = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
 filenames = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
 
 root_dir='F:\';
+else
+run('/home/users/attialex/AlexA_Library/default_paths.m')
+filenames=dir(fullfile(OAK,'attialex','NP_DATA','*mismatch*.mat'));
+end
 
 beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
 varlist={'AID','CGS','DEPTH','avgMM','avgRunOn','avgRunOff','CID','session_name','session_type','REGION','PARENT'};
@@ -35,10 +40,12 @@ for ii=1:length(beh_varlist)
 end
 MM_snps={};
 %%
-session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+%session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+session_table = readtable(fullfile(OAK,'attialex','NP_DATA','data_summary_June2019.xlsx'));
 session_names = session_table.SessionName;
 %idx = strcmp(filenames(1).name(1:end-4),session_names);
-for iF=12:numel(filenames)
+for iF=1:numel(filenames)
+    try
     %clear all
     clear anatomy
     load(fullfile(filenames(iF).folder, filenames(iF).name));
@@ -83,20 +90,38 @@ for iF=12:numel(filenames)
             tmp_region = anatomy.region_shifted;
             tmp_parent = anatomy.parent_shifted;
         else
+            if isfield(anatomy,'cluster_region')
             tmp_region = anatomy.cluster_region;
+            else % because for now we only have cluster parent for mec data
+                tmp_region = anatomy.cluster_parent;
+            end
+            
             tmp_parent = anatomy.cluster_parent;
         end
           if numel(tmp_region) ~= numel(depth)
+              pp=anatomy.cluster_parent(sp.cids);
+              tmp_parent = pp;
+              tmp_
               error('anatomy and real clusters do not match')
           end
     else
         tmp_region = cell(1,numel(depth));
         tmp_parent = cell(1,numel(depth));
     end
-    
+    if ~isrow(tmp_parent)
+        tmp_parent = tmp_parent';
+    end
+    if ~isrow(tmp_region)
+        tmp_region = tmp_region';
+    end
     PARENT=cat(2,PARENT,tmp_parent);
     REGION = cat(2,REGION,tmp_region);
-end
+
+catch ME
+    warning(sprintf('error with File %s',filenames(iF).name));
+    display(ME.message)
+    end
+    end
 for ii =1:length(varlist)
     aggregateData.(varlist{ii}) = eval(varlist{ii});
 end
@@ -107,6 +132,9 @@ aggregateData.MM_snps=MM_snps;
 % aggregateData.CGS=CGS;
 % aggregateData.DEPTH = DEPTH;
 %clearvars -except agg* avgMM filenames root_dir AID
+save(fullfile(OAK,'attialex',strcat('MM_aggregate',date,'.mat')),'aggregateData','-v7.3')
+aggregateData.MM_snps=[];
+save(fullfile(OAK,'attialex',strcat('MM_aggregateSmall',date,'.mat')),'aggregateData','-v7.3')
 
 %%
 params=struct();
