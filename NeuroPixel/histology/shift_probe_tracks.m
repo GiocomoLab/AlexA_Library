@@ -1,15 +1,21 @@
-session_table = readtable('Z:\giocomo\attialex\NP_DATA\AA_session_summary.xlsx');
-histo_loc = 'Z:\giocomo\export\data\Projects\AlexA_NP\Histology';
-session_loc = 'Z:\giocomo\attialex\NP_DATA';
+%session_table = readtable('Z:\giocomo\attialex\NP_DATA\AA_session_summary.xlsx');
+%histo_loc = 'Z:\giocomo\export\data\Projects\AlexA_NP\Histology';
+%session_loc = 'Z:\giocomo\attialex\NP_DATA';
+%%
+session_table = readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/AA_session_summary.xlsx');
+histo_loc = '/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/Histology';
+session_loc = '/oak/stanford/groups/giocomo/attialex/NP_DATA';
 %go through each row
 nS=size(session_table,1);
 %%
-for iS=3
+for iS=6:nS
     animal = session_table.Mouse{iS};
     sessionID = session_table.SessionName{iS};
     recording_day =session_table.RecordingDay(iS);
     recording_depth = session_table.ProbeDepth(iS);
 %load sp file
+    clear data
+    clear anatomy
     data = load(fullfile(session_loc,sessionID),'anatomy');
     if ~session_table.Histology(iS)
         continue
@@ -60,9 +66,10 @@ anatomy = data.anatomy;
 anatomy.depth_shifted = cp_shifted;
 anatomy.region_shifted = acr;
 anatomy.parent_shifted = parent;
+        save(fullfile(session_loc,sessionID),'anatomy','-append')
+
     end
     
-        save(fullfile(session_loc,sessionID),'anatomy','-append')
 
     drawnow
     

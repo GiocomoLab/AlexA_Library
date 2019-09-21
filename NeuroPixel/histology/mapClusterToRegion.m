@@ -1,10 +1,15 @@
 % load excel db
-session_table = readtable('Z:\giocomo\attialex\NP_DATA\AA_session_summary.xlsx');
-histo_loc = 'Z:\giocomo\export\data\Projects\AlexA_NP\Histology';
-session_loc = 'Z:\giocomo\attialex\NP_DATA';
+%session_table = readtable('Z:\giocomo\attialex\NP_DATA\AA_session_summary.xlsx');
+%histo_loc = 'Z:\giocomo\export\data\Projects\AlexA_NP\Histology';
+%session_loc = 'Z:\giocomo\attialex\NP_DATA';
+addpath(genpath('/home/users/attialex/spikes/'))
+addpath(genpath('/home/users/attialex/AlexA_Library'))
+session_table = readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/AA_session_summary.xlsx');
+histo_loc = '/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/Histology';
+session_loc = '/oak/stanford/groups/giocomo/attialex/NP_DATA';
 %go through each row
 nS=size(session_table,1);
-for iS=3
+for iS=11:nS
     animal = session_table.Mouse{iS};
     sessionID = session_table.SessionName{iS};
     recording_day =session_table.RecordingDay(iS);

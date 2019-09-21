@@ -1,5 +1,9 @@
 function histology = process_histology()
-histo_table = readtable('Z:\giocomo\attialex\NP_DATA\Histology_Quantification.xlsx');
+if ispc()
+    histo_table = readtable('Z:\giocomo\attialex\NP_DATA\Histology_Quantification.xlsx');
+else
+    histo_table = readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/Histology_Quantification.xlsx');
+end
 time_dat = datestr(histo_table.Date,'mmdd');
 year = datestr(histo_table.Date,'yy');
 histology.date = time_dat;

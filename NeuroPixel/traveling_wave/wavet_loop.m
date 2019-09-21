@@ -3,12 +3,15 @@ addpath(genpath('/home/users/attialex/AlexA_Library'));
 addpath(genpath('/home/users/attialex/spikes/'));
 %% find sessions based on table
 
-session_info=readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/session_summary.xlsx');
-nums = session_info(:,4);
-nums=nums.Variables;
-first_session = strcmp(nums,'1');
-session_names = session_info(first_session,5);
-session_names = session_names.Variables;
+%session_info=readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/session_summary.xlsx');
+session_info=readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/AA_session_summary.xlsx');
+nums = session_info.SessionNum;
+%nums=nums.Variables;
+%first_session = strcmp(nums,'1');
+first_sessions = nums==1;
+session_names = session_info.SessionName(first_sessions);
+% session_names = session_info(first_session,5);
+% session_names = session_names.Variables;
 Files = struct();
 for iF=1:numel(session_names)
     Files(iF).name=strcat(session_names{iF},'.mat');
@@ -32,7 +35,11 @@ for iF=1:numel(Files)
     MERGED(cntr).average_triggered = aa_spikes;
     MERGED(cntr).max_depth = maxChan_spikes;
     MERGED(cntr).name = Files(iF).name;
-    MERGED(cntr).sp = dataset.sp; 
+%     MERGED(cntr).sp = dataset.sp;
+    save(fullfile(root,'MERGED_FIRSTSESSIONS_AA'),'MERGED');
+    if isfield(dataset,'anatomy')
+        MERGED(cntr).anatomy = dataset.anatomy;
+    end
     cntr=cntr+1;
 %     if mod(iF,7) ~=0
 %         close(spikefig)
@@ -41,9 +48,9 @@ for iF=1:numel(Files)
         ME.message
         warning(strcat('something wrong with ',Files(iF).name))
     end
-
+    
 end
-%save(fullfile(root,'MERGED_FIRSTSESSIONS_DandA'),'MERGED');
+%
 %% scatter of max locations
 bins = 0:40:3840;
 time_bins = 0.002; 
