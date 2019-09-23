@@ -5,6 +5,7 @@
 %     'npF4_1023_gaincontrast_1.mat',...
 %     'npF4_1025_gaincontrast_2.mat '};
 %restoredefaultpath
+if ispc()
 addpath(genpath('C:\code\AlexA_Library'));
 addpath(genpath('C:\code\boundedline'));
 addpath(genpath('F:\code\cortexlab_spikes'));
@@ -17,10 +18,16 @@ addpath(genpath('F:\code\cortexlab_spikes'));
 %     };
 
 filenames = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
+filenames = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
+
 root_dir='F:\';
+else
+run('/home/users/attialex/AlexA_Library/default_paths.m')
+filenames=dir(fullfile(OAK,'attialex','NP_DATA','AA*mismatch*.mat'));
+end
 
 beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
-varlist={'AID','CGS','avgMM','SIG_VAL','CID','session_name','session_type'};
+varlist={'AID','CGS','avgMM','SIG_VAL','CID','session_name','REGION','PARENT'};
 %%
 aggregateData=struct();
 for ii =1:length(varlist)
@@ -32,16 +39,16 @@ for ii=1:length(beh_varlist)
 end
 MM_snps={};
 %%
-session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
-session_names = session_table.SessionName;
+%session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+%session_names = session_table.SessionName;
 %idx = strcmp(filenames(1).name(1:end-4),session_names);
-for iF=1:numel(filenames)
+for iF=1:12%numel(filenames)
     %clear all
 
     load(fullfile(filenames(iF).folder, filenames(iF).name));
     session_name{iF} = filenames(iF).name;
-    idx = strcmp(filenames(1).name(1:end-4),session_names);
-    session_type{iF} = session_table.SessionType{idx};
+    %idx = strcmp(filenames(1).name(1:end-4),session_names);
+    %session_type{iF} = session_table.SessionType{idx};
     mm_timing_perSession
     avgMM=cat(1,avgMM,squeeze(mean(rate_mat,2)));
     SIG_VAL = cat(1,SIG_VAL,sig_val);
@@ -49,6 +56,36 @@ for iF=1:numel(filenames)
     AID = cat(1,AID,ones(length(sp.cgs),1)*iF);
     CGS = cat(1,CGS,sp.cgs');
     CID = cat(1,CID,sp.cids');
+    nCLU = nnz(sp.cgs>=1);
+    if exist('anatomy','var')
+        if isfield(anatomy,'region_shifted')
+            tmp_region = anatomy.region_shifted;
+            tmp_parent = anatomy.parent_shifted;
+        else
+            if isfield(anatomy,'cluster_region')
+            tmp_region = anatomy.cluster_region;
+            else % because for now we only have cluster parent for mec data
+                tmp_region = anatomy.cluster_parent;
+            end
+            
+            tmp_parent = anatomy.cluster_parent;
+        end
+          if numel(tmp_region) ~= nCLU
+              error('anatomy and real clusters do not match')
+          end
+    else
+        tmp_region = cell(1,nCLU);
+        tmp_parent = cell(1,nCLU);
+    end
+    if ~isrow(tmp_parent)
+        tmp_parent = tmp_parent';
+    end
+    if ~isrow(tmp_region)
+        tmp_region = tmp_region';
+    end
+    PARENT=cat(2,PARENT,tmp_parent);
+    REGION = cat(2,REGION,tmp_region);
+    
     
     drawnow;
     %sprintf('Now working on: %s',filenames{iF})
@@ -60,14 +97,17 @@ for ii =1:length(varlist)
     aggregateData.(varlist{ii}) = eval(varlist{ii});
 end
 
+save(fullfile(OAK,'attialex',strcat('MM_aggregate_timing',date,'.mat')),'aggregateData','-v7.3')
 
 %%
 RANKING = [];
 figure
 nA=unique(aggregateData.AID);
 for iA=1:numel(nA)
-IDX=aggregateData.AID==iA;
-
+IDX=aggregateData.AID==iA & strcmp(aggregateData.PARENT,'VISp')';
+if nnz(IDX)==0
+    continue
+end
 sig_val=aggregateData.SIG_VAL(IDX,:);
 avgMM=aggregateData.avgMM(IDX,:);
 mmresp = mean(avgMM(:,220:250),2)-mean(avgMM(:,155:185),2);
@@ -85,11 +125,12 @@ for iC= 1:size(avgMM,1)
         crossings(iC)=a(1);
     end
 end
-frac = .1;
+frac = .2;
 n=round(frac*size(avgMM,1));
 subplot(4,4,iA)
 tvec = linspace(-4,4,size(rate_mat,3));
-tmp = mean(squeeze(mean(rate_mat(sidx(1:n),:,:),2)));
+%tmp = mean(squeeze(mean(rate_mat(sidx(1:n),:,:),2)));
+tmp = mean(avgMM(sidx(1:n),:));
 plot(tvec,tmp)
 hold on
 ff=round(nanmedian(crossings(sidx(1:n))));
