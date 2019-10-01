@@ -16,12 +16,14 @@ axis equal
 
 %% from MEC corrdinates to Allen Coordinates in MM:
 
-%MEC_Offset = [3.66,2.84,-5.01];
+MEC_Offset = [3.66,2.84,-5.01];
 fwireframe = plotBrainGrid([], [], [], true); hold on; 
 fwireframe.InvertHardcopy = 'off';
 brainfig = gcf;
 probefig=figure();
 hold on
+atlasRes = 0.010; % mm
+bregma=allenCCFbregma()
 MEC_Offset = [3.0,2.0,-5.25]; %ML,DV,AP %estimate from old paxinos atlas
 MEC_angle = 15;
 MEC_Offset = [3.3,2.0,-5.0]; % estimated from 2008 allen
@@ -37,6 +39,12 @@ for iP= 1:numel(histology.X1)
     pos3D=[entry_allen;term_allen];
     vecAllen = -term_allen + entry_allen;
     vecAllen = vecAllen/norm(vecAllen);
+    if strcmp(histology.Side{iP},'L')
+        %continue
+        term_allen(1)=-term_allen(1);
+        pos3D(:,1)=-pos3D(:,1);
+        vecAllen(1)=-vecAllen(1);
+    end
     wholeTrack = [term_allen;term_allen+histology.FinalDepth(iP)*vecAllen/1000];
     figure(probefig)
     scatter3(pos3D(:,1),pos3D(:,3),pos3D(:,2),4,[1 0 0; 0 0 1])
@@ -57,19 +65,9 @@ xlabel('ML')
 ylabel('AP')
 zlabel('DV')
 axis equal
-figure(brainfig)
-pointList=load('Z:\giocomo\export\data\Projects\AlexA_NP\Histology\AA_190709_1\combined\processed\probe_pointsMEC_L1.mat');
-pointList = pointList.pointList.pointList;
-plot3(pointList{1}(:,3),pointList{1}(:,1),pointList{1}(:,2),'g.')
+% figure(brainfig)
+% pointList=load('Z:\giocomo\export\data\Projects\AlexA_NP\Histology\AA_190709_1\combined\processed\probe_pointsMEC_L1.mat');
+% pointList = pointList.pointList.pointList;
+% plot3(pointList{1}(:,3),pointList{1}(:,1),pointList{1}(:,2),'g.')
 
 %%
-
-bregma = allenCCFbregma;
-
-atlasRes = 0.010; % mm
-ap = -(currentSlice-bregma(1))*atlasRes;
-dv = (pixel(1)-bregma(2))*atlasRes;
-ml = (pixel(2)-bregma(3))*atlasRes;
-
-%pixelCoords = term_allen/atlasRes+bregma;
-%pixelVec = 
