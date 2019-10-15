@@ -15,14 +15,13 @@ if exist(image_save_dir,'dir')~=7
     mkdir(image_save_dir);
 end
 cell_info_dir = fullfile('/oak/stanford/groups/giocomo/attialex');
-cell_info_file = 'session_info_cell';
+cell_info_file = 'sesssion_info_cell2';
 load(fullfile(cell_info_dir,cell_info_file));
 
 %% params
 
 % change these params
-session_file = 'sessions_starting_with_small_gain_MEC_and_VISp';
-brain_region = 'MEC';
+brain_region = 'hc';
 num_trials_total = 34;
 gains_to_analyze = 0.8;
 stab_thresh = 0.3;
@@ -30,7 +29,7 @@ numreps_max = 1; % maximum number of reps for each gain change
 max_lag = 100; % for finding xcorr peak of individual cells
 
 % these params mostly stay fixed
-params = readtable('UniversalParams.xlsx'));
+params = readtable('UniversalParams.xlsx');
 numtrialspergainchange = 4;
 xbincent = params.TrackStart+params.SpatialBin/2:params.SpatialBin:params.TrackEnd-params.SpatialBin/2;
 track_length = params.TrackEnd-params.TrackStart;
@@ -39,12 +38,17 @@ track_length = params.TrackEnd-params.TrackStart;
 save_figs = true;
 
 %% load cell_info and session_name
+
+
 load(fullfile(cell_info_dir,cell_info_file));
-load(fullfile(cell_info_dir,session_file));
+idx = startsWith(cell_info.BrainRegion,brain_region);
+session_name = unique(cell_info.Session(idx));
+
+
 local_stab = cell_info.LocalStability;
 local_stab = nanmean(local_stab(:,1:floor(num_trials_total/numtrialspergainchange)),2);
 keep_cell = ismember(cell_info.Session,session_name) & ...
-    strcmp(cell_info.BrainRegion,brain_region) & ...
+    startsWith(cell_info.BrainRegion,brain_region) & ...
     local_stab > stab_thresh;
 cell_info = cell_info(keep_cell,:);
 local_stab = local_stab(keep_cell);
@@ -135,7 +139,8 @@ for i = 1:numel(session_name)
 end
 
 %% avg xcorr curve over all sessions
-figure; hold on;
+set(0,'DefaultFigureRenderer','painters')
+h=figure; hold on;
 for j = 1:numel(gains_to_analyze)
     for k = 1:numreps_max
         N_bl = sum(~isnan(crosscorr_all(:,j,k,1,1)));
@@ -154,6 +159,12 @@ for j = 1:numel(gains_to_analyze)
         ylabel('xcorr');
     end
 end
+if save_figs
+    saveas(h,fullfile(image_save_dir,strcat('grand','_',brain_region)),'png');
+    saveas(h,fullfile(image_save_dir,strcat('grand','_',brain_region)),'pdf');
+    saveas(h,fullfile(image_save_dir,strcat('grand','_',brain_region)),'fig');
+end
+
 
 %% compute pct remapping + map shift from mean xcorr for each session
 peak_bl = nan(numel(session_name),numel(gains_to_analyze),numreps_max,1);

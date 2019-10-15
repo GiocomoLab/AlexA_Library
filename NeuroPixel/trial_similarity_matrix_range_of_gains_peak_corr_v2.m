@@ -11,27 +11,27 @@
 
 root_dir = '/home/users/attialex/';
 %neuropix_folder = fullfile(root_dir,'Dropbox','Work','neuropixels');
-addpath(genpath(fullfile(neuropix_folder,'AlexA_Library')));
-addpath(genpath(fullfile(neuropix_folder,'spikes')));
+addpath(genpath(fullfile(root_dir,'AlexA_Library')));
+addpath(genpath(fullfile(root_dir,'spikes')));
 
 data_dir = fullfile('/oak/stanford/groups/giocomo/attialex','NP_DATA');
 image_save_dir = fullfile('/oak/stanford/groups/giocomo/attialex','images','peak_xcorr');
 if exist(image_save_dir,'dir')~=7
     mkdir(image_save_dir);
 end
-cell_info_dir = fullfile(neuropix_folder,'matlab_scripts','cell_info');
-cell_info_file = 'cell_info_ALL_Oct2019_v2';
-
+cell_info_dir = fullfile('/oak/stanford/groups/giocomo/attialex');
+cell_info_file = 'sesssion_info_cell2';
+load(fullfile(cell_info_dir,cell_info_file))
 %% params
 
 % change these params
-brain_region = 'VISp';
+brain_region = 'CA';
 num_trials_total = 36; % plots trials 1 to num_trials_total
 stab_thresh = 0.3; % minimum average stability within 4 trial blocks
 maxlag = 100; % in cm, for finding peak lag across all cells
 
 % these params mostly stay fixed
-params = readtable('UniversalParams.xlsx'));
+params = readtable('UniversalParams.xlsx');
 xbincent = params.TrackStart+params.SpatialBin/2:params.SpatialBin:params.TrackEnd-params.SpatialBin/2;
 track_length = params.TrackEnd-params.TrackStart;
 
@@ -42,7 +42,7 @@ plot_colors_gain = [0 0 0; cool(4); 0 0 1];
 plot_colors_trial_num = gray(num_trials_total);
 
 %% load cell_info and session_name
-idx = strcmp(cell_info.BrainRegion,brain_region);
+idx = startsWith(cell_info.BrainRegion,brain_region);
 session_name = unique(cell_info.Session(idx));
 
 %% filter cells by brain region and stability
@@ -50,7 +50,7 @@ local_stab = cell_info.LocalStability;
 numblocks = floor(num_trials_total/4);
 local_stab = mean(local_stab(:,1:numblocks),2);
 keep_cell = ismember(cell_info.Session,session_name) & ...
-    strcmp(cell_info.BrainRegion,brain_region) & ...
+    startsWith(cell_info.BrainRegion,brain_region) & ...
     local_stab > stab_thresh;
 cell_info = cell_info(keep_cell,:);
 local_stab = local_stab(keep_cell);
@@ -140,26 +140,26 @@ grand_mean = nanmean(peak_xcorr_all,3);
 
 % all sessions individually
 image_save_dir_this = fullfile(image_save_dir,'individual_sessions',...
-    strcat(session_file,'_',brain_region));
+    strcat('_',brain_region));
 if exist(image_save_dir_this,'dir')~=7
     mkdir(image_save_dir_this);
 end
-for i = 1:size(peak_xcorr_all,3)
-    x = squeeze(peak_xcorr_all(:,:,i));
-    x = x-diag(diag(x));
-    h=figure;
-    imagesc(x);
-    xlim([1 num_trials_total]);
-    ylim([1 num_trials_total]);
-    axis square;
-    title(session_name{i},'Interpreter','none');
-    colorbar;
-    if save_figs
-        saveas(h,fullfile(image_save_dir_this,session_name{i}),'png');
-        saveas(h,fullfile(image_save_dir_this,session_name{i}),'pdf');
-        saveas(h,fullfile(image_save_dir_this,session_name{i}),'fig');
-    end
-end
+% for i = 1:size(peak_xcorr_all,3)
+%     x = squeeze(peak_xcorr_all(:,:,i));
+%     x = x-diag(diag(x));
+%     h=figure;
+%     imagesc(x);
+%     xlim([1 num_trials_total]);
+%     ylim([1 num_trials_total]);
+%     axis square;
+%     title(session_name{i},'Interpreter','none');
+%     colorbar;
+%     if save_figs
+%         saveas(h,fullfile(image_save_dir_this,session_name{i}),'png');
+%         saveas(h,fullfile(image_save_dir_this,session_name{i}),'pdf');
+%         saveas(h,fullfile(image_save_dir_this,session_name{i}),'fig');
+%     end
+% end
 
 % average xcorr across sessions
 x = grand_mean-diag(diag(grand_mean));
@@ -168,55 +168,56 @@ imagesc(x);
 xlim([1 num_trials_total]);
 ylim([1 num_trials_total]);
 axis square;
-title('avg over sessions');
+nSess = numel(session_name);
+title(sprintf('avg over sessions, %d',nSess));
 colorbar;
 if save_figs
-    saveas(h,fullfile(image_save_dir,strcat(session_file,'_',brain_region)),'png');
-    saveas(h,fullfile(image_save_dir,strcat(session_file,'_',brain_region)),'pdf');
-    saveas(h,fullfile(image_save_dir,strcat(session_file,'_',brain_region)),'fig');
+    saveas(h,fullfile(image_save_dir,strcat('grand','_',brain_region)),'png');
+    saveas(h,fullfile(image_save_dir,strcat('grand','_',brain_region)),'pdf');
+    saveas(h,fullfile(image_save_dir,strcat('grand','_',brain_region)),'fig');
 end
 
 %% cluster trials
-
-image_save_dir_this = fullfile(image_save_dir,'cluster_trials');
-if exist(image_save_dir_this,'dir')~=7
-    mkdir(image_save_dir_this);
-end
-h=figure;
-ha=tight_subplot(3,1);
-% cluster grand mean matrix and plot dendrogram
-axes(ha(1));
-dist_vec = squareform(1-grand_mean,'tovector');
-tree = linkage(dist_vec,'average');
-[~,~,outperm]=dendrogram(tree,0);
-[~,trial_sort_idx] = sort(outperm);
-xlim([0.5 num_trials_total+0.5]);
-xticks(''); yticks('');
-% plot trial info
-axes(ha(2));
-for i = 1:num_trials_total
-    % what gain is this trial?
-    gain_this = find(gains_plot==trial_gain(i));
-    % sorted order
-    tr = trial_sort_idx(i);
-    % colored by gain val:
-    patch([tr-0.5 tr-0.5 tr+0.5 tr+0.5],[0 0.5 0.5 0], plot_colors_gain(gain_this,:));
-    % colored by trial num:
-    patch([tr-0.5 tr-0.5 tr+0.5 tr+0.5],[0.5 1 1 0.5], plot_colors_trial_num(i,:));
-end
-xlim([0.5 num_trials_total+0.5]); ylim([0 1]);
-xticks(''); yticks('');
-% plot dist matrix
-axes(ha(3));
-x = grand_mean-diag(diag(grand_mean));
-x_sorted = x(:,outperm);
-x_sorted = x_sorted(outperm,:);
-imagesc(x_sorted-diag(diag(x_sorted)));
-xlim([0.5 num_trials_total+0.5]);
-ylim([0.5 num_trials_total+0.5]);
-xticks(''); yticks('');
-if save_figs
-    saveas(h,fullfile(image_save_dir_this,strcat(session_file,'_',brain_region)),'png');
-    saveas(h,fullfile(image_save_dir_this,strcat(session_file,'_',brain_region)),'pdf');
-    saveas(h,fullfile(image_save_dir_this,strcat(session_file,'_',brain_region)),'fig');
-end
+% 
+% image_save_dir_this = fullfile(image_save_dir,'cluster_trials');
+% if exist(image_save_dir_this,'dir')~=7
+%     mkdir(image_save_dir_this);
+% end
+% h=figure;
+% ha=tight_subplot(3,1);
+% % cluster grand mean matrix and plot dendrogram
+% axes(ha(1));
+% dist_vec = squareform(1-grand_mean,'tovector');
+% tree = linkage(dist_vec,'average');
+% [~,~,outperm]=dendrogram(tree,0);
+% [~,trial_sort_idx] = sort(outperm);
+% xlim([0.5 num_trials_total+0.5]);
+% xticks(''); yticks('');
+% % plot trial info
+% axes(ha(2));
+% for i = 1:num_trials_total
+%     % what gain is this trial?
+%     gain_this = find(gains_plot==trial_gain(i));
+%     % sorted order
+%     tr = trial_sort_idx(i);
+%     % colored by gain val:
+%     patch([tr-0.5 tr-0.5 tr+0.5 tr+0.5],[0 0.5 0.5 0], plot_colors_gain(gain_this,:));
+%     % colored by trial num:
+%     patch([tr-0.5 tr-0.5 tr+0.5 tr+0.5],[0.5 1 1 0.5], plot_colors_trial_num(i,:));
+% end
+% xlim([0.5 num_trials_total+0.5]); ylim([0 1]);
+% xticks(''); yticks('');
+% % plot dist matrix
+% axes(ha(3));
+% x = grand_mean-diag(diag(grand_mean));
+% x_sorted = x(:,outperm);
+% x_sorted = x_sorted(outperm,:);
+% imagesc(x_sorted-diag(diag(x_sorted)));
+% xlim([0.5 num_trials_total+0.5]);
+% ylim([0.5 num_trials_total+0.5]);
+% xticks(''); yticks('');
+% if save_figs
+%     saveas(h,fullfile(image_save_dir_this,strcat(session_file,'_',brain_region)),'png');
+%     saveas(h,fullfile(image_save_dir_this,strcat(session_file,'_',brain_region)),'pdf');
+%     saveas(h,fullfile(image_save_dir_this,strcat(session_file,'_',brain_region)),'fig');
+% end

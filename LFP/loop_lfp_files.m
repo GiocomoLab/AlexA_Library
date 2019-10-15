@@ -4,7 +4,7 @@ channelMapFile = fullfile('/home/users/attialex/neuropixel-utils/map_files','neu
 %ksdirs = dir(fullfile('/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/**','*ap.bin'))
 %ksdirs=dir('Y:\giocomo\export\data\Projects\ContrastExperiment_neuropixels\**\*imec0.ap.bin');
 ksdirs = dir(fullfile('/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/AA_*/neuropixels_data/AA*/AA*/*.ap.bin'));
-for iD = 1:length(ksdirs)
+for iD = 1%1:length(ksdirs)
     clearvars -except ksdirs channelMapFile iD 
     im_save_dir = fullfile('/oak/stanford/groups/giocomo','attialex','images','LFP');
     myKsDir=ksdirs(iD).folder;

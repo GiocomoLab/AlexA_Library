@@ -10,12 +10,12 @@
 restoredefaultpath
 root_dir = '/home/users/attialex/';
 %neuropix_folder = fullfile(root_dir,'Dropbox','Work','neuropixels');
-addpath(genpath(fullfile(neuropix_folder,'AlexA_Library')));
-addpath(genpath(fullfile(neuropix_folder,'spikes')));
+addpath(genpath(fullfile(root_dir,'AlexA_Library')));
+addpath(genpath(fullfile(root_dir,'spikes')));
 
 % extract names of all sessions in data dir
 data_dir = fullfile('/oak/stanford/groups/giocomo/attialex','NP_DATA');
-session_name = dir(fullfile(data_dir,'*gain_*.mat'));
+session_name = dir(fullfile(data_dir,'AA*gain*.mat'));
 session_name = {session_name.name}';
 session_name = session_name(contains(session_name,'.mat'));
 for i = 1:numel(session_name)
@@ -28,7 +28,7 @@ end
 blocksize = 4; % num trials in block for computing LocalStability
 
 % these params mostly stay fixed
-params = readtable(fullfile(neuropix_folder,'UniversalParams.xlsx'));
+params = readtable(fullfile('UniversalParams.xlsx'));
 gains_all = [1 0.8 0.7 0.6 0.5 0.2]; % all gains we ever use
 contrasts_all = [100 50 20 10 5 2 0]; % all contrasts we ever use
 

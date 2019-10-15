@@ -23,7 +23,7 @@ filenames = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
 root_dir='F:\';
 else
 run('/home/users/attialex/AlexA_Library/default_paths.m')
-filenames=dir(fullfile(OAK,'attialex','NP_DATA','AA*mismatch*.mat'));
+filenames=dir(fullfile(OAK,'attialex','NP_DATA','*mismatch*.mat'));
 end
 
 beh_varlist={'AID_B','MMRun','RunOFF','MMAllRun'};
@@ -42,9 +42,9 @@ MM_snps={};
 %session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
 %session_names = session_table.SessionName;
 %idx = strcmp(filenames(1).name(1:end-4),session_names);
-for iF=1:12%numel(filenames)
+for iF=12:numel(filenames)
     %clear all
-
+    clear anatomy
     load(fullfile(filenames(iF).folder, filenames(iF).name));
     session_name{iF} = filenames(iF).name;
     %idx = strcmp(filenames(1).name(1:end-4),session_names);
