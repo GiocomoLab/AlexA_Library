@@ -112,8 +112,6 @@ xplot = xplot(keep_xcorr);
 plot_colors = [cool(4); 0 0 1];
 
 %% avg xcorr curves (all sessions individually)
-mean_bl_all = nan(numel(session_name),numel(gains_to_analyze),numreps_max,numel(xbincent)*2-1);
-mean_gc_all = nan(numel(session_name),numel(gains_to_analyze),numreps_max,numel(xbincent)*2-1);
 for i = 1:numel(session_name)
     figure; hold on;
     for j = 1:numel(gains_to_analyze)
@@ -124,7 +122,7 @@ for i = 1:numel(session_name)
             mean_bl = squeeze(nanmean(crosscorr_all(keep_cell,j,k,:,1)));
             mean_gc = squeeze(nanmean(crosscorr_all(keep_cell,j,k,:,2)));
             sem_bl = squeeze(nanstd(crosscorr_all(keep_cell,j,k,:,1)))/sqrt(N_bl);
-            sem_gc = squeeze(nanstd(crosscorr_all(keep_cell,j,k,:,2)))/sqrt(N_gc);
+            sem_gc = squeeze(nanstd(crosscorr_all(keep_cell,j,k,:,1)))/sqrt(N_gc);
             errorbar(xplot,mean_bl(keep_xcorr),sem_bl(keep_xcorr),'k-');
             errorbar(xplot,mean_gc(keep_xcorr),sem_gc(keep_xcorr),'-','Color',plot_colors(j,:));
             xlim([-100 100]);
@@ -132,8 +130,6 @@ for i = 1:numel(session_name)
             plot([0 0],ylim(),'k--');
             title(sprintf('%s\nn = %d cells bl, %d cells gc',...
                 strrep(session_name{i},'_','-'),N_bl,N_gc));
-            mean_bl_all(i,j,k,:) = mean_bl;
-            mean_gc_all(i,j,k,:) = mean_gc;
         end
     end
 end
@@ -142,12 +138,12 @@ end
 figure; hold on;
 for j = 1:numel(gains_to_analyze)
     for k = 1:numreps_max
-        N_bl = sum(~isnan(mean_bl_all(:,j,k,1)));
-        N_gc = sum(~isnan(mean_gc_all(:,j,k,1)));
-        mean_bl = squeeze(nanmean(mean_bl_all(:,j,k,:)));
-        mean_gc = squeeze(nanmean(mean_gc_all(:,j,k,:)));
-        sem_bl = squeeze(nanstd(mean_bl_all(:,j,k,:)))/sqrt(N_bl);
-        sem_gc = squeeze(nanstd(mean_gc_all(:,j,k,:)))/sqrt(N_gc);
+        N_bl = sum(~isnan(crosscorr_all(:,j,k,1,1)));
+        N_gc = sum(~isnan(crosscorr_all(:,j,k,1,2)));
+        mean_bl = squeeze(nanmean(crosscorr_all(:,j,k,:,1)));
+        mean_gc = squeeze(nanmean(crosscorr_all(:,j,k,:,2)));
+        sem_bl = squeeze(nanstd(crosscorr_all(:,j,k,:,1)))/sqrt(N_bl);
+        sem_gc = squeeze(nanstd(crosscorr_all(:,j,k,:,1)))/sqrt(N_gc);
         errorbar(xplot,mean_bl(keep_xcorr),sem_bl(keep_xcorr),'k-');
         errorbar(xplot,mean_gc(keep_xcorr),sem_gc(keep_xcorr),'-','Color',plot_colors(j,:));
         xlim([-100 100]);
