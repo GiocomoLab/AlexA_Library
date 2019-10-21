@@ -30,7 +30,7 @@ end
 
     % load data
     fprintf('session %d/%d: %s\n',session_num,numel(session_name),session_name{session_num});
-    clearvars -except sess* aggre* data* save_figs
+    clearvars -except sess* aggre* data* save_figs image_save_dir
     load(fullfile(data_dir,strcat(session_name{session_num},'.mat')));
     shift_vs_speed
     aggregateData(session_num).models = models;
@@ -40,3 +40,5 @@ end
     aggregateData(session_num).p_vals = p_vals;
     aggregateData(session_num).clu_reg = clu_reg;
 end
+
+save('/oak/stanford/groups/giocomo/attialex/shift_vs_speed.mat',aggregateData);

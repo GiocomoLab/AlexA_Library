@@ -145,10 +145,10 @@ for cellIDX = 1:numel(good_cells)
     title(sprintf('c%d, %s',good_cells(cellIDX),region{cluID}));
     xticks(''); yticks('');
     for ij=[80 :80:320]
-        xline(ij)
+        xline(ij);
     end
     for ij=posWindow
-        xline(ij,'r')
+        xline(ij,'r');
     end
     
   
