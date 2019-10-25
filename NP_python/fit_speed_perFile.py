@@ -6,7 +6,7 @@ def mkdir_p(dir):
         os.mkdir(dir)
     
 
-job_directory = "%s/speed_jobs_scripts" %os.environ['OAK']
+job_directory = "%s/attialex/speed_jobs_scripts" %os.environ['OAK']
 scratch = os.environ['SCRATCH']
 #data_dir = os.path.join(scratch, '/registration/')
 
@@ -42,7 +42,7 @@ for sn in session_names:
         fh.writelines("#SBATCH --mail-user=attialex@stanford.edu\n")
         fh.writelines("ml matlab\n")
         fh.writelines("cd $HOME/AlexA_Library/NeuroPixel/speed_sorting")
-        fh.writelines("matlab fit_speed " + sn)
+        fh.writelines("matlab -r -nosplash -nodisplay -nojvm \'fit_speed(\""  + sn +"\");exit\'")
 
     os.system("sbatch %s" %job_file)
     print('submitted job for: ' + sn)
