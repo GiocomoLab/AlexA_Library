@@ -6,7 +6,7 @@ def mkdir_p(dir):
         os.mkdir(dir)
     
 
-job_directory = "%s/speed_jobs" %os.environ['SCRATCH']
+job_directory = "%s/speed_jobs_scripts" %os.environ['OAK']
 scratch = os.environ['SCRATCH']
 #data_dir = os.path.join(scratch, '/registration/')
 
@@ -17,7 +17,7 @@ mkdir_p(job_directory)
 data_dir = '/oak/stanford/groups/giocomo/attialex'
 
 files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain_*.mat')
-session_names = files[0:3   ]
+session_names = files[0:3]
 
 for sn in session_names:
     log_dir =os.path.join(job_directory,sn)
@@ -45,3 +45,4 @@ for sn in session_names:
         fh.writelines("matlab fit_speed " + sn)
 
     os.system("sbatch %s" %job_file)
+    print('submitted job for: ' + sn)
