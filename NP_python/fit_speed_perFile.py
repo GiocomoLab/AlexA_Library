@@ -44,7 +44,7 @@ for sn in session_names:
         fh.writelines("#SBATCH --mail-user=attialex@stanford.edu\n")
         fh.writelines("ml matlab\n")
         fh.writelines("cd $HOME/AlexA_Library/NeuroPixel/speed_sorting\n")
-        fh.writelines("matlab -r -nosplash -nodisplay -nojvm \'fit_speed(\""  + sn +"\");exit\'")
+        fh.writelines("matlab -nosplash -nodisplay -nojvm -r \'fit_speed(\""  + sn +"\");exit\'")
 
     os.system("sbatch %s" %job_file)
     print('submitted job for: ' + sn_path)
