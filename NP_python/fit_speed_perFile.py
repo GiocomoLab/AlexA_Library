@@ -20,9 +20,11 @@ files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain_*.mat'
 session_names = files[0:3]
 
 for sn in session_names:
-    log_dir =os.path.join(job_directory,sn)
+    sn_path = os.path.basename(sn)
+    sn_path = os.path.splitext(sn_path)[0]
+    log_dir =os.path.join(job_directory,sn_path)
     mkdir_p(log_dir)
-    job_file = os.path.join(job_directory,"%s.job" %sn)
+    job_file = os.path.join(job_directory,"%s.job" %sn_path)
     #mouse_data = os.path.join(data_dir, mouse)
 
     # Create mouse directories
@@ -45,4 +47,4 @@ for sn in session_names:
         fh.writelines("matlab -r -nosplash -nodisplay -nojvm \'fit_speed(\""  + sn +"\");exit\'")
 
     os.system("sbatch %s" %job_file)
-    print('submitted job for: ' + sn)
+    print('submitted job for: ' + sn_path)
