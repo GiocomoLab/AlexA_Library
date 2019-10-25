@@ -17,7 +17,7 @@ mkdir_p(job_directory)
 data_dir = '/oak/stanford/groups/giocomo/attialex'
 
 files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain_*.mat')
-session_names = files[0:3]
+session_names = files
 
 for sn in session_names:
     sn_path = os.path.basename(sn)
@@ -38,7 +38,7 @@ for sn in session_names:
         fh.writelines("#SBATCH --job-name=%s.job\n" % sn)
         fh.writelines("#SBATCH -o "+log_dir+"/slurm.%N.%j.out\n")
         fh.writelines("#SBATCH -e " + log_dir+"/slurm.%N.%j.err\n")
-        fh.writelines("#SBATCH --time=2:00:00\n")
+        fh.writelines("#SBATCH --time=0:30:00\n")
         fh.writelines("#SBATCH --mem-per-cpu=2G\n")
         fh.writelines("#SBATCH --mail-type=FAIL\n")
         fh.writelines("#SBATCH --mail-user=attialex@stanford.edu\n")
