@@ -88,11 +88,11 @@ good_cells = sp.cids(sp.cgs==2);
 
 filt = gausswin(5);
 filt = filt/sum(filt);
-fig = figure('Position',[109   487   742   259]); hold on;
+%fig = figure('Position',[109   487   742   259]); hold on;
 
 for cellIDX = 1:numel(good_cells)
     cluID = find(sp.cids==good_cells(cellIDX));
-    cluReg{cellIDX}=region{cluID};
+    clu_reg{cellIDX}=region{cluID};
 %     if ~startsWith(region{cluID},'VIS')
 %         continue
 %     end
@@ -121,37 +121,37 @@ for cellIDX = 1:numel(good_cells)
     end
     %%
     
-    
-    fprintf('\tcell %d (%d/%d)\n',cellIDX,cellIDX,numel(good_cells));
-    subplot(1,4,[1 2 3])
-    hold on
-    % get spike times and index into post
-    spike_t = sp.st(sp.clu==good_cells(cellIDX));
-    [~,~,spike_idx] = histcounts(spike_t,post);
-    
-    
-    for j = 1:numel(contrasts)
-        keep = trial_contrast(trial(spike_idx))==contrasts(j) & ...
-            trial_gain(trial(spike_idx))==1;
-        plot(posx(spike_idx(keep)),trial_sorted(spike_idx(keep)),'.','Color',plot_colors_contrast(contrast_plot_idx(j),:));
-    end
-    % gain trials
-    for j = 1:numel(gains)
-        keep = trial_gain(trial(spike_idx))==gains(j);
-        plot(posx(spike_idx(keep)),trial_sorted(spike_idx(keep)),'.','Color',plot_colors_gain(gain_plot_idx(j),:));
-    end
-    xlim([params.TrackStart params.TrackEnd]);
-    ylim([0 max(trial)+1]);
-    title(sprintf('c%d, %s',good_cells(cellIDX),region{cluID}));
-    xticks(''); yticks('');
-    for ij=[80 :80:320]
-        xline(ij);
-    end
-    for ij=posWindow
-        xline(ij,'r');
-    end
-    
-  
+%     
+%     fprintf('\tcell %d (%d/%d)\n',cellIDX,cellIDX,numel(good_cells));
+%     subplot(1,4,[1 2 3])
+%     hold on
+%     % get spike times and index into post
+%     spike_t = sp.st(sp.clu==good_cells(cellIDX));
+%     [~,~,spike_idx] = histcounts(spike_t,post);
+%     
+%     
+%     for j = 1:numel(contrasts)
+%         keep = trial_contrast(trial(spike_idx))==contrasts(j) & ...
+%             trial_gain(trial(spike_idx))==1;
+%         plot(posx(spike_idx(keep)),trial_sorted(spike_idx(keep)),'.','Color',plot_colors_contrast(contrast_plot_idx(j),:));
+%     end
+%     % gain trials
+%     for j = 1:numel(gains)
+%         keep = trial_gain(trial(spike_idx))==gains(j);
+%         plot(posx(spike_idx(keep)),trial_sorted(spike_idx(keep)),'.','Color',plot_colors_gain(gain_plot_idx(j),:));
+%     end
+%     xlim([params.TrackStart params.TrackEnd]);
+%     ylim([0 max(trial)+1]);
+%     title(sprintf('c%d, %s',good_cells(cellIDX),region{cluID}));
+%     xticks(''); yticks('');
+%     for ij=[80 :80:320]
+%         xline(ij);
+%     end
+%     for ij=posWindow
+%         xline(ij,'r');
+%     end
+%     
+%   
     bl_trials = delay_list(:,3)==1 & delay_list(:,5)==1 & delay_list(:,4)==100 & delay_list(:,6)==100;
     mod = fitlm(delay_list(bl_trials,2),delay_list(bl_trials,1));
     [c,p]=corrcoef(delay_list(bl_trials,[2 1]),'Rows','complete');
@@ -159,24 +159,24 @@ for cellIDX = 1:numel(good_cells)
     models{end+1}=mod.Coefficients;
     c_coeff(end+1)=c(2,1);
     p_vals(end+1)=p(2,1);
-  
-    drawnow
-    subplot(1,4,4)
-    plot(delay_list(bl_trials,2),delay_list(bl_trials,1),'.')
-      axis square
-    xlabel('speed diff')
-    ylabel('delay')
-    x1=min(delay_list(:,2));
-    x2=max(delay_list(:,2));
-    y1=[1 x1]*mod.Coefficients.Estimate;
-    y2=[1 x2]*mod.Coefficients.Estimate;
-    hold on
-    plot([x1 x2],[y1 y2])
-    if save_figs
-        saveas(fig,fullfile(image_save_dir,sprintf('%d.png',cellIDX)),'png');
-        %saveas(h,fullfile(image_save_dir,sprintf('%d.pdf',k)),'pdf');
-    end
-    %pause
-    clf
+%   
+%     drawnow
+%     subplot(1,4,4)
+%     plot(delay_list(bl_trials,2),delay_list(bl_trials,1),'.')
+%       axis square
+%     xlabel('speed diff')
+%     ylabel('delay')
+%     x1=min(delay_list(:,2));
+%     x2=max(delay_list(:,2));
+%     y1=[1 x1]*mod.Coefficients.Estimate;
+%     y2=[1 x2]*mod.Coefficients.Estimate;
+%     hold on
+%     plot([x1 x2],[y1 y2])
+%     if save_figs
+%         saveas(fig,fullfile(image_save_dir,sprintf('%d.png',cellIDX)),'png');
+%         %saveas(h,fullfile(image_save_dir,sprintf('%d.pdf',k)),'pdf');
+%     end
+%     %pause
+%     clf
 end
 

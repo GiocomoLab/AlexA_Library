@@ -2,7 +2,7 @@ function fit_speed(filepath)
 
 [~,session_name,~]=fileparts(filepath);
 
-
+plot_data=false;
 
 run('/home/users/attialex/AlexA_Library/default_paths.m')
 
@@ -80,6 +80,13 @@ c_coeff = zeros(numel(good_cells),1);
 p_vals = c_coeff;
 models = cell(numel(good_cells));
 if plot_data
+            image_save_dir = fullfile('/oak/stanford/groups/giocomo/attialex/images/',...
+    session_name,'speed_sort');
+    if ~isfolder(image_save_dir)
+        mkdir(image_save_dir)
+    end
+    
+    
     fig = figure('Position',[109   487   742   259]); hold on;
     gains_all = [0.8 0.7 0.6 0.5 0.2];
 contrasts_all = [100 50 20 10 5 2 0];
@@ -99,12 +106,13 @@ plot_colors_contrast = plot_colors_contrast(1:end-1,:);
 end
 
 for cellIDX = 1:numel(good_cells)
+    fprintf('now working on %d of %d \n',cellIDX,numel(good_cells))
     cluID = find(sp.cids==good_cells(cellIDX));
     clu_reg{cellIDX}=region{cluID};
     mS=spMap(:,:,cellIDX);
     mS(isnan(mS))=0;
     mS=conv2(mS,filt);
-    %%
+    
     [rr,lags]=xcorr(mS(posBin(1):posBin(2),:));
     nR=size(mS,2);
     delay_list=zeros(nR*(nR-1)/2,6); %delay, speed_diff, %i gain, i contrast, jgain j contrast
@@ -119,12 +127,12 @@ for cellIDX = 1:numel(good_cells)
                 midx = nan;
             end
             
-            hold on
+            
             tmp_d = min(lags)-1;
             delay_list(idx,:)=[midx+tmp_d,trial_speed(iT)-trial_speed(jT), trial_gain(iT),trial_contrast(iT),trial_gain(jT),trial_contrast(jT) ];
         end
     end
-    %%
+    
     
     bl_trials = delay_list(:,3)==1 & delay_list(:,5)==1 & delay_list(:,4)==100 & delay_list(:,6)==100;
     mod = fitlm(delay_list(bl_trials,2),delay_list(bl_trials,1));
@@ -176,9 +184,9 @@ for cellIDX = 1:numel(good_cells)
     y2=[1 x2]*mod.Coefficients.Estimate;
     hold on
     plot([x1 x2],[y1 y2])
-    if save_figs
-        saveas(fig,fullfile(image_save_dir,sprintf('%d.png',cellIDX)),'png');
-    end
+   
+    saveas(fig,fullfile(image_save_dir,sprintf('%d.png',cellIDX)),'png');
+    
     clf
     end
     
