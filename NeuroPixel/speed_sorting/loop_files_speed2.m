@@ -8,7 +8,7 @@ run('/home/users/attialex/AlexA_Library/default_paths.m')
 data_dir=fullfile(OAK,'attialex','NP_DATA');
 %session_name = {'AA5_190809_gain_1'};
 session_name = {};
-sn = dir(fullfile(data_dir,'*_gain_*.mat'));
+sn = dir(fullfile(data_dir,'*.mat'));
 for iS = 1:numel(sn)
     if ~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback') || contains(sn(iS).name,'dark'))
         session_name{end+1}=sn(iS).name(1:end-4);

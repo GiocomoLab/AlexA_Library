@@ -56,7 +56,7 @@ spatialMap(isnan(spatialMap))=0;
 
 %split and flatten maps by region
 [regs,~,idx] = unique(region(sp.cgs==2));
-flatMaps = {};
+flatMaps = cell(numel(regs),1);
 nTrials = size(spatialMap,3);
 
 %define window for xcorr
@@ -96,7 +96,7 @@ for ii = 1:max(trial)
     trial_speed(ii)=tmp;
 end
 
-delays = {};
+delays = cell(numel(regs),1);
 for iR = 1:numel(flatMaps)
     if isempty(flatMaps{iR})
         continue
