@@ -140,12 +140,28 @@ if plot_data && any(abs(corr)>thresh)
     [~,sid]=sort(trial_speed);
     
     trial_sorted =trial;
-    trial_rank = 1:max(trial);
-    trial_rank(sid)=trial_rank;
-    for ii=1:max(trial)
+%     trial_rank = 1:max(trial);
+%     trial_rank(sid)=trial_rank;
+%     for ii=1:max(trial)
+%         idx = trial==ii;
+%         trial_sorted(idx)=trial_rank(ii);
+%     end
+    bl_idx = data.trial_gain ==1 & data.trial_contrast ==100;
+    bs_speed=trial_speed(bl_idx);
+
+[~,sid]=sort(bs_speed);
+bl_rank = 1:sum(bl_idx);
+bl_rank(sid)=bl_rank;
+trial_sorted = nan(1,max(trial));
+bli=0;
+for ii=1:max(trial)
+    if bl_idx(ii)
         idx = trial==ii;
-        trial_sorted(idx)=trial_rank(ii);
+        bli=bli+1;
+    trial_sorted(idx)=bl_rank(bli);
     end
+end
+    
     data.region = region;
     data.posWindow = posWindow;
     data.trial_sorted = trial_sorted;

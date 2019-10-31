@@ -1,6 +1,6 @@
 function plotRasterSpeedSort(data,params,savepath)
 
-fig = figure('Position',[109   487   742   259]); hold on;
+fig = figure('Position',[109   487   742   259],'visible','off'); hold on;
 gains_all = [0.8 0.7 0.6 0.5 0.2];
 contrasts_all = [100 50 20 10 5 2 0];
 gains = sort(unique(data.trial_gain),'descend');
@@ -42,7 +42,7 @@ for j = 1:numel(gains)
     plot(data.posx(spike_idx(keep)),trial_sorted(spike_idx(keep)),'.','Color',plot_colors_gain(gain_plot_idx(j),:));
 end
 xlim([params.TrackStart params.TrackEnd]);
-ylim([0 max(data.trial)+1]);
+ylim([0 max(data.trial_sorted)+1]);
 title(sprintf('c%d, %s',good_cells(cellIDX),region{cluID}));
 xticks(''); yticks('');
 for ij=[80 :80:320]
