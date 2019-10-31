@@ -2,10 +2,6 @@ function fit_speed2(filepath,savepath,params,im_save_root)
 [~,session_name,~]=fileparts(filepath);
 
 if ~isempty(im_save_root)
-    image_save_dir = fullfile(im_save_root,session_name);
-    if ~isfolder(image_save_dir)
-        mkdir(image_save_dir)
-    end
     plot_data=true;
 else
     plot_data=false;
@@ -136,6 +132,11 @@ if plot_data
 end
 thresh = 0.08;
 if plot_data && any(abs(corr)>thresh)
+    image_save_dir = fullfile(im_save_root,session_name);
+    if ~isfolder(image_save_dir)
+        mkdir(image_save_dir)
+    end
+    
     [~,sid]=sort(trial_speed);
     
     trial_sorted =trial;
