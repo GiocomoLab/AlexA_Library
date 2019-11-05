@@ -55,7 +55,7 @@ idxNP=data.sp.st<stop & data.sp.st>=start;
 
 [sp,occ,good_cells,track_edges]=getSpikeMatPosition2(data.sp.st(idxClu&idxNP),data.sp.clu(idxClu&idxNP),data.posx(idxVR),data.post(idxVR));
 
-sp=bsxfun(@rdivide,sp,mean(sp3));
+%sp=bsxfun(@rdivide,sp,mean(sp));
 
 sp=reshape(sp,[size(sp,1) 1 size(sp,2)]);
 
