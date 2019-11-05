@@ -103,7 +103,7 @@ track_centers = track_centers /2;
 loc_downsampled = interp1(data.post(idxVR),track_centers(aa),tvec(idxPost));
 loc_downsampled = discretize(loc_downsampled,track_edges);
 loc_downsampled = track_centers(loc_downsampled);
-speed_resampled = interp1(data.post(idxVR),speed,tvec(idxPost));
+speed_resampled = interp1(data.post(idxVR),speed(idxVR),tvec(idxPost));
 trial_downsampled = interp1(data.post(idxVR),data.trial(idxVR),tvec(idxPost));
 error = (loc_downsampled-track_centers(maxi));
 
@@ -126,5 +126,6 @@ data_out.regions = u_regs;
 data_out.edges_all=edges_all;
 data_out.posteriors=posteriors;
 data_out.trial=trials_all;
+data_out.speed_all = speed_all;
 save(fullfile(savepath,session_name),'data_out')
 end
