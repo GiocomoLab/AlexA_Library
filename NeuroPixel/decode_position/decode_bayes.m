@@ -34,6 +34,7 @@ gains =cell(numel(u_regs),1);
 edges_all = gains;
 posteriors=gains;
 trials_all = gains;
+speed_all  = gains;
 %% select cells
 %good_cells = data.sp.cids(data.sp.cgs==2 & ismember(region,'VISp'));
 %good_cells = data.sp.cids(ismember(data.anatomy.parent_shifted,'VISp'));
@@ -102,6 +103,7 @@ track_centers = track_centers /2;
 loc_downsampled = interp1(data.post(idxVR),track_centers(aa),tvec(idxPost));
 loc_downsampled = discretize(loc_downsampled,track_edges);
 loc_downsampled = track_centers(loc_downsampled);
+speed_resampled = interp1(data.post(idxVR),speed,tvec(idxPost));
 trial_downsampled = interp1(data.post(idxVR),data.trial(idxVR),tvec(idxPost));
 error = (loc_downsampled-track_centers(maxi));
 
@@ -110,6 +112,7 @@ location_real{iR}=loc_downsampled;
 location_decoded{iR}=track_centers(maxi);
 n_cells{iR}=numel(good_cells);
 gains{iR}=data.trial_gain(test_trials);
+speed_all{iR}=speed_resampled;
 posteriors{iR}=squeeze(post(:,:,idxPost));
 edges_all{iR}=track_edges;
 trials_all{iR}=trial_downsampled;
