@@ -4,7 +4,8 @@ function decode_bayes(filepath,savepath)
 
 %% load data
 data=load(filepath);
-
+p.TimeBin = 0.02;
+speed = calcSpeed(data.posx,p);
 %%
 try
     if isfield(data.anatomy,'parent_shifted')
@@ -46,13 +47,16 @@ end
 
 idxClu = ismember(data.sp.clu,(good_cells));
 
-idxVR=data.trial<=20;
+idxVR=data.trial<=20 & speed>2;
 t_time=data.post(idxVR);
 start=min(t_time);
 stop=max(t_time);
 idxNP=data.sp.st<stop & data.sp.st>=start;
 
 [sp,occ,good_cells,track_edges]=getSpikeMatPosition2(data.sp.st(idxClu&idxNP),data.sp.clu(idxClu&idxNP),data.posx(idxVR),data.post(idxVR));
+
+sp=bsxfun(@rdivide,sp,mean(sp3));
+
 sp=reshape(sp,[size(sp,1) 1 size(sp,2)]);
 
 % calculate firing rate by time
@@ -73,7 +77,7 @@ end
 withHistory = false;
 post = decode_calcBayesPost(frMat', sp, occ',tBin,withHistory);
 % decode position for selected trials
-test_trials = [21:24];
+test_trials = [21:28];
 idxVR=ismember(data.trial,test_trials);
     t_time=data.post(idxVR);
     start=min(t_time);
