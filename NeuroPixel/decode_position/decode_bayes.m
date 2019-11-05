@@ -67,13 +67,13 @@ nBins = ceil(max(data.sp.st)/tBin);
 edges=0:tBin:nBins*tBin;
 tvec=edges(1:end-1)+edges(2:end);
 tvec=tvec/2;
-frMat = zeros(nBins+1,numel(good_cells));
+frMat = zeros(nBins,numel(good_cells));
 filt = gausswin(5);
 filt = filt/sum(filt);
 for iC=1:numel(good_cells)
-    frMat(:,iC)=conv(histc(data.sp.st(data.sp.clu==good_cells(iC)),edges),filt,'same');
+    frMat(:,iC)=conv(histcounts(data.sp.st(data.sp.clu==good_cells(iC)),edges),filt,'same');
 end
-
+frMat= frMat*4;
 % calculate posterior
 withHistory = false;
 post = decode_calcBayesPost(frMat', sp, occ',tBin,withHistory);
