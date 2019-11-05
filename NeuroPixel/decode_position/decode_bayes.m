@@ -3,7 +3,7 @@ function decode_bayes(filepath,savepath)
 
 
 %% load data
-data=load('Z:\giocomo\attialex\NP_DATA\AA1_190726_gain_1.mat');
+data=load(filepath);
 
 %%
 try
@@ -16,23 +16,29 @@ catch
     disp('no anatomy')
     return
 end
+if iscolumn(region)
+    region=region';
+end
 
 %%
 u_regs = unique(region);
 c = arrayfun(@(x)sum(strcmp(region,x)), unique(region), 'Uniform', false);
 counts = cell2mat(c);
 
-errors={};
-location_real={};
-location_decoded={};
-n_cells={};
-gains ={};
+errors=cell(numel(u_regs),1);
+location_real=cell(numel(u_regs),1);
+location_decoded=cell(numel(u_regs),1);
+n_cells=cell(numel(u_regs),1);
+gains =cell(numel(u_regs),1);
+edges_all = gains;
+posteriors=gains;
+trials_all = gains;
 %% select cells
 %good_cells = data.sp.cids(data.sp.cgs==2 & ismember(region,'VISp'));
 %good_cells = data.sp.cids(ismember(data.anatomy.parent_shifted,'VISp'));
 for iR=1:numel(u_regs)
     current_reg = u_regs{iR};
-good_cells = data.sp.cids(data.sp.cgs>=1 & ismember(region,current_reg));
+good_cells = data.sp.cids(data.sp.cgs==2 & ismember(region,current_reg));
 if numel(good_cells)<50
     continue
 end
@@ -90,6 +96,9 @@ aa=discretize(tmp,track_edges);
 track_centers = track_edges(1:end-1)+track_edges(2:end);
 track_centers = track_centers /2;
 loc_downsampled = interp1(data.post(idxVR),track_centers(aa),tvec(idxPost));
+loc_downsampled = discretize(loc_downsampled,track_edges);
+loc_downsampled = track_centers(loc_downsampled);
+trial_downsampled = interp1(data.post(idxVR),data.trial(idxVR),tvec(idxPost));
 error = (loc_downsampled-track_centers(maxi));
 
 errors{iR}=error;
@@ -97,11 +106,18 @@ location_real{iR}=loc_downsampled;
 location_decoded{iR}=track_centers(maxi);
 n_cells{iR}=numel(good_cells);
 gains{iR}=data.trial_gain(test_trials);
+posteriors{iR}=squeeze(post(:,:,idxPost));
+edges_all{iR}=track_edges;
+trials_all{iR}=trial_downsampled;
 end
 data_out.errors = errors;
 data_out.location_real=location_real;
 data_out.location_decoded = location_decoded;
 data_out.n_cells = n_cells;
 data_out.gains = gains;
+data_out.regions = u_regs;
+data_out.edges_all=edges_all;
+data_out.posteriors=posteriors;
+data_out.trial=trials_all;
 save(fullfile(savepath,session_name),'data_out')
 end
