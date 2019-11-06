@@ -1,4 +1,4 @@
-function decode_bayes(filepath,savepath)
+function decode_bayes(filepath,savepath,cell_info)
 [~,session_name,~]=fileparts(filepath);
 
 
@@ -35,13 +35,22 @@ edges_all = gains;
 posteriors=gains;
 trials_all = gains;
 speed_all  = gains;
+
+local_stab = cell_info.LocalStability;
+numblocks = floor(32/4);
+local_stab = mean(local_stab(:,1:numblocks),2);
+this_sess = strcmp(cell_info.Session,session_name);
+this_cells = cell_info.CellID(this_sess);
+this_stab = local_stab(this_sess);
+stable_cells=this_cells(this_stab>=0.3);
 %% select cells
 %good_cells = data.sp.cids(data.sp.cgs==2 & ismember(region,'VISp'));
 %good_cells = data.sp.cids(ismember(data.anatomy.parent_shifted,'VISp'));
 for iR=1:numel(u_regs)
     current_reg = u_regs{iR};
 good_cells = data.sp.cids(data.sp.cgs==2 & ismember(region,current_reg));
-if numel(good_cells)<50
+good_cells = good_cells(ismember(good_cells,stable_cells));
+if numel(good_cells)<30
     continue
 end
 % calc spatial Firing rate map for these cells for the selected trial range
@@ -73,7 +82,6 @@ filt = filt/sum(filt);
 for iC=1:numel(good_cells)
     frMat(:,iC)=conv(histcounts(data.sp.st(data.sp.clu==good_cells(iC)),edges),filt,'same');
 end
-frMat= frMat*4;
 % calculate posterior
 withHistory = false;
 post = decode_calcBayesPost(frMat', sp, occ',tBin,withHistory);
