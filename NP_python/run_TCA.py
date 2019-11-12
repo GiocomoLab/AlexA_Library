@@ -84,10 +84,27 @@ def run_pipeline(filename):
     for iC in range(n_cells):
         spMapN[iC,:,:]=np.divide(counts[iC,:,:],occupancy)
 
-    spMapN = spi.gaussian_filter(spMapN,(0,5,0))
+    spMapN = spi.gaussian_filter(spMapN,(0,2,0))
     
 
-    R=10
+   
+    n_cells = len(good_cells)
+    n_bins = len(pos_edges)-1
+    spFlat = np.zeros((n_cells,n_trials*n_bins))
+
+    for iC in range(n_cells):
+        spFlat[iC,:]=spMapN[iC,:,:].ravel(order='F')
+    #spFlat = spFlat-spFlat.mean(axis=1)[:,np.newaxis]
+    spFlat = normalize(spFlat,axis=0,norm='l2')
+    for iC in range(n_cells):
+        for iT in range(n_trials):
+            start = iT*n_bins
+            stop = (iT+1)*n_bins
+            trial_idx = np.arange(start,stop)
+            tmp = spFlat[iC,trial_idx]
+            spMapN[iC,:,iT]=tmp
+
+    R=5
     # Fit CP tensor decomposition (two times).
     U = tt.ncp_bcd(spMapN, rank=R, verbose=False)
     V = tt.ncp_bcd(spMapN, rank=R, verbose=False)
@@ -102,25 +119,17 @@ def run_pipeline(filename):
     tt.plot_factors(V.factors, fig=fig)
     fig.suptitle("aligned models")
     fig.tight_layout()
-    fig.savefig('C:\\temp\\'+session_name+'_tca.png')
-    n_cells = len(good_cells)
-    n_bins = len(pos_edges)-1
-    spFlat = np.zeros((n_cells,n_trials*n_bins))
-
-    for iC in range(n_cells):
-        spFlat[iC,:]=spMapN[iC,:,:].ravel(order='F')
-    spFlat = spFlat-spFlat.mean(axis=1)[:,np.newaxis]
-    spFlat = normalize(spFlat,axis=0,norm='l2')   
+    fig.savefig('C:\\temp\\try3\\'+session_name+'_tca.png')
 
     ff=np.matmul(np.transpose(spFlat),spFlat)
     plt.figure()
     ax=plt.imshow(ff)
-    ax.set_clim([0,1.0])
+    plt.colorbar()
     plt.axvline(x=n_bins*20,color='red',ls='--',linewidth=1)
     plt.axvline(x=n_bins*21,color='green',ls='--',linewidth=1)
     plt.axhline(y=n_bins*20,color='red',ls='--',linewidth=1)
     plt.axhline(y=n_bins*21,color='green',ls='--',linewidth=1)
-    plt.savefig('C:\\temp\\'+session_name+'_cov.png')
+    plt.savefig('C:\\temp\\try3\\'+session_name+'_cov.png')
     plt.close('all')
 
 
@@ -128,6 +137,7 @@ if __name__=='__main__':
     files = glob.glob('F:/NP_DATA/np*_gain*.mat')
     #files = glob.glob('Z:/giocomo/attialex/NP_DATA/np*_gain*.mat')
     for iF in files:
+        print(iF)
         run_pipeline(iF)
     
     p=Pool(processes =5)
