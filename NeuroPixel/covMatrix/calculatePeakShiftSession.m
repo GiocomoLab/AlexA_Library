@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS]=calculatePeakShiftSession(data,trials,chunksize,stride)
+function [PEAKS,SHIFTS]=calculatePeakShiftSession(data,trials,chunksize,stride,region,stability)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -19,9 +19,12 @@ for iT=1:length(trials)
     dwell_time=cat(1,dwell_time,dT);
 end
 %cellIDX=find(sp.cgs>=1);
-%reg = strcmp(data.anatomy.cluster_parent,'MEC')';
+reg = strcmp(data.anatomy.cluster_parent,region);
+if iscolumn(reg)
+    reg = reg';
+end
 spatialMap=spatialMap(data.sp.cids+1,:,:);
-spatialMap=spatialMap(data.sp.cgs==2,:,:);
+spatialMap=spatialMap(data.sp.cgs==2 & reg,:,:);
 %spatialMap = spatialMap(this_stab>0.0 & this_MEC,:,:);
 %normalize by dwell time in each bin
 dt=dwell_time';
@@ -46,16 +49,22 @@ startVec = 1:stride:(nBins-chunksize);
 nReps = numel(startVec);
 maxlag = 10;
 nTrials = size(spatialMap,3);
-SHIFTS = zeros(nTrials,nReps);
+SHIFTS = nan(nTrials,nReps);
 PEAKS = SHIFTS;
 repidx = 0;
+subset = calc_xcorr_snippet(spatialMap(:,:,template_trials),template,1,200,20);
+peaks = max(subset,[],3);
+stable_cells = all(peaks>stability,2);
+if nnz(stable_cells)<20
+    return
+end
 for iStart = 1:stride:(nBins-chunksize)
     repidx = repidx+1;
     startbin = iStart;
     stopbin = iStart+chunksize;
     
     [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template,startbin,stopbin,maxlag);
-    m_xcorr = squeeze(nanmean(xcorrs,1));
+    m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
     [peaks,iidx]=max(m_xcorr,[],2);
     shifts = lags(iidx);
     PEAKS(:,repidx)=peaks;
