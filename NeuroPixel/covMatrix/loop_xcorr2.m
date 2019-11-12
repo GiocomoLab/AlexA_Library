@@ -1,58 +1,89 @@
-chunksize=50;
-stride = 20;
+chunksize=100; %in bins,so thats 200 cm
+binsize=2;
+stride = 10;
 trials = [11:34];
-
+startVec = 1:stride:(200-chunksize);
+chunksPerTrials = numel(startVec);
 region = 'MEC';
 contrast = 100;
-gain_to_look_at = 0.8;
+gain_to_look_at = 0.5;
 
-[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:/NP_DATA');
+[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+%
+p=gcp('nocreate');
+if isempty(p)
+    parpool(8)
+end
 %%
 n_chunks = 0;
+chunk_idx = triggers;
 for ii=1:numel(filenames)
-    n_chunks = n_chunks+numel(triggers{ii});
+    %n_chunks = n_chunks+numel(triggers{ii});
+    for iC=1:numel(triggers{ii})
+        n_chunks = n_chunks+1;
+        chunk_idx{ii}(iC)=n_chunks;
+        loop_data(n_chunks).filename = filenames{ii};
+        loop_data(n_chunks).trigger = triggers{ii}(iC);
+    end
 end
-PEAKS=zeros(24,8,n_chunks);
-SHIFTS = PEAKS;
+
 tt=(-10:13);
-cntr = 0;
-for iF = 1:numel(filenames)
-    data = load(filenames{iF});
-    for iTrigger = 1:numel(triggers{iF})
-        cntr = cntr+1;
-        current_trig = triggers{iF}(iTrigger);
+
+PEAKS=zeros(numel(tt),chunksPerTrials,n_chunks);
+SHIFTS = PEAKS;
+%cntr = 0;
+parfor iF = 1:n_chunks
+%     data = load(filenames{iF});
+%     for iTrigger = 1:10
+%         cntr = chunk_idx{iF}(iTrigger);
+%         current_trig = triggers{iF}(iTrigger);
+        data = load(loop_data(iF).filename);
+        current_trig = loop_data(iF).trigger;
+        
         trials = current_trig+tt;
         
-        [peak,shift]=calculatePeakShiftSession(data,trials,chunksize,stride,region,0.2);
-        PEAKS(:,:,cntr)=peak;
-        SHIFTS(:,:,cntr)=shift;
-    startVec = 1:stride:(200-chunksize);
-    
-    x=startVec+25;
-    x = x-1;
-    x = x*2;
-    fig = figure('visibile','off');
-    hold on
-for iT = 1:24
-    tmp = x+400*(iT-1);
-    plot(tmp,peak(iT,:),'b.')
-end
-    ylim([0.2, 0.8])
-    drawnow
-    [~,session_name,~] = fileparts(filenames{iF});
-    savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv1';
-    saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d.png',session_name,region,gain_to_look_at,contrast)))
-    close(fig)
-    end
+        [peak,shift,xtx]=calculatePeakShiftSession(data,trials,chunksize,stride,region,0.2,binsize);
+        PEAKS(:,:,iF)=peak;
+        SHIFTS(:,:,iF)=shift;
+        
+        x=startVec+chunksize/2;
+        x = x-1;
+        x = x*2;
+        fig = figure('visible','off');
+        subplot(1,2,1)
+        hold on
+        for iT = 1:numel(tt)
+            tmp = x+400*(iT-1)-10*400;
+            if ismember(iT,[11:14])
+                plot(tmp,peak(iT,:),'r.')
+                
+            else
+                
+                plot(tmp,peak(iT,:),'b.')
+            end
+        end
+        ylim([0.2, 0.8])
+        
+        subplot(1,2,2)
+        imagesc(xtx,[0 1]);
+        xline(10*400/binsize,'r');
+        yline(10*400/binsize,'r');
+        axis image;
+        
+        [~,session_name,~] = fileparts(loop_data(iF).filename);
+        savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv1';
+        saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,region,gain_to_look_at,contrast,iF)))
+        close(fig)
+    %end
 end
 %%
 X=[];
 
 startVec = 1:stride:(200-chunksize);
-    
-    x=startVec+25;
-    x = x-1;
-    x = x*2;
+
+x=startVec+25;
+x = x-1;
+x = x*2;
 for iT = 1:24
     tmp = x+400*(iT-1);
     X=cat(2,X,tmp);
@@ -68,3 +99,14 @@ for iS = 1:size(PEAKS,3)
         
     end
 end
+
+savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv1';
+output.X=X;
+output.Y = Y;
+output.region = region;
+output.gain = gain_to_look_at;
+output.contrast = contrast;
+output.loop_data = loop_data;
+save(fullfile(savepath,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output')
+%%
+

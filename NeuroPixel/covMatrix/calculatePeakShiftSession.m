@@ -1,10 +1,10 @@
-function [PEAKS,SHIFTS]=calculatePeakShiftSession(data,trials,chunksize,stride,region,stability)
+function [PEAKS,SHIFTS,XTX]=calculatePeakShiftSession(data,trials,chunksize,stride,region,stability,binsize)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:2:400];
+edges=[0:binsize:400];
 edges(1)=-.01;
 data.posx(data.posx<0)=0;
 data.posx(data.posx>=400)=399.00;
@@ -40,8 +40,9 @@ filt = reshape(filt,[1, numel(filt),1]);
 
 sPF=convn(spatialMap,filt,'same');
 % get template trials
-template_trials = [4:10];
-template = nanmean(sPF(:,:,template_trials),3);
+template_trials = [6:10];
+spatialMap = sPF;
+template = nanmean(spatialMap(:,:,template_trials),3);
 
 %%
 nBins = size(spatialMap,2);
@@ -55,6 +56,7 @@ repidx = 0;
 subset = calc_xcorr_snippet(spatialMap(:,:,template_trials),template,1,200,20);
 peaks = max(subset,[],3);
 stable_cells = all(peaks>stability,2);
+XTX = zeros(nTrials*nBins);
 if nnz(stable_cells)<20
     return
 end
@@ -69,6 +71,21 @@ for iStart = 1:stride:(nBins-chunksize)
     shifts = lags(iidx);
     PEAKS(:,repidx)=peaks;
     SHIFTS(:,repidx)=shifts;
+end
+spatialMap = spatialMap(stable_cells,:,:);
+X=zeros(nnz(stable_cells),size(spatialMap,2)*size(spatialMap,3));
+
+for iC = 1:size(X,1)
+    tmp = spatialMap(iC,:,:);
+    
+    X(iC,:)=tmp(:);
+end
+X(isnan(X))=0;
+X=X-mean(X,2);
+X=normc(X);
+
+XTX = X'*X;
+
 end
 %%
    
