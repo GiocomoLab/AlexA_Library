@@ -11,7 +11,7 @@ for iF = 1:numel(files)
     SHIFTS(:,:,iF)=shifts;
     startVec = 1:stride:(200-chunksize);
     
-     x=startVec+25;
+    x=startVec+25;
     x = x-1;
     x = x*2;
     fig = figure();
