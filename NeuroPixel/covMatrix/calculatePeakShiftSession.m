@@ -40,9 +40,12 @@ filt = reshape(filt,[1, numel(filt),1]);
 
 sPF=convn(spatialMap,filt,'same');
 % get template trials
-template_trials = [6:10];
+
 spatialMap = sPF;
-template = nanmean(spatialMap(:,:,template_trials),3);
+template1_trials = [6:10];
+template2_trials = [1:5];
+template1 = nanmean(spatialMap(:,:,template1_trials),3);
+template2 = nanmean(spatialMap(:,:,template2_trials),3);
 
 %%
 nBins = size(spatialMap,2);
@@ -53,7 +56,7 @@ nTrials = size(spatialMap,3);
 SHIFTS = nan(nTrials,nReps);
 PEAKS = SHIFTS;
 repidx = 0;
-subset = calc_xcorr_snippet(spatialMap(:,:,template_trials),template,1,200,20);
+subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
 peaks = max(subset,[],3);
 stable_cells = all(peaks>stability,2);
 XTX = zeros(nTrials*nBins);
@@ -65,9 +68,14 @@ for iStart = 1:stride:(nBins-chunksize)
     startbin = iStart;
     stopbin = iStart+chunksize;
     
-    [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template,startbin,stopbin,maxlag);
+    [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag);
+    [xcorrs2,~] = calc_xcorr_snippet(spatialMap,template2,startbin,stopbin,maxlag);
     m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
     [peaks,iidx]=max(m_xcorr,[],2);
+    m_xcorr2 = squeeze(nanmean(xcorrs2(stable_cells,:,:),1));
+    [peaks2,iidx2]=max(m_xcorr2,[],2);
+    peaks(template1_trials)=peaks2(template1_trials);
+    iidx(template1_trials)=iidx2(template1_trials);
     shifts = lags(iidx);
     PEAKS(:,repidx)=peaks;
     SHIFTS(:,repidx)=shifts;

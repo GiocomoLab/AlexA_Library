@@ -8,12 +8,13 @@ region = 'MEC';
 contrast = 100;
 gain_to_look_at = 0.5;
 
-[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+%[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
 %
-p=gcp('nocreate');
-if isempty(p)
-    parpool(8)
-end
+% p=gcp('nocreate');
+% if isempty(p)
+%     parpool(8)
+% end
 %%
 n_chunks = 0;
 chunk_idx = triggers;
@@ -32,7 +33,7 @@ tt=(-10:13);
 PEAKS=zeros(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 %cntr = 0;
-parfor iF = 1:n_chunks
+for iF = 1:n_chunks
 %     data = load(filenames{iF});
 %     for iTrigger = 1:10
 %         cntr = chunk_idx{iF}(iTrigger);
@@ -71,8 +72,10 @@ parfor iF = 1:n_chunks
         axis image;
         
         [~,session_name,~] = fileparts(loop_data(iF).filename);
-        savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv1';
+        savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv2';
+        drawnow
         saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,region,gain_to_look_at,contrast,iF)))
+        
         close(fig)
     %end
 end
@@ -100,7 +103,7 @@ for iS = 1:size(PEAKS,3)
     end
 end
 
-savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv1';
+savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv2';
 output.X=X;
 output.Y = Y;
 output.region = region;
