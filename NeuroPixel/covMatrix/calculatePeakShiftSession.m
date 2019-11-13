@@ -34,11 +34,17 @@ for ii=1:size(spatialMap,1)
 end
 spatialMap(isnan(spatialMap))=0;
 % do spatial smoothing
-filt = gausswin(1);
-filt = filt/sum(filt);
-filt = reshape(filt,[1, numel(filt),1]);
-
-sPF=convn(spatialMap,filt,'same');
+% filt = gausswin(11);
+% filt = filt/sum(filt);
+% filt = reshape(filt,[1, numel(filt),1]);
+smoothSigma = 4/binsize;
+smoothWindow = floor(smoothSigma*5/2)*2+1;
+gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
+sPF = repmat(spatialMap,[1,3,1]);
+sPF=convn(sPF,filt,'same');
+iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
+sPF = sPF(:,iidx,:);
 % get template trials
 
 spatialMap = sPF;
