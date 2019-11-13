@@ -1,23 +1,25 @@
 chunksize=100; %in bins,so thats 200 cm
+stride_start = 10;
 binsize=2;
 stride = 10;
 trials = [11:34];
-startVec = 1:stride:(200-chunksize);
+startVec = stride_start:stride:(200-chunksize);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
 contrast = 100;
 gain_to_look_at = 0.5;
 
-%[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
+[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+%[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
 %
-% p=gcp('nocreate');
-% if isempty(p)
-%     parpool(8)
-% end
+p=gcp('nocreate');
+if isempty(p)
+    parpool(8);
+end
 %%
 n_chunks = 0;
 chunk_idx = triggers;
+loop_data = struct();
 for ii=1:numel(filenames)
     %n_chunks = n_chunks+numel(triggers{ii});
     for iC=1:numel(triggers{ii})
@@ -33,7 +35,7 @@ tt=(-10:13);
 PEAKS=zeros(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 %cntr = 0;
-for iF = 1:n_chunks
+parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
 %     for iTrigger = 1:10
 %         cntr = chunk_idx{iF}(iTrigger);
@@ -43,7 +45,7 @@ for iF = 1:n_chunks
         
         trials = current_trig+tt;
         
-        [peak,shift,xtx]=calculatePeakShiftSession(data,trials,chunksize,stride,region,0.2,binsize);
+        [peak,shift,xtx]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.4,binsize);
         PEAKS(:,:,iF)=peak;
         SHIFTS(:,:,iF)=shift;
         
@@ -82,30 +84,34 @@ end
 %%
 X=[];
 
-startVec = 1:stride:(200-chunksize);
 
-x=startVec+25;
+x=startVec+chunksize/2;
 x = x-1;
-x = x*2;
-for iT = 1:24
+x = x*binsize;
+for iT = 1:numel(tt)
     tmp = x+400*(iT-1);
     X=cat(2,X,tmp);
     %plot(tmp,peak(iT,:),'b.')
 end
 Y=zeros(size(PEAKS,3),numel(X));
+S = Y;
 chunks_per_trial = size(PEAKS,2);
 for iS = 1:size(PEAKS,3)
     for iT = 1:24
         idx = ((iT-1)*chunks_per_trial+1):iT*chunks_per_trial;
         tmp = squeeze(PEAKS(iT,:,iS));
         Y(iS,idx)=tmp;
+        tmp = squeeze(SHIFTS(iT,:,iS));
         
+        S(iS,idx)=tmp;
     end
 end
 
 savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv2';
+output=struct();
 output.X=X;
 output.Y = Y;
+output.S = S;
 output.region = region;
 output.gain = gain_to_look_at;
 output.contrast = contrast;

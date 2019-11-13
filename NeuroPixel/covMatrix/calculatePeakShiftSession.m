@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX]=calculatePeakShiftSession(data,trials,chunksize,stride,region,stability,binsize)
+function [PEAKS,SHIFTS,XTX]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability,binsize)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -34,7 +34,7 @@ for ii=1:size(spatialMap,1)
 end
 spatialMap(isnan(spatialMap))=0;
 % do spatial smoothing
-filt = gausswin(10);
+filt = gausswin(1);
 filt = filt/sum(filt);
 filt = reshape(filt,[1, numel(filt),1]);
 
@@ -49,13 +49,15 @@ template2 = nanmean(spatialMap(:,:,template2_trials),3);
 
 %%
 nBins = size(spatialMap,2);
-startVec = 1:stride:(nBins-chunksize);
+startVec = stride_start:stride:(nBins-chunksize);
 nReps = numel(startVec);
 maxlag = 10;
 nTrials = size(spatialMap,3);
 SHIFTS = nan(nTrials,nReps);
 PEAKS = SHIFTS;
 repidx = 0;
+%stable cells: have a peak xcorr across the whole thing of greater than
+%thresh for each trial
 subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
 peaks = max(subset,[],3);
 stable_cells = all(peaks>stability,2);
@@ -63,11 +65,12 @@ XTX = zeros(nTrials*nBins);
 if nnz(stable_cells)<20
     return
 end
-for iStart = 1:stride:(nBins-chunksize)
+for iStart = stride_start:stride:(nBins-chunksize)
     repidx = repidx+1;
     startbin = iStart;
     stopbin = iStart+chunksize;
-    
+    %xcorr relative to template trials: 4 before gain onset for all except
+    %these 4
     [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag);
     [xcorrs2,~] = calc_xcorr_snippet(spatialMap,template2,startbin,stopbin,maxlag);
     m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
