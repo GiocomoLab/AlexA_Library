@@ -11,9 +11,9 @@ for iT = 1:size(spatialMap,3)
             tmp_template = squeeze(spatialMap(iC,startbin:stopbin,iT-4));
             
         elseif iT<20
-            tmp_template = squeeze(spatialMap(iC,startbin:stopbin,iT-8));
+            tmp_template = squeeze(spatialMap(iC,startbin:stopbin,10));
         else 
-            tmp_template = squeeze(spatialMap(iC,startbin:stopbin,iT-12));
+            tmp_template = squeeze(spatialMap(iC,startbin:stopbin,10));
         end
         tmp_resp = squeeze(spatialMap(iC,startbin:stopbin,iT));
         [aa,lags] = xcorr(tmp_template,tmp_resp,maxlag,'coeff');

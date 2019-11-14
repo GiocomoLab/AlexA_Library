@@ -6,7 +6,7 @@ trials = [11:34];
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
-contrast = 100;
+contrast = 10;
 gain_to_look_at = 0.5;
 
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
@@ -16,6 +16,13 @@ p=gcp('nocreate');
 if isempty(p)
     parpool(8);
 end
+
+savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv5';
+savepath = fullfile(savepath,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
+if ~isfolder(savepath)
+    mkdir(savepath)
+end
+
 %%
 n_chunks = 0;
 chunk_idx = triggers;
@@ -32,7 +39,7 @@ end
 
 tt=(-10:13);
 
-PEAKS=zeros(numel(tt),chunksPerTrials,n_chunks);
+PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 %cntr = 0;
 parfor iF = 1:n_chunks
@@ -74,7 +81,7 @@ parfor iF = 1:n_chunks
         axis image;
         
         [~,session_name,~] = fileparts(loop_data(iF).filename);
-        savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv2';
+        
         drawnow
         saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,region,gain_to_look_at,contrast,iF)))
         
@@ -107,7 +114,7 @@ for iS = 1:size(PEAKS,3)
     end
 end
 
-savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv2';
+savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv5';
 output=struct();
 output.X=X;
 output.Y = Y;

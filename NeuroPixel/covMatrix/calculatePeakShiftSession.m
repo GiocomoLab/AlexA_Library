@@ -48,9 +48,10 @@ sPF = sPF(:,iidx,:);
 % get template trials
 
 spatialMap = sPF;
-template1_trials = [6:10];
+template1_trials = [2:10];
 template2_trials = [1:5];
 template1 = nanmean(spatialMap(:,:,template1_trials),3);
+template1 = template1-mean(template1,2);
 template2 = nanmean(spatialMap(:,:,template2_trials),3);
 
 %%
@@ -64,11 +65,20 @@ PEAKS = SHIFTS;
 repidx = 0;
 %stable cells: have a peak xcorr across the whole thing of greater than
 %thresh for each trial
-subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
-peaks = max(subset,[],3);
-stable_cells = all(peaks>stability,2);
-XTX = zeros(nTrials*nBins);
-if nnz(stable_cells)<20
+idx = find(triu(true(8),1));
+stability = zeros(1,size(spatialMap,1));
+for ii=1:numel(stability)
+    tmp = squeeze(spatialMap(ii,:,2:10));
+    tmp = corr(tmp);
+    stability(ii)=mean(tmp(idx));
+end
+    
+stable_cells = stability>.2;
+% subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
+% peaks = max(subset,[],3);
+% stable_cells = all(peaks>stability,2);
+XTX = nan(nTrials*nBins);
+if nnz(stable_cells)<.2*numel(stable_cells)
     return
 end
 for iStart = stride_start:stride:(nBins-chunksize)
@@ -77,7 +87,7 @@ for iStart = stride_start:stride:(nBins-chunksize)
     stopbin = iStart+chunksize;
     %xcorr relative to template trials: 4 before gain onset for all except
     %these 4
-    [xcorrs,lags] = calc_xcorr_snippet2(spatialMap,template1,startbin,stopbin,maxlag);
+    [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag);
     %[xcorrs2,~] = calc_xcorr_snippet(spatialMap,template2,startbin,stopbin,maxlag);
     m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
     [peaks,iidx]=max(m_xcorr,[],2);
