@@ -19,7 +19,11 @@ for iT=1:length(trials)
     dwell_time=cat(1,dwell_time,dT);
 end
 %cellIDX=find(sp.cgs>=1);
-reg = strcmp(data.anatomy.cluster_parent,region);
+if isfield(data.anatomy,'parent_shifted')
+    reg = startsWith(data.anatomy.parent_shifted,region);
+else
+reg = startsWith(data.anatomy.cluster_parent,region);
+end
 if iscolumn(reg)
     reg = reg';
 end
@@ -50,8 +54,17 @@ sPF = sPF(:,iidx,:);
 spatialMap = sPF;
 template1_trials = [2:10];
 template2_trials = [1:5];
-template1 = nanmean(spatialMap(:,:,template1_trials),3);
-template1 = template1-mean(template1,2);
+template1={};
+cntr = 0;
+for ii=template1_trials
+    cntr = cntr+1;
+    tmp_idx =setdiff(template1_trials,ii);
+    tmp = nanmean(spatialMap(:,:,tmp_idx),3);
+    template1{cntr}=tmp;
+end
+template1{numel(template1_trials)}=nanmean(spatialMap(:,:,template1_trials),3);
+%template1 = nanmean(spatialMap(:,:,template1_trials),3);
+%template1 = template1-mean(template1,2);
 template2 = nanmean(spatialMap(:,:,template2_trials),3);
 
 %%
@@ -81,6 +94,7 @@ XTX = nan(nTrials*nBins);
 if nnz(stable_cells)<.2*numel(stable_cells)
     return
 end
+%spatialMap = spatialMap-mean(spatialMap,2);
 for iStart = stride_start:stride:(nBins-chunksize)
     repidx = repidx+1;
     startbin = iStart;

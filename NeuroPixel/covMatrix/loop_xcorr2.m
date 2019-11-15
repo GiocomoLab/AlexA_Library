@@ -2,23 +2,22 @@ chunksize=100; %in bins,so thats 200 cm
 stride_start = 10;
 binsize=2;
 stride = 10;
-trials = [11:34];
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
-region = 'MEC';
-contrast = 10;
-gain_to_look_at = 0.5;
+region = 'VISp';
+contrast = 100;
+gain_to_look_at = .5;
 
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
 %
 p=gcp('nocreate');
 if isempty(p)
-    parpool(8);
+    parpool(12);
 end
 
-savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv5';
-savepath = fullfile(savepath,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv6';
+savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -29,6 +28,10 @@ chunk_idx = triggers;
 loop_data = struct();
 for ii=1:numel(filenames)
     %n_chunks = n_chunks+numel(triggers{ii});
+    if numel(triggers{ii})>4
+        triggers{ii} = randsample(triggers{ii},4);
+    end
+        
     for iC=1:numel(triggers{ii})
         n_chunks = n_chunks+1;
         chunk_idx{ii}(iC)=n_chunks;
@@ -51,8 +54,12 @@ parfor iF = 1:n_chunks
         current_trig = loop_data(iF).trigger;
         
         trials = current_trig+tt;
-        
+        try
         [peak,shift,xtx]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.4,binsize);
+        catch ME
+            sprintf('%s: %d',loop_data(iF).filename,iF)
+            rethrow(ME)
+        end
         PEAKS(:,:,iF)=peak;
         SHIFTS(:,:,iF)=shift;
         
@@ -114,7 +121,6 @@ for iS = 1:size(PEAKS,3)
     end
 end
 
-savepath = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv5';
 output=struct();
 output.X=X;
 output.Y = Y;
@@ -123,6 +129,6 @@ output.region = region;
 output.gain = gain_to_look_at;
 output.contrast = contrast;
 output.loop_data = loop_data;
-save(fullfile(savepath,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output')
+save(fullfile(savepath_root,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output')
 %%
 
