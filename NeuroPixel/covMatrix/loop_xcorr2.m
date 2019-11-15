@@ -13,10 +13,10 @@ gain_to_look_at = .5;
 
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
 %
-% p=gcp('nocreate');
-% if isempty(p)
-%     parpool(12);
-% end
+p=gcp('nocreate');
+if isempty(p)
+    parpool(8);
+end
 
 savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv6';
 %savepath_root = '/users/attialex/tmp/';
@@ -48,7 +48,7 @@ tt=(-8:13);
 PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 %cntr = 0;
-for iF = 1:n_chunks
+parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
 %     for iTrigger = 1:10
 %         cntr = chunk_idx{iF}(iTrigger);
