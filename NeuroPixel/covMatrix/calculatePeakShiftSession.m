@@ -52,17 +52,18 @@ sPF = sPF(:,iidx,:);
 % get template trials
 
 spatialMap = sPF;
-template1_trials = [2:10];
+template1_trials = [1:8];
 template2_trials = [1:5];
 template1={};
 cntr = 0;
 for ii=template1_trials
     cntr = cntr+1;
     tmp_idx =setdiff(template1_trials,ii);
+
     tmp = nanmean(spatialMap(:,:,tmp_idx),3);
     template1{cntr}=tmp;
 end
-template1{numel(template1_trials)}=nanmean(spatialMap(:,:,template1_trials),3);
+template1{numel(template1_trials)+1}=nanmean(spatialMap(:,:,template1_trials),3);
 %template1 = nanmean(spatialMap(:,:,template1_trials),3);
 %template1 = template1-mean(template1,2);
 template2 = nanmean(spatialMap(:,:,template2_trials),3);

@@ -3,7 +3,7 @@ xcorrs = zeros(size(spatialMap,1),size(spatialMap,3),2*maxlag+1);
 n_sets = numel(template);
 for iT = 1:size(spatialMap,3)
     if iT<n_sets
-        template_set = max(iT-2,1);
+        template_set = iT;
     else
         template_set = n_sets;
     end

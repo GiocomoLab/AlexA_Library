@@ -4,19 +4,22 @@ binsize=2;
 stride = 10;
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
-region = 'VISp';
+region = 'MEC';
 contrast = 100;
 gain_to_look_at = .5;
 
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+%[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
+
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
 %
-p=gcp('nocreate');
-if isempty(p)
-    parpool(12);
-end
+% p=gcp('nocreate');
+% if isempty(p)
+%     parpool(12);
+% end
 
 savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv6';
+%savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -40,12 +43,12 @@ for ii=1:numel(filenames)
     end
 end
 
-tt=(-10:13);
+tt=(-8:13);
 
 PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 %cntr = 0;
-parfor iF = 1:n_chunks
+for iF = 1:n_chunks
 %     data = load(filenames{iF});
 %     for iTrigger = 1:10
 %         cntr = chunk_idx{iF}(iTrigger);
@@ -71,7 +74,7 @@ parfor iF = 1:n_chunks
         hold on
         for iT = 1:numel(tt)
             tmp = x+400*(iT-1)-10*400;
-            if ismember(iT,[11:14])
+            if ismember(iT,[abs(tt(1))+(1:4)])
                 plot(tmp,peak(iT,:),'r.')
                 
             else
@@ -79,12 +82,12 @@ parfor iF = 1:n_chunks
                 plot(tmp,peak(iT,:),'b.')
             end
         end
-        ylim([0.2, 0.8])
+        ylim([0., 0.8])
         
         subplot(1,2,2)
         imagesc(xtx,[0 1]);
-        xline(10*400/binsize,'r');
-        yline(10*400/binsize,'r');
+        xline(abs(min(tt))*400/binsize,'r');
+        yline(abs(min(tt))*400/binsize,'r');
         axis image;
         
         [~,session_name,~] = fileparts(loop_data(iF).filename);
@@ -111,7 +114,7 @@ Y=zeros(size(PEAKS,3),numel(X));
 S = Y;
 chunks_per_trial = size(PEAKS,2);
 for iS = 1:size(PEAKS,3)
-    for iT = 1:24
+    for iT = 1:numel(tt)
         idx = ((iT-1)*chunks_per_trial+1):iT*chunks_per_trial;
         tmp = squeeze(PEAKS(iT,:,iS));
         Y(iS,idx)=tmp;
@@ -129,6 +132,9 @@ output.region = region;
 output.gain = gain_to_look_at;
 output.contrast = contrast;
 output.loop_data = loop_data;
+figure
+plot(output.X-4000,nanmean(output.Y))
+hold on
 save(fullfile(savepath_root,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output')
 %%
 
