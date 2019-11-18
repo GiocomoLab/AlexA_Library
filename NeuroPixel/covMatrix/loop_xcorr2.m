@@ -9,15 +9,15 @@ gain_to_look_at = 0.5;
 contrast = 100;
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
-
+%%
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
 %
 p=gcp('nocreate');
 if isempty(p)
     parpool(12);
 end
-
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_ventral';
+%%
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_MAXMEAN';
 %savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
@@ -28,7 +28,7 @@ end
 n_chunks = 0;
 chunk_idx = triggers;
 loop_data = struct();
-for ii=1:numel(filenames)
+parfor ii=1:numel(filenames)
     %n_chunks = n_chunks+numel(triggers{ii});
     if numel(triggers{ii})>4
         triggers{ii} = randsample(triggers{ii},4);
@@ -48,8 +48,9 @@ PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 MouseID = cell(n_chunks,1);
 NUnits = nan(n_chunks,2);
+XTX = nan(numel(tt)*200,numel(tt)*200,n_chunks);
 %cntr = 0;
-parfor iF = 1:n_chunks
+for iF = 1:n_chunks
 %     data = load(filenames{iF});
 %     for iTrigger = 1:10
 %         cntr = chunk_idx{iF}(iTrigger);
@@ -71,9 +72,9 @@ parfor iF = 1:n_chunks
 
         PEAKS(:,:,iF)=peak;
         SHIFTS(:,:,iF)=shift;
-        MouseID{iF}=session_name
+        MouseID{iF}=session_name;
         NUnits(iF,:)=n_units;
-        
+        XTX(:,:,iF)=xtx;
         x=startVec+chunksize/2;
         x = x-1;
         x = x*2;
@@ -139,6 +140,7 @@ output.region = region;
 output.gain = gain_to_look_at;
 output.contrast = contrast;
 output.loop_data = loop_data;
+output.NUnits = NUnits;
 %figure
 %plot(output.X-4000,nanmean(output.Y))
 %hold on

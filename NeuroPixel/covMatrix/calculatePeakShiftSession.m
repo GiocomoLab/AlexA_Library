@@ -57,9 +57,9 @@ template2_trials = [1:5];
 template1={};
 cntr = 0;
 
-depth = data.anatomy.tip_distance(data.sp.cgs==2 & reg);
-sel_idx = depth<median(depth);
-spatialMap = spatialMap(sel_idx,:,:);
+%depth = data.anatomy.tip_distance(data.sp.cgs==2 & reg);
+%sel_idx = depth<median(depth);
+%spatialMap = spatialMap(sel_idx,:,:);
 
 for ii=template1_trials
     cntr = cntr+1;
@@ -111,13 +111,20 @@ for iStart = stride_start:stride:(nBins-chunksize)
     %these 4
     [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag);
     %[xcorrs2,~] = calc_xcorr_snippet(spatialMap,template2,startbin,stopbin,maxlag);
-    m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
-    [peaks,iidx]=max(m_xcorr,[],2);
+    
+    %m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
+    %[peaks,iidx]=max(m_xcorr,[],2);
+    %shifts = lags(iidx);
+
+    [pp,pps] = max(xcorrs,[],3);
+    peaks=nanmean(pp);
+    midx = round(nanmean(pps));
+    shifts = lags(midx);
+    
     %m_xcorr2 = squeeze(nanmean(xcorrs2(stable_cells,:,:),1));
     %[peaks2,iidx2]=max(m_xcorr2,[],2);
     %peaks(template1_trials)=peaks2(template1_trials);
     %iidx(template1_trials)=iidx2(template1_trials);
-    shifts = lags(iidx);
     PEAKS(:,repidx)=peaks;
     SHIFTS(:,repidx)=shifts;
 end
