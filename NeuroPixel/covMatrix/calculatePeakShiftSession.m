@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability,binsize)
+function [PEAKS,SHIFTS,XTX,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -56,6 +56,11 @@ template1_trials = [1:8];
 template2_trials = [1:5];
 template1={};
 cntr = 0;
+
+depth = data.anatomy.tip_distance(data.sp.cgs==2 & reg);
+sel_idx = depth<median(depth);
+spatialMap = spatialMap(sel_idx,:,:);
+
 for ii=template1_trials
     cntr = cntr+1;
     tmp_idx =setdiff(template1_trials,ii);
@@ -87,12 +92,14 @@ for ii=1:numel(stability)
     stability(ii)=mean(tmp(idx));
 end
     
-stable_cells = stability>.2;
+stable_cells = stability>stability_threshold;
 % subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
 % peaks = max(subset,[],3);
 % stable_cells = all(peaks>stability,2);
 XTX = nan(nTrials*nBins);
-if nnz(stable_cells)<.2*numel(stable_cells)
+n_units = [nnz(stable_cells),numel(stable_cells)];
+
+if nnz(stable_cells)<=.2*numel(stable_cells)
     return
 end
 %spatialMap = spatialMap-mean(spatialMap,2);
@@ -116,7 +123,6 @@ for iStart = stride_start:stride:(nBins-chunksize)
 end
 spatialMap = spatialMap(stable_cells,:,:);
 X=zeros(nnz(stable_cells),size(spatialMap,2)*size(spatialMap,3));
-
 for iC = 1:size(X,1)
     tmp = spatialMap(iC,:,:);
     

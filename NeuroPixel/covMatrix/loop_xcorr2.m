@@ -5,9 +5,8 @@ stride = 10;
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
+gain_to_look_at = 0.5;
 contrast = 100;
-gain_to_look_at = .5;
-
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 
@@ -15,10 +14,10 @@ gain_to_look_at = .5;
 %
 p=gcp('nocreate');
 if isempty(p)
-    parpool(8);
+    parpool(12);
 end
 
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv6';
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_ventral';
 %savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
@@ -43,10 +42,12 @@ for ii=1:numel(filenames)
     end
 end
 
-tt=(-8:13);
+tt=(-8:11);
 
 PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
+MouseID = cell(n_chunks,1);
+NUnits = nan(n_chunks,2);
 %cntr = 0;
 parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
@@ -57,14 +58,21 @@ parfor iF = 1:n_chunks
         current_trig = loop_data(iF).trigger;
         
         trials = current_trig+tt;
+        peak = 0;
+        shift = 0;
+        xtx = 0;
         try
-        [peak,shift,xtx]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.4,binsize);
+        [peak,shift,xtx,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize);
         catch ME
             sprintf('%s: %d',loop_data(iF).filename,iF)
             rethrow(ME)
         end
+        [~,session_name,~] = fileparts(loop_data(iF).filename);
+
         PEAKS(:,:,iF)=peak;
         SHIFTS(:,:,iF)=shift;
+        MouseID{iF}=session_name
+        NUnits(iF,:)=n_units;
         
         x=startVec+chunksize/2;
         x = x-1;
@@ -90,7 +98,6 @@ parfor iF = 1:n_chunks
         yline(abs(min(tt))*400/binsize,'r');
         axis image;
         
-        [~,session_name,~] = fileparts(loop_data(iF).filename);
         
         drawnow
         saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,region,gain_to_look_at,contrast,iF)))
@@ -132,9 +139,9 @@ output.region = region;
 output.gain = gain_to_look_at;
 output.contrast = contrast;
 output.loop_data = loop_data;
-figure
-plot(output.X-4000,nanmean(output.Y))
-hold on
+%figure
+%plot(output.X-4000,nanmean(output.Y))
+%hold on
 save(fullfile(savepath_root,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output')
 %%
 
