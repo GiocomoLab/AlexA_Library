@@ -28,7 +28,7 @@ end
 n_chunks = 0;
 chunk_idx = triggers;
 loop_data = struct();
-parfor ii=1:numel(filenames)
+for ii=1:numel(filenames)
     %n_chunks = n_chunks+numel(triggers{ii});
     if numel(triggers{ii})>4
         triggers{ii} = randsample(triggers{ii},4);
@@ -50,7 +50,7 @@ MouseID = cell(n_chunks,1);
 NUnits = nan(n_chunks,2);
 XTX = nan(numel(tt)*200,numel(tt)*200,n_chunks);
 %cntr = 0;
-for iF = 1:n_chunks
+parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
 %     for iTrigger = 1:10
 %         cntr = chunk_idx{iF}(iTrigger);
