@@ -19,13 +19,15 @@ end
 %%
 FiringRates = nan(numel(filenames),200);
 FiringRatesNormalized = FiringRates;
+FiringRatesIncreasing=FiringRates;
 Names = cell(numel(filenames),1);
 NUnits = nan(numel(filenames),1);
 parfor iF=1:numel(filenames)
     data=load(filenames{iF});
-    [tmp,tmpN,nunits] = getSpatialMap(data,region);
+    [tmp,tmpN,nunits,respIncreasing] = getSpatialMap(data,region);
     FiringRates(iF,:)=tmp;
     FiringRatesNormalized(iF,:)=tmpN;
+    FiringRatesIncreasing(iF,:)=repIncreasing;
     [~,tmp,~]=fileparts(filenames{iF});
     Names{iF}=tmp;
     NUnits(iF)=nunits;
@@ -36,3 +38,16 @@ out.FiringRatesNorm = FiringRatesNormalized;
 out.names = Names;
 out.NUnits= NUnits;
 save(fullfile(savepath,'firingRateData.mat'),'out')
+%%
+figure
+x=1:2:400;
+
+idx = (1:199);
+subplot(2,1,1)
+errorbar(x(idx),mean(out.FiringRates(:,idx)*50),std(out.FiringRates(:,idx)*50)/sqrt(numel(out.NUnits)))
+xlabel('Position [cm]')
+ylabel('Firing Rate [Hz]')
+subplot(2,1,2)
+errorbar(x(idx),mean(out.FiringRatesNorm(:,idx)),std(out.FiringRatesNorm(:,idx))/sqrt(numel(out.NUnits)))
+xlabel('Position [cm]')
+ylabel('Z Scored Rate')

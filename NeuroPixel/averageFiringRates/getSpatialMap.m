@@ -1,4 +1,4 @@
-function [meanSpatialMap,meanSpatialMapNormalized,nunits] = getSpatialMap(data,region)
+function [meanSpatialMap,meanSpatialMapNormalized,nunits,respIncreasing] = getSpatialMap(data,region)
 
 trials = find(data.trial_gain == 1 & data.trial_contrast == 100);
 
@@ -18,7 +18,18 @@ spatialMap=spatialMap(data.sp.cgs==2 & reg,:,:);
 meanSpatialMap = squeeze(nanmean(spatialMap,3));
 meanSpatialMap = nanmean(meanSpatialMap,1);
 
+meanE = squeeze(nanmean(spatialMap(:,:,2:2:end),3));
+meanO = squeeze(nanmean(spatialMap(:,:,1:2:end),3));
 
+respLate=squeeze(nanmean(spatialMap(:,141:190,2:2:end),2));
+respEarly = squeeze(nanmean(spatialMap(:,1:50,2:2:end),2));
+Pvals = nan(size(spatialMap,1),1);
+for iC=1:numel(Pvals)
+    x=squeeze(respLate(iC,:)-respEarly(iC,:));
+    tmp = signrank(x,0,'tail','right');
+    Pvals(iC)=tmp;
+end
+respIncreasing = nanmean(meanO(Pvals<0.05,:));
 X=zeros(size(spatialMap,1),size(spatialMap,2)*size(spatialMap,3));
 
 for iC = 1:size(X,1)
