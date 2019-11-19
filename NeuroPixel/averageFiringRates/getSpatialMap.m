@@ -21,7 +21,7 @@ meanSpatialMap = nanmean(meanSpatialMap,1);
 meanE = squeeze(nanmean(spatialMap(:,:,2:2:end),3));
 meanO = squeeze(nanmean(spatialMap(:,:,1:2:end),3));
 
-respLate=squeeze(nanmean(spatialMap(:,141:190,2:2:end),2));
+respLate=squeeze(nanmean(spatialMap(:,172:197,2:2:end),2));
 respEarly = squeeze(nanmean(spatialMap(:,1:50,2:2:end),2));
 Pvals = nan(size(spatialMap,1),1);
 for iC=1:numel(Pvals)

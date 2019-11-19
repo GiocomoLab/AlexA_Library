@@ -22,12 +22,14 @@ FiringRatesNormalized = FiringRates;
 FiringRatesIncreasing=FiringRates;
 Names = cell(numel(filenames),1);
 NUnits = nan(numel(filenames),1);
+NUnitsInc = NUnits;
 parfor iF=1:numel(filenames)
     data=load(filenames{iF});
-    [tmp,tmpN,nunits,respIncreasing] = getSpatialMap(data,region);
+    [tmp,tmpN,nunits,respIncreasing,nInc] = getSpatialMap(data,region);
     FiringRates(iF,:)=tmp;
     FiringRatesNormalized(iF,:)=tmpN;
     FiringRatesIncreasing(iF,:)=respIncreasing;
+    NUnitsInc(iF)=nInc;
     [~,tmp,~]=fileparts(filenames{iF});
     Names{iF}=tmp;
     NUnits(iF)=nunits;
@@ -38,8 +40,9 @@ out.FiringRatesNorm = FiringRatesNormalized;
 out.FiringRatesIncreasing = FiringRatesIncreasing;
 out.names = Names;
 out.NUnits= NUnits;
-save(fullfile(savepath,'firingRateData.mat'),'out')
+save(fullfile(savepath,'firingRateData_v2.mat'),'out')
 %%
+set(0,'DefaultFigureRenderer','Painters')
 figure
 x=1:2:400;
 
@@ -50,6 +53,26 @@ hold on
 errorbar(x(idx),nanmean(out.FiringRatesIncreasing(:,idx)*50),nanstd(out.FiringRatesIncreasing(:,idx)*50)/sqrt(numel(out.NUnits)));
 xlabel('Position [cm]')
 ylabel('Firing Rate [Hz]')
+subplot(2,1,2)
+errorbar(x(idx),mean(out.FiringRatesNorm(:,idx)),std(out.FiringRatesNorm(:,idx))/sqrt(numel(out.NUnits)))
+xlabel('Position [cm]')
+ylabel('Z Scored Rate')
+
+
+%%
+
+set(0,'DefaultFigureRenderer','Painters')
+figure
+x=1:2:400;
+
+idx = (1:199);
+subplot(2,1,1)
+boundedline(x(idx),mean(out.FiringRates(:,idx)*50),std(out.FiringRates(:,idx)*50)/sqrt(numel(out.NUnits)),'alpha')
+hold on
+boundedline(x(idx),nanmean(out.FiringRatesIncreasing(:,idx)*50),nanstd(out.FiringRatesIncreasing(:,idx)*50)/sqrt(numel(out.NUnits)),'r','alpha');
+xlabel('Position [cm]')
+ylabel('Firing Rate [Hz]')
+legend({'All Neurons','Increasing'})
 subplot(2,1,2)
 errorbar(x(idx),mean(out.FiringRatesNorm(:,idx)),std(out.FiringRatesNorm(:,idx))/sqrt(numel(out.NUnits)))
 xlabel('Position [cm]')
