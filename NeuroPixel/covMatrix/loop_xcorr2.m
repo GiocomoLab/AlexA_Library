@@ -17,7 +17,7 @@ if isempty(p)
     parpool(12);
 end
 %%
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_MAXMEAN';
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_NoMEAN';
 %savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
@@ -48,7 +48,7 @@ PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 MouseID = cell(n_chunks,1);
 NUnits = nan(n_chunks,2);
-XTX = nan(numel(tt)*200,numel(tt)*200,n_chunks);
+XTX = zeros(numel(tt)*200,numel(tt)*200,n_chunks);
 %cntr = 0;
 parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
@@ -141,9 +141,10 @@ output.gain = gain_to_look_at;
 output.contrast = contrast;
 output.loop_data = loop_data;
 output.NUnits = NUnits;
+output.XTX =nanmean(XTX,3);
 %figure
 %plot(output.X-4000,nanmean(output.Y))
 %hold on
-save(fullfile(savepath_root,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output')
+save(fullfile(savepath_root,sprintf('allData_%s_%.1f_%d.mat',region,gain_to_look_at,contrast)),'output','-v7.3')
 %%
 

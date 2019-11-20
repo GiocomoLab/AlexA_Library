@@ -112,14 +112,14 @@ for iStart = stride_start:stride:(nBins-chunksize)
     [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag);
     %[xcorrs2,~] = calc_xcorr_snippet(spatialMap,template2,startbin,stopbin,maxlag);
     
-    %m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
-    %[peaks,iidx]=max(m_xcorr,[],2);
-    %shifts = lags(iidx);
+    m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
+    [peaks,iidx]=max(m_xcorr,[],2);
+    shifts = lags(iidx);
 
-    [pp,pps] = max(xcorrs,[],3);
-    peaks=nanmean(pp);
-    midx = round(nanmean(pps));
-    shifts = lags(midx);
+    %[pp,pps] = max(xcorrs,[],3);
+    %peaks=nanmean(pp);
+    %midx = round(nanmean(pps));
+    %shifts = lags(midx);
     
     %m_xcorr2 = squeeze(nanmean(xcorrs2(stable_cells,:,:),1));
     %[peaks2,iidx2]=max(m_xcorr2,[],2);
