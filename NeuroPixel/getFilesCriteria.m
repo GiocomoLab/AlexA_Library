@@ -6,11 +6,14 @@ triggers = {};
 for iF = 1:numel(files)
     data = load(fullfile(files(iF).folder,files(iF).name),'anatomy','trial_gain','trial_contrast');
     gaincontrastcombo = false;
+    if contains(files(iF).name,'mismatch') || contains(files(iF).name,'playback') || contains(files(iF).name,'dark')
+        continue
+    end
     if isfield(data,'trial_gain') && isfield(data,'trial_contrast')
-        if gain_to_look_at == 1
+        if strcmp(gain_to_look_at,'baseline') || gain_to_look_at == 1
             %find condition with given contrast and no gain change
             bin = data.trial_gain == gain_to_look_at & data.trial_contrast == contrast;
-            trigger_tmp = strfind(bin',[1 1 1 1 1 1 1 1 1 1 1 1]) +4;
+            trigger_tmp = strfind(bin',ones(1,16)) +8;
             trigger_tmp(trigger_tmp <10) = [];
             gaincontrastcombo = nnz(trigger_tmp)>0;
         elseif gain_to_look_at == 0

@@ -1,18 +1,7 @@
-function [XTX,trial,gain,contrast]=getCovMatrix(data,cell_info_session,trials)
-
-local_stab = cell_info_session.LocalStability;
-numblocks = floor(32/4);
-local_stab = mean(local_stab(:,1:numblocks),2);
-this_stab = local_stab;
-this_reg = cell_info_session.BrainRegion;
-this_MEC = strcmp(this_reg,'MEC');
-
-
-
-%trials = trials(trial_gain == 1 & trial_contrast == 100);
+function [XTX,trial,gain,contrast,nunits]=getCovMatrix(data,region,trials,binsize)
 spatialMap=[];
 dwell_time=[];
-edges=[0:5:400];
+edges=[0:binsize:400];
 edges(1)=-.01;
 data.posx(data.posx<0)=0;
 data.posx(data.posx>=400)=399.00;
@@ -27,9 +16,17 @@ for iT=1:length(trials)
     dwell_time=cat(1,dwell_time,dT);
 end
 %cellIDX=find(sp.cgs>=1);
+if isfield(data.anatomy,'parent_shifted')
+    reg = startsWith(data.anatomy.parent_shifted,region);
+else
+reg = startsWith(data.anatomy.cluster_parent,region);
+end
+if iscolumn(reg)
+    reg = reg';
+end
 spatialMap=spatialMap(data.sp.cids+1,:,:);
-spatialMap=spatialMap(data.sp.cgs==2,:,:);
-spatialMap = spatialMap(this_stab>0.0 & this_MEC,:,:);
+spatialMap=spatialMap(data.sp.cgs==2 & reg,:,:);
+%spatialMap = spatialMap(this_stab>0.0 & this_MEC,:,:);
 %normalize by dwell time in each bin
 dt=dwell_time';
 dt=reshape(dt,[1 size(dt,1),size(dt,2)]);
@@ -37,11 +34,25 @@ for ii=1:size(spatialMap,1)
     spatialMap(ii,:,:)=spatialMap(ii,:,:)./dt;
 end
 spatialMap(isnan(spatialMap))=0;
+% do spatial smoothing
+% filt = gausswin(11);
+% filt = filt/sum(filt);
+% filt = reshape(filt,[1, numel(filt),1]);
+smoothSigma = 4/binsize;
+smoothWindow = floor(smoothSigma*5/2)*2+1;
+gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
+%sPF = repmat(spatialMap,[1,3,1]);
+%sPF=convn(sPF,filt,'same');
+%iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
+%sPF = sPF(:,iidx,:);
+% get template trials
+
+%spatialMap = sPF;
+nunits = size(spatialMap,1);
 %%
 
 X=zeros(size(spatialMap,1),size(spatialMap,2)*size(spatialMap,3));
-filt = gausswin(15);
-filt = filt/sum(filt);
 for iC = 1:size(spatialMap,1)
     tmp = spatialMap(iC,:,:);
     
