@@ -75,22 +75,25 @@ end
 figure
 subplot(4,1,[1:3])
 hold on
-col = summer(numel(MERGED));
+col = lines(numel(MERGED));
 params = [];
 for iF=1:numel(MERGED)
     [~,max_loc]=max(MERGED(iF).average_triggered,[],2);
+    %max_loc(max_loc==1)=[];
     tmp_d=bins;
     tmp_d=tmp_d-bins(MERGED(iF).max_depth);
-    valid_idx = max_loc'>1 & tmp_d>-500 & tmp_d<500;
-
-    plot(tvec_spikes(max_loc),tmp_d,'.','Color',col(iF,:))
+    valid_idx = max_loc'>1 & tmp_d<500;
+    plot_idx = max_loc>1;
+    plot(tvec_spikes(max_loc(plot_idx)),tmp_d(plot_idx),'.','Color',col(iF,:))
     p=polyfit(tmp_d(valid_idx),tvec_spikes(max_loc(valid_idx)),1);
     params=cat(1,params,p);
     delay=polyval(p,tmp_d);
     %plot(delay,tmp_d)
 end
-av_delay = polyval(median(params),[-2000 3000]);
-plot(av_delay,[-2000 3000],'k','LineWidth',2)
+av_delay = polyval(median(params),[-2000 2000]);
+plot(av_delay,[-2000 2000],'k','LineWidth',2)
+xlabel('Delay [ms]')
+ylabel('Distance from peak channel')
 subplot(4,1,4)
 speed = [-2000 1]*params'*1000/2;
 boxplot(speed)
@@ -400,3 +403,12 @@ subplot(1,2,2)
 xlabel('ML')
 axis equal
 ylabel('Depth')
+
+%%
+names ={};
+for iN=1:numel(MERGED)
+    names{iN}=MERGED(iN).name(1:4);
+end
+
+numel(unique(names))
+
