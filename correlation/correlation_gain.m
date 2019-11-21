@@ -17,7 +17,7 @@ for iF=1:numel(filenames)
     trials_xtx = (triggers{iF}(1)-4):triggers{iF}(1)+3;
     [ACG_corr_gain,ZERO_LAG_PRE,ZERO_LAG_POST] = extractXCorr(data,trials,region);
     [ACG_corr_BL,ZERO_LAG_PRE_BL,ZERO_LAG_POST_BL] = extractXCorr(data,trials-4,region);
-    XTX_GAIN = getCovMatrix(data,region,trials_xtx,2);
+    XTX_GAIN = getCovMatrix(data,region,trials_xtx,2,1:4,-1);
     XTX_BL = getCovMatrix(data,region,trials_xtx-4,2);
     h=figure();
     subplot(2,3,1)
