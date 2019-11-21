@@ -52,7 +52,7 @@ sPF = sPF(:,iidx,:);
 % get template trials
 
 spatialMap = sPF;
-template1_trials = [1:8];
+template1_trials = [1:6];
 template2_trials = [1:5];
 template1={};
 cntr = 0;

@@ -1,12 +1,12 @@
 chunksize=100; %in bins,so thats 200 cm
-stride_start = 10;
+stride_start = 1;
 binsize=2;
 stride = 10;
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
-gain_to_look_at = 0.5;
-contrast = 100;
+gain_to_look_at = [];
+contrast = 50;
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 %%
@@ -42,7 +42,7 @@ for ii=1:numel(filenames)
     end
 end
 
-tt=(-8:11);
+tt=(-6:9);
 
 PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
