@@ -1,16 +1,23 @@
-filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
-    'G2/1211_mismatch_1/1211_mismatch_1.mat',...
-    'G2/1212_mismatch_1/1212_mismatch_1.mat',...
-    'G5/1207_mismatch_1/1207_mismatch_1.mat',...
-    'G5/1210_mismatch_1/1210_mismatch_1.mat'
-    };
+% filenames = {'G4/1204_mismatch_1/1204_mismatch_1.mat',...
+%     'G2/1211_mismatch_1/1211_mismatch_1.mat',...
+%     'G2/1212_mismatch_1/1212_mismatch_1.mat',...
+%     'G5/1207_mismatch_1/1207_mismatch_1.mat',...
+%     'G5/1210_mismatch_1/1210_mismatch_1.mat'
+%     };
+% 
+% 
+% root_dir='F:\';
 
-
-root_dir='F:\';
-
+%get files
+region= 'MEC';
+contrast = 100;
+gain_to_look_at=1;
+%[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
+[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+%%
 CGR_all=[];
 for iF=4
-    load([root_dir filenames{iF}]);
+    load(filenames{iF});
     good_cells = sp.cids(sp.cgs==2);
     idx=ismember(sp.clu,good_cells);
     [CGR,b]=CCG(sp.st(idx),double(sp.clu(idx)),'binSize',[0.001],'duration',[0.5]);
@@ -49,7 +56,7 @@ figure('Name','KMEANS')
 hold on
 for ii=1:9
     subplot(5,2,ii)
-    plot([-.025:0.001:.025],mean(CGR_ms(IDX==ii,:)))
+    plot([-.25:0.001:.25],mean(CGR_ms(IDX==ii,:)))
     xlabel('Time [s]')
     grid on
     axis tight
@@ -60,7 +67,7 @@ end
 figure('Name','PCA');
 for ii=1:10
     subplot(5,2,ii)
-    plot([-.025:0.001:.025],coeff(:,ii))
+    plot([-.25:0.001:.25],coeff(:,ii))
     xlabel(sprintf('Time [s], Explained: %.2f',vex(ii)))
     grid on
     axis tight
