@@ -10,17 +10,24 @@ for iF = 1:numel(files)
         continue
     end
     if isfield(data,'trial_gain') && isfield(data,'trial_contrast')
-        if strcmp(gain_to_look_at,'baseline') || gain_to_look_at == 1
+        if strcmp(gain_to_look_at,'baseline') || any(gain_to_look_at == 1)
             %find condition with given contrast and no gain change
             bin = data.trial_gain == gain_to_look_at & data.trial_contrast == contrast;
             trigger_tmp = strfind(bin',ones(1,16)) +8;
             trigger_tmp(trigger_tmp <10) = [];
             gaincontrastcombo = nnz(trigger_tmp)>0;
-        elseif gain_to_look_at == 0
+        elseif any(gain_to_look_at == 0)
             %special case: find where gain ==1 and for a given contrast
             %change
             gaincontrastcombo = any(data.trial_gain == 1 & data.trial_contrast == contrast);
             trigger_tmp = strfind((data.trial_gain == 1 & data.trial_contrast == contrast)',[0 1])+1;
+        elseif isempty(gain_to_look_at)
+            %find contrast steps (100 to contrast)
+            pot = strfind(data.trial_contrast'  == contrast,[0 1])+1;
+            pot = pot(data.trial_contrast(pot-1)==100);
+            gaincontrastcombo = any(pot);
+            trigger_tmp = pot;
+         
         else
         gaincontrastcombo = any(data.trial_gain == gain_to_look_at & data.trial_contrast == contrast);
         trigger_tmp = strfind((data.trial_gain == gain_to_look_at & data.trial_contrast == contrast)',[0 1])+1;
