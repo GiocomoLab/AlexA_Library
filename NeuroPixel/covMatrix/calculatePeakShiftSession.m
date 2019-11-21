@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize)
+function [PEAKS,SHIFTS,XTX,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -52,8 +52,7 @@ sPF = sPF(:,iidx,:);
 % get template trials
 
 spatialMap = sPF;
-template1_trials = [1:6];
-template2_trials = [1:5];
+template1_trials = template_trials;
 template1={};
 cntr = 0;
 
@@ -84,10 +83,10 @@ PEAKS = SHIFTS;
 repidx = 0;
 %stable cells: have a peak xcorr across the whole thing of greater than
 %thresh for each trial
-idx = find(triu(true(8),1));
+idx = find(triu(true(numel(template_trials)),1));
 stability = zeros(1,size(spatialMap,1));
 for ii=1:numel(stability)
-    tmp = squeeze(spatialMap(ii,:,2:10));
+    tmp = squeeze(spatialMap(ii,:,template_trials));
     tmp = corr(tmp);
     stability(ii)=mean(tmp(idx));
 end

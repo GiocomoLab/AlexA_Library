@@ -43,7 +43,7 @@ for ii=1:numel(filenames)
 end
 
 tt=(-6:9);
-
+template_trials = 1:6;
 PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 MouseID = cell(n_chunks,1);
@@ -63,7 +63,7 @@ parfor iF = 1:n_chunks
         shift = 0;
         xtx = 0;
         try
-        [peak,shift,xtx,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize);
+        [peak,shift,xtx,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
         catch ME
             sprintf('%s: %d',loop_data(iF).filename,iF)
             rethrow(ME)

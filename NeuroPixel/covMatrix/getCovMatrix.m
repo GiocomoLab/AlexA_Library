@@ -1,4 +1,4 @@
-function [XTX,trial,gain,contrast,nunits]=getCovMatrix(data,region,trials,binsize)
+function [XTX,trial,gain,contrast,nunits]=getCovMatrix(data,region,trials,binsize,template_trials,stability_threshold)
 spatialMap=[];
 dwell_time=[];
 edges=[0:binsize:400];
@@ -41,16 +41,27 @@ spatialMap(isnan(spatialMap))=0;
 smoothSigma = 4/binsize;
 smoothWindow = floor(smoothSigma*5/2)*2+1;
 gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
-filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
-%sPF = repmat(spatialMap,[1,3,1]);
-%sPF=convn(sPF,filt,'same');
-%iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
-%sPF = sPF(:,iidx,:);
-% get template trials
+filt = gauss_filter;
+%filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
+% sPF = repmat(spatialMap,[1,3,1]);
+% sPF=convn(sPF,filt,'same');
+% iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
+% sPF = sPF(:,iidx,:);
+%get template trials
 
 %spatialMap = sPF;
 nunits = size(spatialMap,1);
 %%
+
+idx = find(triu(true(numel(template_trials)),1));
+stability = zeros(1,size(spatialMap,1));
+for ii=1:numel(stability)
+    tmp = squeeze(spatialMap(ii,:,template_trials));
+    tmp = corr(tmp);
+    stability(ii)=mean(tmp(idx));
+end
+    
+stable_cells = stability>stability_threshold;
 
 X=zeros(size(spatialMap,1),size(spatialMap,2)*size(spatialMap,3));
 for iC = 1:size(spatialMap,1)
@@ -60,6 +71,7 @@ for iC = 1:size(spatialMap,1)
 end
 X(isnan(X))=0;
 X=conv2(X,filt','same');
+X=X(stable_cells,:);
 X=X-mean(X,2);
 X=normc(X);
 
