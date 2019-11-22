@@ -6,7 +6,7 @@ startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
 gain_to_look_at = [];
-contrast = 50;
+contrast = 10
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 %%

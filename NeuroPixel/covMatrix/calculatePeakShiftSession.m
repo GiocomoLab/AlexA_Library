@@ -70,7 +70,7 @@ end
 template1{numel(template1_trials)+1}=nanmean(spatialMap(:,:,template1_trials),3);
 %template1 = nanmean(spatialMap(:,:,template1_trials),3);
 %template1 = template1-mean(template1,2);
-template2 = nanmean(spatialMap(:,:,template2_trials),3);
+%template2 = nanmean(spatialMap(:,:,template2_trials),3);
 
 %%
 nBins = size(spatialMap,2);
