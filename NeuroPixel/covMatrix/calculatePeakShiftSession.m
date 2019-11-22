@@ -129,20 +129,27 @@ for iStart = stride_start:stride:(nBins-chunksize)
     SHIFTS(:,repidx)=shifts;
 end
 % trial by trial similarity, all cells
-Y=zeros(size(spatialMap,3),nnz(stable_cells)*size(spatialMap,2));
-for iT=1:size(Y,1)
-    tmp = squeeze(spatialMap(stable_cells,:,iT))';
-    tmp = reshape(tmp,1,[]);
-    Y(iT,:)=tmp;
-end
-
-Y=Y-mean(Y,1);
-Y=normr(Y);
-
-YYT = Y*Y';
-% position by position covariance matrix, stable cells
-
+% Y=zeros(size(spatialMap,3),nnz(stable_cells)*size(spatialMap,2));
+% for iT=1:size(Y,1)
+%     tmp = squeeze(spatialMap(stable_cells,:,iT))';
+%     tmp = reshape(tmp,1,[]);
+%     Y(iT,:)=tmp;
+% end
+% 
+% Y=Y-mean(Y,1);
+% Y=normr(Y);
+% 
+% YYT = Y*Y';
 spatialMap = spatialMap(stable_cells,:,:);
+correlation_All=zeros(size(spatialMap,3),size(spatialMap,3),size(spatialMap,1));
+for iC=1:size(spatialMap,1)
+    tmp=corr(squeeze(spatialMap(iC,:,:)));
+    correlation_All(:,:,iC)=tmp;
+end
+YYT = squeeze(nanmean(correlation_All,3));
+% position by position covariance matrix, stable cells
+%spatialMap = spatialMap(stable_cells,:,:);
+
 X=zeros(nnz(stable_cells),size(spatialMap,2)*size(spatialMap,3));
 for iC = 1:size(X,1)
     tmp = spatialMap(iC,:,:);
