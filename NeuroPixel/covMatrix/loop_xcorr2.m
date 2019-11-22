@@ -1,12 +1,12 @@
 chunksize=100; %in bins,so thats 200 cm
-stride_start = 1;
+stride_start = 10;
 binsize=2;
 stride = 10;
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
 gain_to_look_at = [];
-contrast = 10
+contrast = 50
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 %%
@@ -17,7 +17,7 @@ if isempty(p)
     parpool(12);
 end
 %%
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_NoMEAN';
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_CONTRAST2';
 %savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
