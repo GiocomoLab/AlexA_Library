@@ -1,4 +1,4 @@
-function [XTX,trial,gain,contrast,nunits]=getCovMatrix(data,region,trials,binsize,template_trials,stability_threshold)
+function [XTX,YYT,trial,gain,contrast,nunits]=getCovMatrix(data,region,trials,binsize,template_trials,stability_threshold)
 spatialMap=[];
 dwell_time=[];
 edges=[0:binsize:400];
@@ -79,4 +79,33 @@ XTX = X'*X;
 trial = trials;
 gain = data.trial_gain(trials);
 contrast = data.trial_contrast(trials);
+
+
+filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
+sPF = repmat(spatialMap,[1,3,1]);
+sPF=convn(sPF,filt,'same');
+iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
+sPF = sPF(:,iidx,:);
+
+spatialMap = sPF;
+
+Y=zeros(size(spatialMap,3),size(spatialMap,1)*size(spatialMap,2));
+for iT=1:size(Y,1)
+    tmp = squeeze(spatialMap(:,:,iT))';
+    tmp = reshape(tmp,1,[]);
+    Y(iT,:)=tmp;
+end
+
+Y=Y-mean(Y,1);
+Y=normr(Y);
+
+YYT = Y*Y';
+
+% correlation_All=zeros(size(spatialMap,3),size(spatialMap,3),size(spatialMap,1));
+% for iC=1:size(spatialMap,1)
+%     tmp=corr(squeeze(spatialMap(iC,:,:)));
+%     correlation_All(:,:,iC)=tmp;
+%     diagAll(iC,:)=diag(tmp,1);
+% end
+
 end

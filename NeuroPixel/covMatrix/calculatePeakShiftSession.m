@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX,n_units]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
+function [PEAKS,SHIFTS,XTX,n_units,yyt]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -127,6 +127,20 @@ for iStart = stride_start:stride:(nBins-chunksize)
     PEAKS(:,repidx)=peaks;
     SHIFTS(:,repidx)=shifts;
 end
+% trial by trial similarity, all cells
+Y=zeros(size(spatialMap,3),size(spatialMap,1)*size(spatialMap,2));
+for iT=1:size(Y,1)
+    tmp = squeeze(spatialMap(:,:,iT))';
+    tmp = reshape(tmp,1,[]);
+    Y(iT,:)=tmp;
+end
+
+Y=Y-mean(Y,1);
+Y=normr(Y);
+
+YYT = Y*Y';
+% position by position covariance matrix, stable cells
+
 spatialMap = spatialMap(stable_cells,:,:);
 X=zeros(nnz(stable_cells),size(spatialMap,2)*size(spatialMap,3));
 for iC = 1:size(X,1)
@@ -139,6 +153,8 @@ X=X-mean(X,2);
 X=normc(X);
 
 XTX = X'*X;
+
+
 
 end
 %%
