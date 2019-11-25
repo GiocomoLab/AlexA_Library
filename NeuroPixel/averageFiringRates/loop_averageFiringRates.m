@@ -40,7 +40,8 @@ out.FiringRatesNorm = FiringRatesNormalized;
 out.FiringRatesIncreasing = FiringRatesIncreasing;
 out.names = Names;
 out.NUnits= NUnits;
-save(fullfile(savepath,'firingRateData_v2.mat'),'out')
+out.NUnitsInc = NUnitsInc,
+save(fullfile(savepath,'firingRateData.mat'),'out')
 %%
 set(0,'DefaultFigureRenderer','Painters')
 figure
