@@ -103,8 +103,20 @@ for ii=1:numel(stability)
     tmp = corr(tmp);
     stability(ii)=mean(tmp(idx));
 end
-    
-stable_cells = stability>stability_threshold;
+% fit a glm to the data
+clu_list = data.cids(data.sp.cgs==2 & reg);
+glmData = fitGLM(data,tr,clu_list);
+glmscore = nan(1,numel(glmData));
+tmp = glmData(sp.cgs==2);
+for iC=1:numel(glmData)
+    if ~isnan(glmData(iC).allModelTestFits)
+    glmscore(iC)=mean(glmData(iC).allModelTestFits{1}(:,1));
+
+end
+   
+%stable_cells = stability>stability_threshold;
+stable_cells = glmscore>0;
+
 % subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
 % peaks = max(subset,[],3);
 % stable_cells = all(peaks>stability,2);
