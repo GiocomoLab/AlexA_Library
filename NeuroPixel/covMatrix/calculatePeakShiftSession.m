@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
+function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat,fr_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -29,19 +29,14 @@ if iscolumn(reg)
     reg = reg';
 end
 spatialMap=spatialMap(data.sp.cids+1,:,:);
-spatialMap=spatialMap(data.sp.cgs==2 & reg,:,:);
-%spatialMap = spatialMap(this_stab>0.0 & this_MEC,:,:);
-%normalize by dwell time in each bin
+
+
 dt=dwell_time';
 dt=reshape(dt,[1 size(dt,1),size(dt,2)]);
 for ii=1:size(spatialMap,1)
     spatialMap(ii,:,:)=spatialMap(ii,:,:)./dt;
 end
 spatialMap(isnan(spatialMap))=0;
-% do spatial smoothing
-% filt = gausswin(11);
-% filt = filt/sum(filt);
-% filt = reshape(filt,[1, numel(filt),1]);
 smoothSigma = 4/binsize;
 smoothWindow = floor(smoothSigma*5/2)*2+1;
 gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
@@ -53,6 +48,23 @@ sPF = sPF(:,iidx,:);
 % get template trials
 
 spatialMap = sPF;
+
+
+
+
+mm=sum(spatialMap(:,:,1:6),3);
+mm=sum(mm,2);
+%pp=bsxfun(@rdivide,spatialMap,mm);
+fr_mat = squeeze(nanmean(spatialMap));
+spatialMap=spatialMap(data.sp.cgs==2 & reg,:,:);
+%spatialMap = spatialMap(this_stab>0.0 & this_MEC,:,:);
+%normalize by dwell time in each bin
+
+% do spatial smoothing
+% filt = gausswin(11);
+% filt = filt/sum(filt);
+% filt = reshape(filt,[1, numel(filt),1]);
+
 template1_trials = template_trials;
 template1={};
 cntr = 0;

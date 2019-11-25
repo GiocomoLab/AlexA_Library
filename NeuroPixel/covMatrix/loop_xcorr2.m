@@ -4,9 +4,9 @@ binsize=2;
 stride = 10;
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
-region = 'VISp';
-gain_to_look_at = [];
-contrast = 50
+region = 'MEC';
+gain_to_look_at = 1.;
+contrast = 100;
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 %%
@@ -17,7 +17,7 @@ if isempty(p)
     parpool(12);
 end
 %%
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_CONTRAST2';
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv7';
 %savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
@@ -51,6 +51,7 @@ NUnits = nan(n_chunks,2);
 XTX = zeros(numel(tt)*200,numel(tt)*200,n_chunks);
 YYT = zeros(numel(tt),numel(tt),n_chunks);
 SPEED=zeros(numel(tt),200,n_chunks);
+FR=SPEED;
 %cntr = 0;
 parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
@@ -65,7 +66,7 @@ parfor iF = 1:n_chunks
         shift = 0;
         xtx = 0;
         try
-        [peak,shift,xtx,n_units,yyt,speed_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
+        [peak,shift,xtx,n_units,yyt,speed_mat,fr_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
         catch ME
             sprintf('%s: %d',loop_data(iF).filename,iF)
             rethrow(ME)
@@ -79,6 +80,7 @@ parfor iF = 1:n_chunks
         XTX(:,:,iF)=xtx;
         YYT(:,:,iF)=yyt;
         SPEED(:,:,iF)=speed_mat;
+        FR(:,:,iF)=fr_mat';
         x=startVec+chunksize/2;
         x = x-1;
         x = x*2;
@@ -148,6 +150,7 @@ output.NUnits = NUnits;
 output.XTX =nanmean(XTX,3);
 output.YYT = YYT;
 output.SPEED = SPEED;
+output.FR = FR;
 %figure
 %plot(output.X-4000,nanmean(output.Y))
 %hold on
