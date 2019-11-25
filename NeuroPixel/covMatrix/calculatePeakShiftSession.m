@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX,n_units,YYT]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
+function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -6,6 +6,7 @@ spatialMap=[];
 dwell_time=[];
 edges=[0:binsize:400];
 edges(1)=-.01;
+[speed,speed_mat] = calc_speed(data.posx,data.trial,trials,edges);
 data.posx(data.posx<0)=0;
 data.posx(data.posx>=400)=399.00;
 for iT=1:length(trials)
@@ -166,7 +167,31 @@ XTX = X'*X;
 
 end
 %%
-   
+function [speed,speed_mat] = calc_speed(posx,trial_pos,trials,edges)
+speed = diff(posx)/0.02;
+
+% throw out extreme values and interpolate
+speed(speed > 150) = NaN;
+speed(speed<-5) = NaN;
+speed(isnan(speed)) = interp1(find(~isnan(speed)), speed(~isnan(speed)), find(isnan(speed)), 'pchip'); % interpolate NaNs
+speed = [0;speed];
+posx(posx<0)=0;
+posx(posx>=400)=399.99;
+
+d_loc = discretize(posx,edges);
+speed_mat = nan(numel(trials,numel(edges)-2));
+for iT=1:numel(trials)
+    idxT = trial_pos == trials(iT);
+
+    for iB=1:numel(edges)-1
+        idx= idxT & d_loc==iB;
+        speed_mat(iT,iB)=mean(speed(idx));
+    end
+end
+
+end
+
+
 
 %%
 %cm = winter(24);
