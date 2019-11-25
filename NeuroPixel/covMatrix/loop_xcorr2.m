@@ -50,6 +50,7 @@ MouseID = cell(n_chunks,1);
 NUnits = nan(n_chunks,2);
 XTX = zeros(numel(tt)*200,numel(tt)*200,n_chunks);
 YYT = zeros(numel(tt),numel(tt),n_chunks);
+SPEED=zeros(numel(tt),200,n_chunks);
 %cntr = 0;
 parfor iF = 1:n_chunks
 %     data = load(filenames{iF});
@@ -64,7 +65,7 @@ parfor iF = 1:n_chunks
         shift = 0;
         xtx = 0;
         try
-        [peak,shift,xtx,n_units,yyt]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
+        [peak,shift,xtx,n_units,yyt,speed_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
         catch ME
             sprintf('%s: %d',loop_data(iF).filename,iF)
             rethrow(ME)
@@ -77,6 +78,7 @@ parfor iF = 1:n_chunks
         NUnits(iF,:)=n_units;
         XTX(:,:,iF)=xtx;
         YYT(:,:,iF)=yyt;
+        SPEED(:,:,iF)=speed_mat;
         x=startVec+chunksize/2;
         x = x-1;
         x = x*2;
@@ -145,6 +147,7 @@ output.loop_data = loop_data;
 output.NUnits = NUnits;
 output.XTX =nanmean(XTX,3);
 output.YYT = YYT;
+output.SPEED = SPEED;
 %figure
 %plot(output.X-4000,nanmean(output.Y))
 %hold on
