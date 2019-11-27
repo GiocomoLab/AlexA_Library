@@ -104,18 +104,18 @@ for ii=1:numel(stability)
     stability(ii)=mean(tmp(idx));
 end
 % fit a glm to the data
-clu_list = data.cids(data.sp.cgs==2 & reg);
+clu_list = data.sp.cids(data.sp.cgs==2 & reg);
+tr = max(min(trials)-4,2):min(trials)+5;
 glmData = fitGLM(data,tr,clu_list);
-glmscore = nan(1,numel(glmData));
-tmp = glmData(sp.cgs==2);
+glmscore = nan(2,numel(glmData));
 for iC=1:numel(glmData)
-    if ~isnan(glmData(iC).allModelTestFits)
-    glmscore(iC)=mean(glmData(iC).allModelTestFits{1}(:,1));
-
+    if iscell(glmData(iC).allModelTestFits)
+    glmscore(:,iC)=mean(glmData(iC).allModelTestFits{1});
+    end
 end
    
 %stable_cells = stability>stability_threshold;
-stable_cells = glmscore>0;
+stable_cells = glmscore(2,:)>0 & glmscore(2,:)>glmscore(1,:);
 
 % subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
 % peaks = max(subset,[],3);
@@ -124,9 +124,9 @@ XTX = nan(nTrials*nBins);
 YYT = nan(nTrials,nTrials);
 n_units = [nnz(stable_cells),numel(stable_cells)];
 
-if nnz(stable_cells)<=.2*numel(stable_cells)
-    return
-end
+% if nnz(stable_cells)<=.2*numel(stable_cells)
+%     return
+% end
 %spatialMap = spatialMap-mean(spatialMap,2);
 for iStart = stride_start:stride:(nBins-chunksize)
     repidx = repidx+1;

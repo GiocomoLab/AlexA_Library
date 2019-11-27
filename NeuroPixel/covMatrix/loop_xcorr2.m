@@ -5,7 +5,7 @@ stride = 10;
 startVec = stride_start:stride:(200-chunksize+1);
 chunksPerTrials = numel(startVec);
 region = 'MEC';
-gain_to_look_at = 1.;
+gain_to_look_at = .5;
 contrast = 100;
 [filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
@@ -17,7 +17,7 @@ if isempty(p)
     parpool(12);
 end
 %%
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv7';
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_glm_speed';
 %savepath_root = '/users/attialex/tmp/';
 savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
 if ~isfolder(savepath)
