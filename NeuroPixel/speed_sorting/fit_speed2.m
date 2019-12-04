@@ -1,5 +1,4 @@
-function fit_speed2(filepath,savepath,params,im_save_root)
-[~,session_name,~]=fileparts(filepath);
+function data_out = fit_speed2(data,session_name,savepath,params,im_save_root)
 
 if ~isempty(im_save_root)
     plot_data=true;
@@ -8,7 +7,6 @@ else
 end
 
 %load file
-data=load(filepath);
 fn=fieldnames(data);
 for iF=1:numel(fn);eval(sprintf('%s = data.%s;',fn{iF},fn{iF}));end
 
@@ -33,7 +31,7 @@ trials=[1:max(trial)];
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:2:400];
+edges=[0:params.SpatialBin:400];
 edges(1)=-.01;
 posx(posx<0)=0;
 posx(posx>400)=400;
@@ -66,12 +64,26 @@ flatMaps = cell(numel(regs),1);
 nTrials = size(spatialMap,3);
 
 %define window for xcorr
-posWindow=[60 140];
+posWindow=[10 390]; %[60 140]
 posBin = [find(edges == posWindow(1)), find(edges == posWindow(2))];
 nBins=posBin(2)-posBin(1)+1;
 
-filt = gausswin(5);
-filt = filt/sum(filt);
+%filt = gausswin(5);
+%filt = filt/sum(filt);
+
+smoothSigma = 4/params.SpatialBin;
+smoothWindow = floor(smoothSigma*5/2)*2+1;
+gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
+sPF = repmat(spatialMap,[1,3,1]);
+sPF=convn(sPF,filt,'same');
+iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
+sPF = sPF(:,iidx,:);
+% get template trials
+
+spatialMap = sPF;
+
+
 for iR=1:numel(regs)
     nC=nnz(idx==iR);
     cellList = find(idx==iR);
@@ -84,8 +96,9 @@ for iR=1:numel(regs)
             currentCell = cellList(iC);
             t_idx = (iC-1)*nBins+1:iC*nBins;
             tmp = squeeze(spatialMap(currentCell,:,iT));
-            tmp = conv(tmp,filt,'same');
+            %tmp = conv(tmp,filt,'same');
             tmp = tmp(posBin(1):posBin(2));
+            tmp = tmp-mean(tmp);
             tmp_flat(iT,t_idx)=tmp;
         end
     end
@@ -111,13 +124,13 @@ for iR = 1:numel(flatMaps)
     end
 end
 
-data.delays = delays;
-data.session = session_name;
-data.regions = regs;
-data.clu_region = region;
-data.posWindow = posWindow;
+data_out.delays = delays;
+data_out.session = session_name;
+data_out.regions = regs;
+data_out.clu_region = region;
+data_out.posWindow = posWindow;
 
-save(fullfile(savepath,session_name),'data')
+save(fullfile(savepath,session_name),'data_out')
 
 if plot_data
     corr = nan(1,numel(delays));
