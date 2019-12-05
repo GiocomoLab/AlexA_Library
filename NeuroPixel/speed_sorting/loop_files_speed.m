@@ -20,7 +20,10 @@ contrasts_all = [100 50 20 10 5 2 0];
 aggregateData = struct();
 
 %% iterate over sessions
-parpool(8)
+p=gcp('nocreate');
+if isempty(p)
+    parpool(12);
+end
 parfor session_num = 1:numel(session_name)  
         save_figs=true;
         image_save_dir = fullfile('/oak/stanford/groups/giocomo/attialex/images/',...
@@ -43,7 +46,7 @@ end
 %     aggregateData(session_num).sess = session_name{session_num};
 %     save('/oak/stanford/groups/giocomo/attialex/shift_vs_speed.mat','aggregateData');
 try
-    slow_vs_fastTrials(fullfile(data_dir,session_name{session_num}))
+    slow_vs_fastTrials_v2(fullfile(data_dir,session_name{session_num}),image_save_dir)
 catch
     sprintf('failed for %s',session_name{session_num})
 end

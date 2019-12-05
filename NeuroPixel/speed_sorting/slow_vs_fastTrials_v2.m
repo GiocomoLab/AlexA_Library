@@ -1,4 +1,5 @@
-function slow_vs_fastTrials(filepath,image_save_dir)
+function slow_vs_fastTrials_v2(filepath,image_save_dir)
+%make it more consistent with xcorr for other shifts
 
 [~,session_name,~]=fileparts(filepath);
 
@@ -31,7 +32,8 @@ trials=[1:max(trial)];
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:2:400];
+binsize=2;
+edges=[0:binsize:400];
 edges(1)=-.01;
 posx(posx<0)=0;
 posx(posx>400)=400;
@@ -57,6 +59,20 @@ dt=reshape(dt,[1 size(dt,1),size(dt,2)]);
 for ii=1:size(spatialMap,1)
     spatialMap(ii,:,:)=spatialMap(ii,:,:)./dt;
 end
+smoothSigma = 4/binsize;
+smoothWindow = floor(smoothSigma*5/2)*2+1;
+gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
+sPF = repmat(spatialMap,[1,3,1]);
+sPF=convn(sPF,filt,'same');
+iidx = (size(spatialMap,2)+1):(2*size(spatialMap,2));
+sPF = sPF(:,iidx,:);
+% get template trials
+
+spatialMap = sPF;
+
+
+
 %% calc speed differential
 speed = calcSpeed(posx,params);
 posWindow= [10 390];
@@ -82,11 +98,6 @@ end
 spMap=shiftdim(spatialMap,1);
 
 
-
-filt = gausswin(5);
-filt = filt/sum(filt);
-
-
 bl_trials = find(trial_gain == 1 & trial_contrast == 100);
 
 
@@ -99,17 +110,12 @@ slow_idx = bl_sorted(1:M);
 fast_idx = bl_sorted(nT-M:nT);
 %h=figure('visible','off');
 
-gains_all = [0.8 0.7 0.6 0.5 0.2];
-gains = sort(unique(trial_gain),'descend');
-gains = gains(2:end);
 
-
-[~,gain_plot_idx] = ismember(gains,gains_all);
-plot_colors_gain = cool(numel(gains_all));
-fig=figure('visible','on');
+fig=figure('visible','off');
 delay_per_cell = zeros(2,numel(good_cells));
 trials_fast = zeros(numel(edges)-1,numel(good_cells));
 trials_slow = trials_fast;
+clu_reg = cell(numel(good_cells),1);
 for cellIDX = 1:numel(good_cells)
     cluID = find(sp.cids==good_cells(cellIDX));
     clu_reg{cellIDX}=region{cluID};
@@ -120,52 +126,26 @@ for cellIDX = 1:numel(good_cells)
     tmp_fast = nanmean(mS(:,fast_idx),2);
     trials_slow(:,cellIDX)=tmp_slow;
     trials_fast(:,cellIDX)=tmp_fast;
-    [rr,lags]=xcorr(tmp_slow(posBin(1):posBin(2)),tmp_fast(posBin(1):posBin(2)),5,'coeff');
+    ts =tmp_slow(posBin(1):posBin(2));
+    ts = ts-mean(ts);
+    tf = tmp_fast(posBin(1):posBin(2));
+    tf = tf-mean(tf);
+    [rr,lags]=xcorr(ts,tf,10,'coeff');
     [~,tmp]=max(rr);
     delay_per_cell(1,cellIDX)=lags(tmp)*mean(diff(edges));
     delay_per_cell(2,cellIDX)=rr(tmp);
-    %dd=finddelay(tmp_slow(posBin(1):posBin(2)),tmp_fast((posBin(1):posBin(2))));
     ax=subplot(1,1,1);
     p1=plot(edges(2:end),(tmp_slow));
     hold(ax,'on')
     p2=plot(edges(2:end),tmp_fast);
     title(round(delay_per_cell(1,cellIDX)))
 
-%     for ig=1:numel(gains)
-%         
-%         idx = trial_gain == gains(ig);
-%         plot(nanmean(mS(:,idx),2),'Color',plot_colors_gain(gain_plot_idx(ig),:));
-%     end
+
     for ij=posWindow
         xline(ij,'r');
     end
     legend([p1 p2],{'slow','fast'})
 
-%     ax2=subplot(2,1,2);
-%     hold(ax2,'on')
-%     % get spike times and index into post
-%     spike_t = sp.st(sp.clu==good_cells(cellIDX));
-%     [~,~,spike_idx] = histcounts(spike_t,post);
-%     
-%     
-%     
-%     % gain trials
-%     plot(posx(spike_idx),trial_sorted(spike_idx),'.','Color',[0 0 0])
-%     for j = 1:numel(gains)
-%         keep = trial_gain(trial(spike_idx))==gains(j);
-%         plot(posx(spike_idx(keep)),trial_sorted(spike_idx(keep)),'.','Color',plot_colors_gain(gain_plot_idx(j),:));
-%     end
-%     xlim([params.TrackStart params.TrackEnd]);
-%     ylim([0 max(trial)+1]);
-%     title(sprintf('c%d, %s',good_cells(cellIDX),region{cluID}));
-%     xticks(''); yticks('');
-%     for ij=[80 :80:320]
-%         xline(ij);
-%     end
-%     for ij=posWindow
-%         xline(ij,'r');
-%     end
-    
     
     saveas(fig,fullfile(image_save_dir,sprintf('%s_%s_%d.png',clu_reg{cellIDX},session_name,cellIDX)),'png');
     clf
@@ -183,3 +163,4 @@ data.slow_trials = trials_slow;
 data.fast_trials = trials_fast;
 
 save(fullfile(OAK,'attialex','speed_sort4',session_name),'data')
+end

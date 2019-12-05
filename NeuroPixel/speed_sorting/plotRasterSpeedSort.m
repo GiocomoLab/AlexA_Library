@@ -69,5 +69,5 @@ end
 saveas(fig,fullfile(savepath,sprintf('%d.png',cellIDX)),'png');
 clf
 end
-
+close(fig)
 end
