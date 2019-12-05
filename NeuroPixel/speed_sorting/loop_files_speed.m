@@ -34,19 +34,13 @@ end
 
     % load data
     fprintf('session %d/%d: %s\n',session_num,numel(session_name),session_name{session_num});
-%     clearvars -except sess* aggre* data* save_figs image_save_dir
-%     load(fullfile(data_dir,strcat(session_name{session_num},'.mat')));
-%     shift_vs_speed
-%     aggregateData(session_num).models = models;
-%     aggregateData(session_num).session = session_name{session_num};
-%     aggregateData(session_num).region = region(sp.cgs==2);
-%     aggregateData(session_num).c_coeff = c_coeff;
-%     aggregateData(session_num).p_vals = p_vals;
-%     aggregateData(session_num).clu_reg = clu_reg;
-%     aggregateData(session_num).sess = session_name{session_num};
-%     save('/oak/stanford/groups/giocomo/attialex/shift_vs_speed.mat','aggregateData');
+
 try
-    slow_vs_fastTrials_v2(fullfile(data_dir,session_name{session_num}),image_save_dir)
+    data = load(fullfile(data_dir,session_name{session_num}));
+    data_out = slow_vs_fastTrials_v2(data,[],params)
+    data_out.session = session_name{session_num};
+    m=matfile(fullfile(OAK,'attialex','speed_sort6',session_name),'writable',true)
+    m.data_out=data_out;
 catch
     sprintf('failed for %s',session_name{session_num})
 end

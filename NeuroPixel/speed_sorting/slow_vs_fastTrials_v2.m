@@ -1,32 +1,37 @@
-function slow_vs_fastTrials_v2(filepath,image_save_dir)
+function data_out=slow_vs_fastTrials_v2(data,image_save_dir,params)
 %make it more consistent with xcorr for other shifts
 
-[~,session_name,~]=fileparts(filepath);
-
-if exist(image_save_dir,'dir')~=7
-    mkdir(image_save_dir);
+if ~isempty(image_save_dir)
+    if exist(image_save_dir,'dir')~=7
+        mkdir(image_save_dir);
+    end
+    save_images = true;
+else
+    save_images=false;
 end
-run('/home/users/attialex/AlexA_Library/default_paths.m')
 
 
-
-load(filepath);
-addpath(genpath('/home/users/attialex/AlexA_Library'));
-params = readtable('UniversalParams.xlsx');
-if ~isvarname('anatomy')
+if ~isfield(data,'anatomy')
     return
 end
+anatomy = data.anatomy;
+trial = data.trial;
+posx = data.posx;
+post = data.post;
+sp = data.sp;
+trial_gain = data.trial_gain;
+trial_contrast = data.trial_contrast;
 try
-
-if isfield(anatomy,'parent_shifted')
-    region = anatomy.parent_shifted;
-else
-    region = anatomy.cluster_parent;
-end
+    
+    if isfield(anatomy,'parent_shifted')
+        region = anatomy.parent_shifted;
+    else
+        region = anatomy.cluster_parent;
+    end
 catch
     disp('no anatomy')
     return
-    end
+end
 
 trials=[1:max(trial)];
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -110,12 +115,14 @@ slow_idx = bl_sorted(1:M);
 fast_idx = bl_sorted(nT-M:nT);
 %h=figure('visible','off');
 
-
-fig=figure('visible','off');
+if save_images
+    fig=figure('visible','off');
+end
 delay_per_cell = zeros(2,numel(good_cells));
 trials_fast = zeros(numel(edges)-1,numel(good_cells));
 trials_slow = trials_fast;
 clu_reg = cell(numel(good_cells),1);
+XCORRS = zeros(numel(good_cells),21);
 for cellIDX = 1:numel(good_cells)
     cluID = find(sp.cids==good_cells(cellIDX));
     clu_reg{cellIDX}=region{cluID};
@@ -131,36 +138,37 @@ for cellIDX = 1:numel(good_cells)
     tf = tmp_fast(posBin(1):posBin(2));
     tf = tf-mean(tf);
     [rr,lags]=xcorr(ts,tf,10,'coeff');
+    XCORRS(cellIDX,:)=rr;
     [~,tmp]=max(rr);
     delay_per_cell(1,cellIDX)=lags(tmp)*mean(diff(edges));
     delay_per_cell(2,cellIDX)=rr(tmp);
-    ax=subplot(1,1,1);
-    p1=plot(edges(2:end),(tmp_slow));
-    hold(ax,'on')
-    p2=plot(edges(2:end),tmp_fast);
-    title(round(delay_per_cell(1,cellIDX)))
-
-
-    for ij=posWindow
-        xline(ij,'r');
+    if save_images
+        
+        ax=subplot(1,1,1);
+        p1=plot(edges(2:end),(tmp_slow));
+        hold(ax,'on')
+        p2=plot(edges(2:end),tmp_fast);
+        title(round(delay_per_cell(1,cellIDX)))
+        
+        
+        for ij=posWindow
+            xline(ij,'r');
+        end
+        legend([p1 p2],{'slow','fast'})
+        
+        saveas(fig,fullfile(image_save_dir,sprintf('%s_%s_%d.png',clu_reg{cellIDX},session_name,cellIDX)),'png');
+        clf
     end
-    legend([p1 p2],{'slow','fast'})
-
-    
-    saveas(fig,fullfile(image_save_dir,sprintf('%s_%s_%d.png',clu_reg{cellIDX},session_name,cellIDX)),'png');
-    clf
     %%
 end
 
-data.delay = delay_per_cell;
+data_out.delay = delay_per_cell;
+data_out.XCORR = XCORRS;
+data_out.region = clu_reg;
+data_out.slow = mean(trial_speed(slow_idx));
 
-data.region = clu_reg;
-data.session = session_name;
-data.slow = mean(trial_speed(slow_idx));
+data_out.fast = mean(trial_speed(fast_idx));
+data_out.slow_trials = trials_slow;
+data_out.fast_trials = trials_fast;
 
-data.fast = mean(trial_speed(fast_idx));
-data.slow_trials = trials_slow;
-data.fast_trials = trials_fast;
-
-save(fullfile(OAK,'attialex','speed_sort4',session_name),'data')
 end
