@@ -1,31 +1,41 @@
-dat08 = load('Z:\giocomo\attialex\Images\xcorrv5\allData_MEC_0.8_100.mat');
-dat05 = load('Z:\giocomo\attialex\Images\xcorrv5\allData_MEC_0.5_100.mat');
-figure
-subplot(1,2,1)
-boundedline(dat08.output.X-4000,nanmean(dat08.output.Y),nanstd(dat08.output.Y)/sqrt(size(dat08.output.Y,1)),'alpha')
-hold on
-boundedline(dat05.output.X-4000,nanmean(dat05.output.Y),nanstd(dat05.output.Y)/sqrt(size(dat05.output.Y,1)),'r','alpha')
-title('100% contrast')
-legend({'0.8','0.5'})
-subplot(1,2,2)
-boundedline(dat08.output.X-4000,nanmean(dat08.output.S),nanstd(dat08.output.S)/sqrt(size(dat08.output.Y,1)),'alpha')
-hold on
-boundedline(dat05.output.X-4000,nanmean(dat05.output.S),nanstd(dat05.output.S)/sqrt(size(dat05.output.Y,1)),'r','alpha')
-
+showXcorrResults('Z:\giocomo\attialex\Images\xcorrv_glm_speed','MEC',{'1.0','0.8','0.7','0.6','0.5'})
+    
 %%
-
-
-dat08 = load('Z:\giocomo\attialex\Images\xcorrv5\allData_MEC_0.8_10.mat');
-dat05 = load('Z:\giocomo\attialex\Images\xcorrv5\allData_MEC_0.5_10.mat');
-figure
+shiftfig = figure();
+xtxfig = figure();
+levels = {'50','20','10'};
+cm=lines(numel(levels));
+region = 'MEC';
+for iL=1:numel(levels)
+    figure(shiftfig)
+data =load(['Z:\giocomo\attialex\Images\xcorrv_CONTRAST2\allData_' region '__' levels{iL} '.mat']);
 subplot(1,2,1)
-boundedline(dat08.output.X,nanmean(dat08.output.Y),nanstd(dat08.output.Y)/sqrt(size(dat08.output.Y,1)),'alpha')
-hold on
-boundedline(dat05.output.X,nanmean(dat05.output.Y),nanstd(dat05.output.Y)/sqrt(size(dat05.output.Y,1)),'r','alpha')
-title('10% contrast')
-
-legend({'0.8','0.5'})
+boundedline(data.output.X-2400,nanmean(data.output.Y),nanstd(data.output.Y)/sqrt(size(data.output.Y,1)),'alpha','cmap',cm(iL,:))
+title('XCorr peak values')
+ylabel('XCorr')
+xlabel('Distance from contrast change [cm]')
 subplot(1,2,2)
-boundedline(dat08.output.X-4000,nanmean(dat08.output.S),nanstd(dat08.output.S)/sqrt(size(dat08.output.Y,1)),'alpha')
-hold on
-boundedline(dat05.output.X-4000,nanmean(dat05.output.S),nanstd(dat05.output.S)/sqrt(size(dat05.output.Y,1)),'r','alpha')
+boundedline(data.output.X-2400,nanmean(data.output.S*2),nanstd(data.output.S*2)/sqrt(size(data.output.Y,1)),'alpha','cmap',cm(iL,:))
+title('XCorr Shifts')
+ylabel('Shift [cm]')
+xlabel('Distance from contrast change [cm]')
+figure(xtxfig)
+subplot(2,numel(levels),iL)
+imagesc(data.output.XTX,[0 .8])
+set(gca,'XTickLabel',[],'YTickLabel',[])
+xline(1200,'r')
+yline(1200,'r')
+axis image
+title(levels{iL})
+colorbar
+subplot(2,numel(levels),numel(levels)+iL)
+imagesc(nanmean(data.output.YYT,3),[0. .5])
+set(gca,'XTickLabel',[],'YTickLabel',[])
+colorbar
+title(levels{iL})
+
+axis image
+end
+figure(shiftfig)
+subplot(1,2,1)
+legend(levels)
