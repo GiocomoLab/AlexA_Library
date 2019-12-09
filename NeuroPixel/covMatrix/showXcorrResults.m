@@ -10,14 +10,14 @@ for ii=1:numel(gains)
     data = load(tmp);
     
 subplot(1,2,1)
-boundedline(data.output.X-3200,nanmean(data.output.Y),nanstd(data.output.Y)/sqrt(size(data.output.Y,1)),'alpha','cmap',cm(ii,:))
+boundedline(data.output.X-2400,nanmean(data.output.Y),nanstd(data.output.Y)/sqrt(size(data.output.Y,1)),'alpha','cmap',cm(ii,:))
 hold on
 axis tight
 ylim([0 0.8])
 leg{end+1}=gains{ii};
 subplot(1,2,2)
 
-boundedline(data.output.X-3200,nanmean(data.output.S*2),nanstd(data.output.S*2)/sqrt(size(data.output.Y,1)),'alpha','cmap',cm(ii,:))
+boundedline(data.output.X-2400,nanmean(data.output.S*2),nanstd(data.output.S*2)/sqrt(size(data.output.Y,1)),'alpha','cmap',cm(ii,:))
     axis tight
     ylim([-2 6])
     catch ME
