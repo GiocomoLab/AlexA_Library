@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import scipy.ndimage as spi
 def preprocess(data,nth_bin = 10):
     track_start = 0
     track_end = 400
@@ -8,6 +9,9 @@ def preprocess(data,nth_bin = 10):
     every_nth_time_bin = nth_bin
     numposbins = np.floor((track_end-track_start)/dx)
     posx_edges = np.linspace(track_start,track_end,numposbins+1)
+    posx_centers = 0.5 * posx_edges[0:-1] + 0.5*posx_edges[1::]
+    data['posx_centers']=posx_centers
+    data['posx_edges']=posx_edges
     posx=data['posx']
     post=data['post']
     trial = data['trial']
@@ -17,7 +21,7 @@ def preprocess(data,nth_bin = 10):
     post_resampled = post[0::every_nth_time_bin]
     posx_resampled=posx
     posx_resampled[posx_resampled<track_start]=track_start
-    posx_resampled[posx_resampled>track_end]=track_end #now happening further down
+    posx_resampled[posx_resampled>=track_end]=track_end-0.001 #now happening further down
     #posx_resampled = posx[0::every_nth_time_bin]
     trial_resampled = trial[0::every_nth_time_bin]
 
@@ -34,6 +38,10 @@ def preprocess(data,nth_bin = 10):
     posx_bin = posx_bin[0::every_nth_time_bin]
     posx_resampled = posx_resampled[0::every_nth_time_bin]
 
+    #speed
+    speed = calcSpeed(data['posx'])
+    speed_resampled = speed[0::every_nth_time_bin]
+
     # count spikes in each time bin for each cell
     spikecount = np.empty((len(good_cells),len(post_resampled),))
     spikecount[:] = np.nan
@@ -44,4 +52,16 @@ def preprocess(data,nth_bin = 10):
     data['posx_bin']=posx_bin
     data['trial_resampled']=trial_resampled
     data['posx_resampled']=posx_resampled
+    data['speed_resampled']=speed_resampled
     return data
+
+def calcSpeed(posx):
+    speed = np.diff(posx)/0.02
+    speed = np.hstack((0,speed))
+    speed[speed>150]=np.nan
+    speed[speed<-5]=np.nan
+    idx_v = np.flatnonzero(np.logical_not(np.isnan(speed)))
+    idx_n = np.flatnonzero(np.isnan(speed))
+    speed[idx_n]=np.interp(idx_n,idx_v,speed[~np.isnan(speed)])
+    speed = spi.gaussian_filter1d(speed,10)
+    return speed
