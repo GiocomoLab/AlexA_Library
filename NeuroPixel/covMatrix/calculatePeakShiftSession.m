@@ -1,4 +1,4 @@
-function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat,fr_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
+function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat,fr_mat,MEAN_XCORRS]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
@@ -122,10 +122,23 @@ stable_cells = stability>stability_threshold;
 XTX = nan(nTrials*nBins);
 YYT = nan(nTrials,nTrials);
 n_units = [nnz(stable_cells),numel(stable_cells)];
-
+MEAN_XCORRS = nan(nTrials,2*maxlag+1,nReps);
 if nnz(stable_cells)<=.2*numel(stable_cells)
     return
 end
+
+trial2templateMap=zeros(1,size(spatialMap,3));
+cntr=1;
+aa=numel(template1_trials)+1;
+for iT = 1:numel(trial2templateMap)
+    if ~ismember(iT,template_trials)
+        trial2templateMap(iT)=aa;
+    else
+        trial2templateMap(iT)=cntr;
+        cntr=cntr+1;
+    end
+end
+
 %spatialMap = spatialMap-mean(spatialMap,2);
 for iStart = stride_start:stride:(nBins-chunksize)
     repidx = repidx+1;
@@ -133,10 +146,11 @@ for iStart = stride_start:stride:(nBins-chunksize)
     stopbin = iStart+chunksize;
     %xcorr relative to template trials: 4 before gain onset for all except
     %these 4
-    [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag);
+    [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag,trial2templateMap);
     %[xcorrs2,~] = calc_xcorr_snippet(spatialMap,template2,startbin,stopbin,maxlag);
     
     m_xcorr = squeeze(nanmean(xcorrs(stable_cells,:,:),1));
+    MEAN_XCORRS(:,:,repidx)=m_xcorr;
     [peaks,iidx]=max(m_xcorr,[],2);
     shifts = lags(iidx);
 
