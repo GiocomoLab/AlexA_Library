@@ -1,5 +1,16 @@
 function data_out = findBestShifts(data,ops)
 
+if isfield(data.anatomy,'parent_shifted')
+    reg = data.anatomy.parent_shifted;
+else
+    reg = data.anatomy.cluster_parent;
+end
+if iscolumn(reg)
+    reg = reg';
+end
+
+reg = reg(data.sp.cgs==2);
+
 
 good_cells=data.sp.cids(data.sp.cgs==2);
 factors = ops.factors;
@@ -27,11 +38,11 @@ if ~isempty(ops.filter)
     speed_raw = conv(speed_raw,ops.filter,'same');
 end
 
-OCC=zeros(nT,400,numel(factors));
+OCC=zeros(nT,max(ops.edges),numel(factors));
 
 for iFactor = 1:numel(factors)
     posxhat = data.posx+factors(iFactor)*speed_raw;
-    posxhat = mod(posxhat,400);
+    posxhat = mod(posxhat,max(ops.edges));
     spike_loc_hat = discretize(posxhat,edges);
     for iT=1:numel(spike_loc_hat)
         r=trial_sorted(iT);
@@ -51,7 +62,7 @@ for cellIDX=1:numel(good_cells)
     spike_id=data.sp.clu==good_cells(cellIDX);
     spike_t = data.sp.st(spike_id);
     [~,~,spike_idx] = histcounts(spike_t,data.post);
-    posx=mod(data.posx,400);
+    posx=mod(data.posx,max(ops.edges));
     spike_loc = discretize(posx,edges);
     
     idx=triu(true(nT),1);
@@ -60,9 +71,9 @@ for cellIDX=1:numel(good_cells)
     VAR=zeros(size(factors));
     STAB=VAR;
     for iFactor = 1:numel(factors)
-        spMatHat = zeros(nT,400);
+        spMatHat = zeros(nT,max(ops.edges));
         posxhat = posx+factors(iFactor)*speed_raw;
-        posxhat = mod(posxhat,400);
+        posxhat = mod(posxhat,max(ops.edges));
         spike_loc_hat = discretize(posxhat,edges);
         for ii=1:numel(spike_idx)
             if ~isnan(trial_sorted(spike_idx(ii)))
@@ -82,7 +93,7 @@ for cellIDX=1:numel(good_cells)
         end
         
         
-        cc=corr(spMatHat');
+        cc=corr(spMatHat(:,ops.idx)');
         stability=nanmean(cc(idx));
         
         STAB(iFactor)=stability;
@@ -93,16 +104,16 @@ for cellIDX=1:numel(good_cells)
         xlim([min(factors) max(factors)])
         [ma,mi]=max(STAB);
         posxhat = posx+factors(mi)*speed_raw;
-        posxhat = mod(posxhat,400);
+        posxhat = mod(posxhat,max(ops.edges));
         title(sprintf('facto %.2f',factors(mi)))
         
         subplot(3,1,2)
         scatter(posx(spike_idx),trial_sorted(spike_idx),2);
-        xlim([0 400])
+        xlim([0 max(ops.edges)])
         ylim([0 nT])
         subplot(3,1,3)
         scatter(posxhat(spike_idx),trial_sorted(spike_idx),2);
-        xlim([0 400])
+        xlim([0 max(ops.edges)])
         ylim([0 nT])
         pause
         clf
@@ -112,9 +123,6 @@ for cellIDX=1:numel(good_cells)
     all_stability(cellIDX,:)=STAB;
 end
 data_out.all_stability=all_stability;
-
+data_out.region = reg;
 end
 
-function occ = getOccpuancy()
-occ=[];
-end
