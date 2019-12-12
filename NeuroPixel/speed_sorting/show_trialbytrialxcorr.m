@@ -1,6 +1,6 @@
 
 %%
-files = dir('F:\temp\xcorrSpeed2\*.mat');
+files = dir('F:\temp\xcorrSpeed\*.mat');
 
 ALL_SLOPES = struct();
 ALL_SESSIONS=struct();
@@ -76,6 +76,28 @@ end
 
 legend(regions)
 xlabel('Slope')
+%%
+regions = {'MEC'};
+edges = [-0.5:0.05:0.5];
+for iR=1:numel(regions)
+    dat = ALL_SLOPES.(regions{iR});
+    [sess,~,sid]=unique(ALL_SESSIONS.(regions{iR}));
+    S_H=zeros(numel(sess),20);
+    for iS=1:numel(sess)
+    idx = dat(:,2)<0.05 & sid ==iS;
+    
+    
+    [N,edges] = histcounts(dat(idx,1),edges, 'Normalization', 'probability');
+    S_H(iS,:)=N;
+    end
+    %histogram(dat(idx,1),'Normalization','probability')
+end
+figure
+[a,sid]=sort(mean(S_H(:,1:10),2));
+imagesc(S_H(sid,:),[0 0.3])
+set(gca,'XTick',[1:20],'XTickLabel',.5*edges(1:end-1)+.5*edges(2:end),'XTickLabelRotation',45)
+
+
 %%
 reg ='VISp';
 tmp = ALL_SLOPES.(reg)(:,1);

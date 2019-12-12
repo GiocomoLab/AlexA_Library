@@ -1,12 +1,16 @@
-function plotRasterSpeedSort(data,params,savepath,clusters2show,trials2show)
+function trial_rank = plotRasterSpeedSort(data,params,savepath,clusters2show,trials2show,ax)
 
 if ~isempty(trials2show)
     height = ceil(numel(trials2show)/16)*85;
 else
     height = ceil(max(data.trial)/16)*85;
 end
-
-fig = figure('Position',[109   387   742   height],'visible','on'); hold on;
+if isempty(ax)
+    fig = figure('Position',[109   387   742   height],'visible','on'); hold on;
+    ax=axes();
+else
+    axes(ax);
+end
 gains_all = [0.8 0.7 0.6 0.5 0.2];
 contrasts_all = [100 50 20 10 5 2 0];
 gains = sort(unique(data.trial_gain),'descend');
@@ -75,7 +79,6 @@ end
 for cellIDX = numel(good_cells)
     cluID = find(data.sp.cids==good_cells(cellIDX));
     
-    subplot(1,4,[1 2 3 4])
     hold on
     % get spike times and index into post
     spike_t = data.sp.st(data.sp.clu==good_cells(cellIDX));

@@ -1,4 +1,4 @@
-function speed = calcSpeed(posx,p)
+function [speed,raw_speed] = calcSpeed(posx,p)
 % function to calculate speed from position and time data
 % Malcolm Campbell 5/21/15
 %
@@ -24,7 +24,7 @@ speed(speed > 150) = NaN;
 speed(speed<-5) = NaN;
 speed(isnan(speed)) = interp1(find(~isnan(speed)), speed(~isnan(speed)), find(isnan(speed)), 'pchip'); % interpolate NaNs
 speed = [0;speed];
-
+raw_speed = speed;
 % smooth speed trace
 speed = gauss_smoothing(speed,smoothSigma);
 

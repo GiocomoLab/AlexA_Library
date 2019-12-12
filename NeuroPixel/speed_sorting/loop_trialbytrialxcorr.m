@@ -17,7 +17,8 @@ end
 for iF=1:numel(session_name)
     data = load(fullfile(data_dir,session_name{iF}));
     try
-    data_out = calculateTrialByTrialXCorr(data,5:20);
+    trials = find(data.trial_gain==1);
+    data_out = calculateTrialByTrialXCorr(data,trials);
     if ~isempty(fieldnames(data_out))
         save(fullfile(save_dir,session_name{iF}),'data_out')
     end
