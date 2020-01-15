@@ -8,36 +8,43 @@
 numrow = 8; % number of rows in final image
 
 % session names
-sn = dir('F:\images\AA*');
+sn = dir('Z:\giocomo\attialex\images\rastersRegionParent_subset20');
 session_name = {};
 for iS=1:numel(sn)
-    session_name{iS}=sn(iS).name;
+    if sn(iS).isdir && ~ismember('.',sn(iS).name)
+    session_name{end+1}=sn(iS).name;
+    end
 end
 % where to save images
-image_save_dir = 'F:\images\pretty_rasters_whole_session_combined';
+image_save_dir = 'F:\images\pretty_rasters_whole_session_parentSubset20';
 mkdir(image_save_dir)
 %% iterate over sessions
 for k = 1:numel(session_name)
     
-    image_dir = fullfile('F:\images\',session_name{k},'\pretty_rasters\');
+    %image_dir = fullfile('F:\images\',session_name{k},'\pretty_rasters\');
+    image_dir = fullfile('Z:\giocomo\attialex\images\rastersRegionParent_subset20',session_name{k});
 
     % get png file names
-    png_files = dir(sprintf('%s\\*.png',image_dir));
+    png_files = dir(fullfile(image_dir,'*.png'));
     png_files = {png_files.name};
+    if numel(png_files)>300
+        iidx = randsample(1:numel(png_files),300);
+        png_files = png_files(iidx);
+    end
 
     % find the files that are of the form (number).png
-    contains_number = regexp(png_files,'(\d*).png');
-    png_files = png_files(cell2mat(contains_number)==1);
+    %contains_number = regexp(png_files,'(\d*).png');
+   % png_files = png_files(cell2mat(contains_number)==1);
 
-    % sort by cell number
-    cell_num = nan(numel(png_files),1);
-    for i = 1:numel(png_files)
-        this_split = strsplit(png_files{i},'.');
-        cell_num(i) = str2num(this_split{1});
-    end
-    [cell_num,sort_idx] = sort(cell_num);
-    png_files = png_files(sort_idx);
-    dat = imread(fullfile(image_dir,png_files{i}),'png');
+%     % sort by cell number
+%     cell_num = nan(numel(png_files),1);
+%     for i = 1:numel(png_files)
+%         this_split = strsplit(png_files{i},'.');
+%         cell_num(i) = str2num(this_split{1});
+%     end
+%     [cell_num,sort_idx] = sort(cell_num);
+%     png_files = png_files(sort_idx);
+    dat = imread(fullfile(image_dir,png_files{1}),'png');
     [size_vert,size_horiz,~]=size(dat);
 
 

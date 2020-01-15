@@ -6,7 +6,8 @@ if baseline_only
     trial_num =1:max(trial);
     
     blt=trial_num(trial_gain==1 & trial_contrast==100);
-    bl_idx=ismember(trial,blt);
+    %bl_idx=ismember(trial,blt);
+    bl_idx=ismember(trial,[10:20]);
     bl_posx=posx(bl_idx);
     bl_post=post(bl_idx);
     
@@ -70,6 +71,7 @@ for cellIDX=1:length(good_cells)
     [~,~,spike_idx] = histcounts(spike_t,post);
     
     spiketrain = histc(spike_t,bl_post);
+    %spiketrain = histcounts(spike_t,bl_post)';
     numFolds = 10;
     T = numel(spiketrain);
     numPts = 3*round(1/params.TimeBin); % 3 seconds. i've tried #'s from 1-10 seconds.. not sure what is best
@@ -110,6 +112,7 @@ for cellIDX=1:length(good_cells)
     %axis([0.5  2.5 -inf inf])
     
     
-    saveas(fighandle, fullfile(plot_path,sprintf('glm_baseline_%d.png',good_cells(cellIDX))));
+    %saveas(fighandle, fullfile(plot_path,sprintf('glm_baseline_%d.png',good_cells(cellIDX))));
+    pause
     close(fighandle);
 end

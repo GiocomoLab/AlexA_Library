@@ -15,7 +15,12 @@ bin_centers = bin_centers/2;
 nBins = numel(bin_centers);
 smooth_fact = 2;
 good_cells = unique(spike_clusters);
-spMap = zeros(nBins,numel(good_cells));
+max_clust = p.Results.max_clust;
+if isempty(max_clust)
+    spMap = zeros(nBins,numel(good_cells));
+else
+    spMap = zeros(nBins,max_clust+1);
+end
 for iC=1:numel(good_cells)
 
 spike_t = spike_times(spike_clusters==good_cells(iC));
@@ -30,8 +35,12 @@ for iBin = 1:nBins
     fr_x(iBin) = sum(dist);
 end
 
-
-spMap(:,iC)=(fr_x);
+if isempty(max_clust)
+    spMap(:,iC)=(fr_x);
+else
+   cellIDX = good_cells(iC)+1;
+   spMap(:,cellIDX)=fr_x;
+end
 
 end
 

@@ -40,8 +40,8 @@ for ii=1:length(beh_varlist)
 end
 MM_snps={};
 %%
-%session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
-session_table = readtable(fullfile(OAK,'attialex','NP_DATA','data_summary_June2019.xlsx'));
+session_table = readtable('Z:\giocomo\attialex\NP_DATA\data_summary_June2019.xlsx');
+%session_table = readtable(fullfile(OAK,'attialex','NP_DATA','data_summary_June2019.xlsx'));
 session_names = session_table.SessionName;
 %idx = strcmp(filenames(1).name(1:end-4),session_names);
 for iF=1:numel(filenames)
@@ -56,18 +56,16 @@ for iF=1:numel(filenames)
     else
     session_type{iF} = session_table.SessionType{idx};
     end
-    plot_mismatch_sequence;
+    extractMismatchTimes;
     aggregateBeh.MMRun{iF}=(squeeze(adata));
     aggregateBeh.MMAllRun{iF}=squeeze(adata_all);
     aggregateBeh.RunOff{iF} =squeeze(adataROFF(1,:,:));
-    resp = squeeze(mean(mm_rate,2));
-    tmpRON=squeeze(mean(rON_rate,2));
-    tmpRON=tmpRON(:,1:20:end);
-    tmpROFF=squeeze(mean(rOFF_rate,2));
-    tmpROFF=tmpROFF(:,1:20:end);
-    for ii=1:length(sp.cgs)
-        MM_snps{iF}=spike_mat_all;
-    end
+%     resp = squeeze(mean(mm_rate,2));
+%     tmpRON=squeeze(mean(rON_rate,2));
+%     tmpRON=tmpRON(:,1:20:end);
+%     tmpROFF=squeeze(mean(rOFF_rate,2));
+%     tmpROFF=tmpROFF(:,1:20:end);
+ 
     avgMM = cat(1,avgMM,resp(:,1:20:end));
     avgRunOn = cat(1,avgRunOn,tmpRON);
     avgRunOff = cat(1,avgRunOff,tmpROFF);

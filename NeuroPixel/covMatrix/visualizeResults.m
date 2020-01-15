@@ -1,4 +1,4 @@
-showXcorrResults('Z:\giocomo\attialex\Images\xcorrv_glm_speed','MEC',{'1.0','0.8','0.7','0.6','0.5'})
+showXcorrResults('Z:\giocomo\attialex\Images\xcorrv7','MEC',{'1.0','0.8','0.5'})
     
 %%
 shiftfig = figure();
@@ -39,3 +39,12 @@ end
 figure(shiftfig)
 subplot(1,2,1)
 legend(levels)
+%%
+figure('Position',[680   558   926   420])
+plot(output.Y(7:10,:)')
+set(gca,'XTick',[5:10:200])
+set(gca,'XTickLabel',[-6:1:-1 1:4 1:6])
+xline(6*10+0.5,'r')
+xline(10*10+0.5,'r')
+ylabel('Peak Xcorr')
+xlabel('Trial #')

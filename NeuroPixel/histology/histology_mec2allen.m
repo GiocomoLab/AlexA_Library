@@ -48,15 +48,15 @@ for iP= 1:numel(histology.X1)
     wholeTrack = [term_allen;term_allen+histology.FinalDepth(iP)*vecAllen/1000];
     figure(probefig)
     scatter3(pos3D(:,1),pos3D(:,3),pos3D(:,2),4,[1 0 0; 0 0 1])
-    plot3(wholeTrack(:,1),wholeTrack(:,3),wholeTrack(:,2))
+    plot3(wholeTrack(:,1),wholeTrack(:,3),wholeTrack(:,2),'LineWidth',2)
     %plot3(probe_track(:,1),probe_track(:,3),probe_track(:,2))
     pixelCoords = wholeTrack;
     pixelCoords(:,3)=pixelCoords(:,3)*-1;
     pixelCoords = pixelCoords/atlasRes+bregma([3 2 1]);
     
     figure(brainfig)
-    plot3(pixelCoords(:,3),pixelCoords(:,1),pixelCoords(:,2))
-    plot3(pixelCoords(1,3),pixelCoords(1,1),pixelCoords(1,2),'ro')
+    plot3(pixelCoords(:,3),pixelCoords(:,1),pixelCoords(:,2),'LineWidth',2)
+    %plot3(pixelCoords(1,3),pixelCoords(1,1),pixelCoords(1,2),'ro')
     %plot
     
 end

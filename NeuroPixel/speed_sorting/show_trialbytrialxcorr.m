@@ -70,7 +70,10 @@ figure
 hold on
 for iR=1:numel(regions)
     dat = ALL_SLOPES.(regions{iR});
+    %tmp = dat(:,1);
+    %tmp(dat(:,2)>0.05)=0;
     idx = dat(:,2)<0.05;
+    %idx = dat(:,2)<1;
     histogram(dat(idx,1),'Normalization','probability')
 end
 
@@ -99,21 +102,21 @@ set(gca,'XTick',[1:20],'XTickLabel',.5*edges(1:end-1)+.5*edges(2:end),'XTickLabe
 
 
 %%
-reg ='VISp';
+reg ='MEC';
 tmp = ALL_SLOPES.(reg)(:,1);
 
 [ma,sid]=sort(abs(tmp),'descend','MissingPlacement','last');
 root = 'F:\NP_Data';
-ii=17;
-while ii<18
+ii=1;
+while ii<30
     pval = ALL_SLOPES.(reg)(sid(ii),2);
     if pval<0.05
     sn = ALL_SESSIONS.(reg){sid(ii)};
     cid = ALL_CLUSTERS.(reg)(sid(ii));
     data = load(fullfile(root,sn));
-    data.posWindow = [300 390];
+    data.posWindow = [60 140];
     
-    plotRasterSpeedSort(data,params,[],cid,[5:20])
+    plotRasterSpeedSort(data,params,[],cid,[5:20],[])
     xlabel(sprintf('%.2f',tmp(sid(ii))))
     drawnow
     ii=ii+1;

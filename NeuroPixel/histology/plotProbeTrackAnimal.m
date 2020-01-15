@@ -156,10 +156,10 @@ brainfig = gcf;
 end
 % plot probe points
 figure(brainfig)
-hp = plot3(curr_probePoints(:,1), curr_probePoints(:,3), curr_probePoints(:,2), '.','linewidth',2, 'color',[ProbeColors(selected_probe,:) .2],'markers',10);
+%hp = plot3(curr_probePoints(:,1), curr_probePoints(:,3), curr_probePoints(:,2), '.','linewidth',2, 'color',[ProbeColors(selected_probe,:) .2],'markers',10);
 
 % plot brain entry point
-plot3(m(1), m(3), m(2), 'k*','linewidth',1)
+%plot3(m(1), m(3), m(2), 'k*','linewidth',1)
 
 % use the deepest clicked point as the tip of the probe, if no scaling provided (scaling_factor = false)
 if use_tip_to_get_reference_probe_length
@@ -189,9 +189,9 @@ active_probe_position = round([active_site_start  probe_length]);
     
 % plot line the length of the active probe sites in reference space
 plot3(m(1)+p(1)*[active_probe_position(1) active_probe_position(2)], m(3)+p(3)*[active_probe_position(1) active_probe_position(2)], m(2)+p(2)*[active_probe_position(1) active_probe_position(2)], ...
-    'Color', ProbeColors(selected_probe,:), 'LineWidth', 1);
+    'Color', ProbeColors(selected_probe,:), 'LineWidth', 2);
 % plot line the length of the entire probe in reference space
 plot3(m(1)+p(1)*[1 probe_length], m(3)+p(3)*[1 probe_length], m(2)+p(2)*[1 probe_length], ...
-    'Color', ProbeColors(selected_probe,:), 'LineWidth', 1, 'LineStyle',':');
+    'Color', ProbeColors(selected_probe,:), 'LineWidth', 2, 'LineStyle',':');
 end
 end

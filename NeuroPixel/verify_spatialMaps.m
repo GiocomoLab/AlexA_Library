@@ -1,10 +1,11 @@
+
 addpath(genpath('C:\code\AlexA_Library'))
 
 trials=[1:max(trial)];
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:2:410];
+edges=[0:2:400];
 edges(1)=-.01;
 posx(posx<0)=0;
 for iT=1:length(trials)

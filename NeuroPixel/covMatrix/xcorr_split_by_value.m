@@ -1,6 +1,6 @@
 gains = {'1.0','0.8','0.5'};
 for ii=1:2%1:3
-    load(['Z:\giocomo\attialex\Images\xcorrv7\allData_MEC_' gains{ii} '_100.mat'])
+    load(['Z:\giocomo\attialex\Images\xcorrv8\allData_MEC_' gains{ii} '_100.mat'])
 nans = isnan(output.Y(:,1));
 validY=output.Y(~nans,:);
 validS = output.S(~nans,:);
@@ -59,7 +59,7 @@ xlim([-200 1200])
 end
 %%
 
-gains = {'1.0','0.8'};
+gains = {'0.8'};
 for ii=1:numel(gains)
     load(['Z:\giocomo\attialex\Images\xcorrv7\allData_MEC_' gains{ii} '_100.mat'])
 nans = isnan(output.Y(:,1));
@@ -130,10 +130,31 @@ figure
 for ii=1:12
     subplot(3,4,ii)
     %plot(meanY,validS(:,68+ii),'.')
-    mdl = fitlm(meanY,validS(:,70+ii));
+    startT=56;
+    idx = abs(validS(:,startT+ii))<10;
+    mdl = fitlm(-meanY(idx),validS(idx,startT+ii));
     plot(mdl)
     pp=anova(mdl);
     legend('off')
     xlabel(sprintf('%.3f',pp{1,5}))
     ylim([-10 10])
 end
+
+%%
+figure
+for ii=1:144
+    hold on
+    plot(output.Y(ii,:),'.','MarkerSize',12)
+    ylabel('Peak XCorr')
+    yyaxis right
+    plot(output.S(ii,:),'r.','MarkerSize',12)
+    ylabel('Shift [cm]')
+    xline(60,'k--')
+    xline(100,'k--')
+    set(gca,'XTick',5:10:200,'XTickLabel',[-6:1:-1 1:4 1:6])
+    xlabel('Trial #')
+    pause
+    clf
+    grid on
+end
+    

@@ -10,6 +10,7 @@ if isempty(ax)
     ax=axes();
 else
     axes(ax);
+    fig = gcf;
 end
 gains_all = [0.8 0.7 0.6 0.5 0.2];
 contrasts_all = [100 50 20 10 5 2 0];
@@ -76,7 +77,7 @@ else
     good_cells = clusters2show;
 end
 
-for cellIDX = numel(good_cells)
+for cellIDX = 1:numel(good_cells)
     cluID = find(data.sp.cids==good_cells(cellIDX));
     
     hold on

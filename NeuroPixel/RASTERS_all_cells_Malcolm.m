@@ -11,10 +11,10 @@ save_figs = true;
 xbincent = params.TrackStart+params.SpatialBin/2:params.SpatialBin:params.TrackEnd-params.SpatialBin/2;
 
 % where to find data and save images
-data_dir = 'Z:\giocomo\attialex\NP_DATA\';
+data_dir = 'F:\NP_DATA\';
 %session_name = {'AA5_190809_gain_1'};
 session_name = {};
-sn = dir(fullfile(data_dir,'AA*.mat'));
+sn = dir(fullfile(data_dir,'AA*_contr*.mat'));
 for iS = 1:numel(sn)
     if ~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback'))
         session_name{end+1}=sn(iS).name(1:end-4);
@@ -25,15 +25,23 @@ gains_all = [0.8 0.7 0.6 0.5 0.2];
 contrasts_all = [100 50 20 10 5 2 0];
 
 %% iterate over sessions
-for session_num = 10:numel(session_name)    
+for session_num = 1:numel(session_name)    
     % load data
     fprintf('session %d/%d: %s\n',session_num,numel(session_name),session_name{session_num});
     load(fullfile(data_dir,strcat(session_name{session_num},'.mat')));
     cells_to_plot = sp.cids(sp.cgs==2); % all good cells
     
+    if isfield(anatomy,'parent_shifted')
+        region = anatomy.parent_shifted;
+    else
+        region = anatomy.cluster_parent;
+    end
+    reg = startsWith(region,'VISp');
+    cells_to_plot = sp.cids(sp.cgs==2 & reg);
+    
     % make image dir if it doesn't exist
     image_save_dir = strcat('F:\images\',...
-        session_name{session_num},'\pretty_rasters\');
+        session_name{session_num},'\pretty_rastersV1\');
     if exist(image_save_dir,'dir')~=7
         mkdir(image_save_dir);
     end
