@@ -1,13 +1,18 @@
-chunksize=100; %in bins,so thats 200 cm
-stride_start = 10;
-binsize=2;
-stride = 10;
-startVec = stride_start:stride:(200-chunksize+1);
+ops.chunksize=100; %in bins,so thats 200 cm
+ops.stride_start = 10;
+ops.binsize=2;
+ops.stride = 10;
+startVec = ops.stride_start:ops.stride:(400/ops.binsize-ops.chunksize+1);
 chunksPerTrials = numel(startVec);
-region = 'MEC';
-gain_to_look_at = .7;
-contrast = 100;
-[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+ops.region = 'MEC';
+ops.gain_to_look_at = .8;
+ops.contrast = 100;
+ops.tt=(-6:9);
+ops.template_trials = 1:6;
+ops.stability_threshold=0.2;
+ops.smoothSigma = 4;
+%%
+[filenames,triggers] = getFilesCriteria(ops.region,ops.contrast,ops.gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 %%
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
@@ -17,9 +22,9 @@ if isempty(p)
     parpool(12);
 end
 %%
-savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv_glm_speed';
+savepath_root = '/oak/stanford/groups/giocomo/attialex/Images/xcorrv8';
 %savepath_root = '/users/attialex/tmp/';
-savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',region,gain_to_look_at,contrast));
+savepath = fullfile(savepath_root,sprintf('%s_%.2f_%d',ops.region,ops.gain_to_look_at,ops.contrast));
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -42,15 +47,14 @@ for ii=1:numel(filenames)
     end
 end
 
-tt=(-6:9);
-template_trials = 1:6;
-PEAKS=nan(numel(tt),chunksPerTrials,n_chunks);
+
+PEAKS=nan(numel(ops.tt),chunksPerTrials,n_chunks);
 SHIFTS = PEAKS;
 MouseID = cell(n_chunks,1);
 NUnits = nan(n_chunks,2);
-XTX = zeros(numel(tt)*200,numel(tt)*200,n_chunks);
-YYT = zeros(numel(tt),numel(tt),n_chunks);
-SPEED=zeros(numel(tt),200,n_chunks);
+XTX = zeros(numel(ops.tt)*200,numel(ops.tt)*200,n_chunks);
+YYT = zeros(numel(ops.tt),numel(ops.tt),n_chunks);
+SPEED=zeros(numel(ops.tt),200,n_chunks);
 FR=SPEED;
 %cntr = 0;
 parfor iF = 1:n_chunks
@@ -61,12 +65,12 @@ parfor iF = 1:n_chunks
         data = load(loop_data(iF).filename);
         current_trig = loop_data(iF).trigger;
         
-        trials = current_trig+tt;
+        trials = current_trig+ops.tt;
         peak = 0;
         shift = 0;
         xtx = 0;
         try
-        [peak,shift,xtx,n_units,yyt,speed_mat,fr_mat]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
+        [peak,shift,xtx,n_units,yyt,speed_mat,fr_mat]=calculatePeakShiftSession(data,trials,ops);
         catch ME
             sprintf('%s: %d',loop_data(iF).filename,iF)
             rethrow(ME)
@@ -81,15 +85,15 @@ parfor iF = 1:n_chunks
         YYT(:,:,iF)=yyt;
         SPEED(:,:,iF)=speed_mat;
         FR(:,:,iF)=fr_mat';
-        x=startVec+chunksize/2;
+        x=startVec+ops.chunksize/2;
         x = x-1;
         x = x*2;
         fig = figure('visible','off');
         subplot(1,2,1)
         hold on
-        for iT = 1:numel(tt)
+        for iT = 1:numel(ops.tt)
             tmp = x+400*(iT-1)-10*400;
-            if ismember(iT,[abs(tt(1))+(1:4)])
+            if ismember(iT,[abs(ops.tt(1))+(1:4)])
                 plot(tmp,peak(iT,:),'r.')
                 
             else
@@ -101,13 +105,13 @@ parfor iF = 1:n_chunks
         
         subplot(1,2,2)
         imagesc(xtx,[0 1]);
-        xline(abs(min(tt))*400/binsize,'r');
-        yline(abs(min(tt))*400/binsize,'r');
+        xline(abs(min(ops.tt))*400/ops.binsize,'r');
+        yline(abs(min(ops.tt))*400/ops.binsize,'r');
         axis image;
         
         
         drawnow
-        saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,region,gain_to_look_at,contrast,iF)))
+        saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,ops.region,ops.gain_to_look_at,ops.contrast,iF)))
         
         close(fig)
     %end
@@ -139,6 +143,7 @@ for iS = 1:size(PEAKS,3)
 end
 
 output=struct();
+output.ops = ops;
 output.X=X;
 output.Y = Y;
 output.S = S;

@@ -24,6 +24,10 @@ p=gcp('nocreate');
 if isempty(p)
     parpool(12);
 end
+savedir = fullfile(OAK,'attialex','speed_sort7');
+if ~isfolder(savedir)
+    mkdir(savedir);
+end
 parfor session_num = 1:numel(session_name)  
         save_figs=true;
         image_save_dir = fullfile('/oak/stanford/groups/giocomo/attialex/images/',...
@@ -36,13 +40,21 @@ end
     fprintf('session %d/%d: %s\n',session_num,numel(session_name),session_name{session_num});
 
 try
+    sn=session_name{session_num};
     data = load(fullfile(data_dir,session_name{session_num}));
-    data_out = slow_vs_fastTrials_v2(data,[],params)
-    data_out.session = session_name{session_num};
-    m=matfile(fullfile(OAK,'attialex','speed_sort6',session_name),'writable',true)
-    m.data_out=data_out;
-catch
+    savepath = fullfile(savedir,sn);
+    data_out = slow_vs_fastTrials_v2(data,[],params,savepath)
+    data_out.session = sn;
+    %parsave(fullfile(savedir,sn),data_out)
+%     m=matfile(fullfile(savedir,sn),'writable',true);
+%     fn = fieldnames(data_out)
+%     for iF=1:numel(fn)
+%         m.(fn{iF}) = data_out.(fn{iF});
+%     end
+    
+catch ME
     sprintf('failed for %s',session_name{session_num})
+    disp(ME.message)
 end
 end
 

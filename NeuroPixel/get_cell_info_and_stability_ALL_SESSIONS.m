@@ -15,7 +15,7 @@ addpath(genpath(fullfile(root_dir,'spikes')));
 
 % extract names of all sessions in data dir
 data_dir = fullfile('/oak/stanford/groups/giocomo/attialex','NP_DATA');
-session_name = dir(fullfile(data_dir,'AA*gain*.mat'));
+session_name = dir(fullfile(data_dir,'np*_gain*.mat'));
 session_name = {session_name.name}';
 session_name = session_name(contains(session_name,'.mat'));
 for i = 1:numel(session_name)

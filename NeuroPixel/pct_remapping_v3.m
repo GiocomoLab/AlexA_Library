@@ -21,7 +21,7 @@ load(fullfile(cell_info_dir,cell_info_file));
 %% params
 
 % change these params
-brain_region = 'hc';
+brain_region = 'CA';
 num_trials_total = 34;
 gains_to_analyze = 0.8;
 stab_thresh = 0.3;
@@ -41,14 +41,14 @@ save_figs = true;
 
 
 load(fullfile(cell_info_dir,cell_info_file));
-idx = startsWith(cell_info.BrainRegion,brain_region);
+idx = startsWith(cell_info.BrainRegion,brain_region) | startsWith(cell_info.BrainRegion,'CA');
 session_name = unique(cell_info.Session(idx));
 
 
 local_stab = cell_info.LocalStability;
 local_stab = nanmean(local_stab(:,1:floor(num_trials_total/numtrialspergainchange)),2);
 keep_cell = ismember(cell_info.Session,session_name) & ...
-    startsWith(cell_info.BrainRegion,brain_region) & ...
+    (startsWith(cell_info.BrainRegion,brain_region) | startsWith(cell_info.BrainRegion,'CA')) & ...
     local_stab > stab_thresh;
 cell_info = cell_info(keep_cell,:);
 local_stab = local_stab(keep_cell);
@@ -123,6 +123,9 @@ for i = 1:numel(session_name)
     for j = 1:numel(gains_to_analyze)
         for k = 1:numreps_max
             keep_cell = strcmp(cell_info.Session,session_name{i});
+            if sum(keep_cell)<2
+                continue
+            end
             N_bl = sum(~isnan(crosscorr_all(keep_cell,j,k,1,1)));
             N_gc = sum(~isnan(crosscorr_all(keep_cell,j,k,1,2)));
             mean_bl = squeeze(nanmean(crosscorr_all(keep_cell,j,k,:,1)));

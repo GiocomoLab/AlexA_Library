@@ -1,20 +1,69 @@
 %waveform extractor
-
+addpath(genpath('/home/users/attialex/neuropixel-utils'))
+addpath(genpath('/home/users/attialex/AlexA_Library'));
 %% get files
+%dir('/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/**/AA_190830_1_0927_gaincontrast_1_g0_t0.imec0.ap.bin')
 
+%ff=dir('/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/**/*ap.bin')
+%%
+%gg = dir('/oak/stanford/groups/giocomo/export/data/Projects/ContrastExperiment_neuropixels/**/*ap.bin');
+%gg = dir('/oak/stanford/groups/giocomo/export/data/Projects/ContrastExperiment_neuropixels/**/*_CAR.bin');
+%%
+%file_location = cat(1,ff,gg);
+%save('/oak/stanford/groups/giocomo/attialex/FileLocations.mat','file_location');
+%%
+load('/oak/stanford/groups/giocomo/attialex/FileLocations')
+
+% %%
+% imec_dir = getRawDataPath('npI5_0413_baseline_g0_t0.imec0.ap.bin',file_location);
+%
+% ks_dir = fileparts(imec_dir)
+% pp=get_waveforms(ks_dir,imec_dir,385)
+%%
+filenames = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/*.mat');
+%%
+savedir = '/oak/stanford/groups/giocomo/attialex/mean_waveforms';
+if ~isfolder(savedir)
+    mkdir(savedir)
+end
+%%
+p=gcp('nocreate')
+if isempty(p)
+    p=parpool(2);
+end
 
 %%
-
-for iF =1:numel(filenames)
-    data = load(filenames{iF});
-    dat_path = data.sp.dat_path;
-    %find full path
-    fullpath = '';
-    
-    [mean_waveforms,mean_temlate_waveforms]=get_waveforms(realpath);
-    
-    %data.mean_waveforms = mean_waveforms;
-    %data.mean_template_waveforms = mean_template_waveforms;
-    save(filenames{iF},'mean_waveforms,'-append')
+parfor iF =1:200%numel(filenames)
+    try
+        data = load(fullfile(filenames(iF).folder,filenames(iF).name));
+        [~,session_name]=fileparts(filenames(iF).name);
+        if isfile(fullfile(savedir,[session_name '.mat']))
+            sprintf('%s already exists \n',session_name)
+            %continue
+        end
+        dat_path = data.sp.dat_path;
+        n_chan = data.sp.n_channels_dat;
+        %find full path
+        imec_dir = getRawDataPath(dat_path,file_location);
+        ks_dir = fileparts(imec_dir);
+        
+        [mean_waveforms,mean_template_waveforms,amplitude,aux]=get_waveforms(ks_dir,imec_dir,n_chan);
+        
+        %data.mean_waveforms = mean_waveforms;
+        %data.mean_template_waveforms = mean_template_waveforms;
+        m = matfile(fullfile(savedir,session_name),'Writable',true);
+        m.mean_waveforms = mean_waveforms;
+        m.mean_template_waveforms = mean_template_waveforms;
+        m.amplitudes = amplitude;
+        m.aux = aux;
+        % save(fullfile(savedir,session_name),'mean_waveforms','mean_waveforms','amplitude','aux')
+    catch ME
+        disp(ME.message);
+        a=fullfile(savedir,sprintf('%s_error.txt',session_name));
+        disp(a);
+        fid = fopen(a,'w');
+        fprintf(fid,ME.message)
+        fclose(fid);
+    end
     
 end

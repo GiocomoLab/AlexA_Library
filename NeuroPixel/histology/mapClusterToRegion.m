@@ -9,7 +9,7 @@ histo_loc = '/oak/stanford/groups/giocomo/export/data/Projects/AlexA_NP/Histolog
 session_loc = '/oak/stanford/groups/giocomo/attialex/NP_DATA';
 %go through each row
 nS=size(session_table,1);
-for iS=83:nS
+for iS=5
     animal = session_table.Mouse{iS};
     sessionID = session_table.SessionName{iS};
     recording_day =session_table.RecordingDay(iS);

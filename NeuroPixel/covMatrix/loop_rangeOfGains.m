@@ -31,45 +31,52 @@ n_chunks = 1;
 template_trials = 1:6;
 PEAKS=nan(212,1,nFiles);
 SHIFTS = PEAKS;
+GAINS = nan(212,nFiles);
 MouseID = cell(nFiles,1);
 NUnits = nan(nFiles,2);
 XCORRS = nan(5,21,nFiles);
+
 %cntr = 0;
 parfor iF = 1:nFiles
-
-        data = load(filenames{iF});
-        template_trials = find(data.trial_gain == .5)';
-        trials = 1:max(data.trial);
-        nT = numel(trials);
-        try
+    
+    data = load(filenames{iF});
+    template_trials = find(data.trial_gain == .5)';
+    trials = 1:max(data.trial);
+    nT = numel(trials);
+    try
         [peak,shift,~,n_units,~,~,~,xcorrs]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,0.2,binsize,template_trials);
-        catch ME
-            sprintf('%s: %d',filenames{iF},iF)
-            rethrow(ME)
-        end
+        
         [~,session_name,~] = fileparts(filenames{iF});
         
+        TMP=nan(5,21);
         gains = [0.5 0.6 0.7 0.8 1];
-        for iG=1:numel(gains)
-            tidx = data.trial_gain == iG;
-            tmp = nanmean(xcorrs(tidx,:));
-            XCORRS(iG,:,iF)=tmp;
-        end
         
+        for iG=1:numel(gains)
+            tidx = data.trial_gain == gains(iG);
+            tmp = nanmean(xcorrs(tidx,:));
+            TMP(iG,:)=tmp;
+        end
+        XCORRS(:,:,iF)=TMP;
+        gains = data.trial_gain;
         if nT>212
             peak=peak(1:212,:);
             shift=shift(1:212,:);
+            gains = gains(1:212,:);
         end
         if nT<212
-            tmpP = nan(nT,size(peak,2));
-            tmpS = nan(nT,size(shift,2));
+            tmpP = nan(212,size(peak,2));
+            tmpS = nan(212,size(shift,2));
+            tmpG=nan(212,1);
             tmpP(1:nT,:)=peak;
             tmpS(1:nT,:)=shift;
+            tmpG(1:nT)=gains;
             peak = tmpP;
             shift=tmpS;
+            gains = tmpG;
         end
         PEAKS(:,:,iF)=peak;
         SHIFTS(:,:,iF)=shift;
+        GAINS(:,iF)=gains;
         MouseID{iF}=session_name;
         NUnits(iF,:)=n_units;
         
@@ -81,61 +88,43 @@ parfor iF = 1:nFiles
         gains = [1 0.8 0.7 0.6 0.5];
         cmap = [0 0 0;cool(4)];
         for iG = 1:numel(gains)
-
+            if numel(data.trial_gain)>212
+            tidx = find(data.trial_gain(1:212) == gains(iG));
+            else
                 tidx = find(data.trial_gain == gains(iG));
-                plot(tidx,peak(tidx,:),'.','Color',cmap(iG,:))
+            end
+            %%%
+            
+            %needs fixing here with the index
+            %%%
+            plot(tidx,peak(tidx,:),'.','Color',cmap(iG,:))
             
         end
         ylim([0., 0.8])
         xlim([0 numel(peak)])
-      
+        
         
         
         drawnow
         saveas(fig,fullfile(savepath,sprintf('%s_%s_%.1f_%d_%d.png',session_name,region,gain_to_look_at,contrast,iF)))
         
         close(fig)
+    catch ME
+        sprintf('%s: %d',filenames{iF},iF)
+        rethrow(ME)
+    end
     %end
 end
 %%
-X=[];
 
-
-x=startVec+chunksize/2;
-x = x-1;
-x = x*binsize;
-for iT = 1:numel(tt)
-    tmp = x+400*(iT-1);
-    X=cat(2,X,tmp);
-    %plot(tmp,peak(iT,:),'b.')
-end
-Y=zeros(size(PEAKS,3),numel(X));
-S = Y;
-chunks_per_trial = size(PEAKS,2);
-for iS = 1:size(PEAKS,3)
-    for iT = 1:numel(tt)
-        idx = ((iT-1)*chunks_per_trial+1):iT*chunks_per_trial;
-        tmp = squeeze(PEAKS(iT,:,iS));
-        Y(iS,idx)=tmp;
-        tmp = squeeze(SHIFTS(iT,:,iS));
-        
-        S(iS,idx)=tmp;
-    end
-end
 
 output=struct();
-output.X=X;
-output.Y = Y;
-output.S = S;
+output.GAINS=GAINS;
+output.SHIFTS = SHIFTS;
+output.PEAKS = PEAKS;
+output.XCORRS = XCORRS;
 output.region = region;
-output.gain = gain_to_look_at;
-output.contrast = contrast;
-output.loop_data = loop_data;
 output.NUnits = NUnits;
-output.XTX =nanmean(XTX,3);
-output.YYT = YYT;
-output.SPEED = SPEED;
-output.FR = FR;
 %figure
 %plot(output.X-4000,nanmean(output.Y))
 %hold on

@@ -44,10 +44,10 @@ session_table = readtable(fullfile(OAK,'attialex','NP_DATA','data_summary_June20
 session_names = session_table.SessionName;
 spike_times = {};
 %idx = strcmp(filenames(1).name(1:end-4),session_names);
-for iF=1:3%numel(filenames)
+for iF=1:numel(filenames)
     try
     %clear all
-    clear anatomy
+    clear anatomy mismatch_trigger
     load(fullfile(filenames(iF).folder, filenames(iF).name));
     session_name{iF} = filenames(iF).name;
     idx = strcmp(filenames(1).name(1:end-4),session_names);
@@ -111,7 +111,10 @@ for iF=1:3%numel(filenames)
         tmp_region = cell(1,numel(depth));
         tmp_parent = cell(1,numel(depth));
     end
-    DEPTH = cat(2,DEPTH,depth);
+    if ~iscolumn(depth)
+        depth = depth';
+    end
+    DEPTH = cat(1,DEPTH,depth);
 
     if ~isrow(tmp_parent)
         tmp_parent = tmp_parent';
@@ -124,6 +127,7 @@ for iF=1:3%numel(filenames)
 
 catch ME
     warning(sprintf('error with File %s',filenames(iF).name));
+    %keyboard
     display(ME.message)
     end
     end
@@ -137,7 +141,7 @@ aggregateData.MM_snps=MM_snps;
 % aggregateData.CGS=CGS;
 % aggregateData.DEPTH = DEPTH;
 %clearvars -except agg* avgMM filenames root_dir AID
-%save(fullfile(OAK,'attialex',strcat('MM_aggregate',date,'.mat')),'aggregateData','-v7.3')
+save(fullfile(OAK,'attialex',strcat('MM_aggregateTimes',date,'.mat')),'aggregateData','-v7.3')
 %aggregateData.MM_snps=[];
 %save(fullfile(OAK,'attialex',strcat('MM_aggregateSmall',date,'.mat')),'aggregateData','-v7.3')
 %% turn into rate maps and calc avgMM

@@ -1,10 +1,10 @@
-function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat,fr_mat,MEAN_XCORRS]=calculatePeakShiftSession(data,trials,chunksize,stride_start,stride,region,stability_threshold,binsize,template_trials)
+function [PEAKS,SHIFTS,XTX,n_units,YYT,speed_mat,fr_mat,MEAN_XCORRS]=calculatePeakShiftSession(data,trials,ops)
 %extract spatial maps
 
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:binsize:400];
+edges=[0:ops.binsize:400];
 edges(1)=-.01;
 [speed,speed_mat] = calc_speed(data.posx,data.trial,trials,edges);
 data.posx(data.posx<0)=0;
@@ -21,9 +21,9 @@ for iT=1:length(trials)
 end
 %cellIDX=find(sp.cgs>=1);
 if isfield(data.anatomy,'parent_shifted')
-    reg = startsWith(data.anatomy.parent_shifted,region);
+    reg = startsWith(data.anatomy.parent_shifted,ops.region);
 else
-reg = startsWith(data.anatomy.cluster_parent,region);
+reg = startsWith(data.anatomy.cluster_parent,ops.region);
 end
 if iscolumn(reg)
     reg = reg';
@@ -37,7 +37,7 @@ for ii=1:size(spatialMap,1)
     spatialMap(ii,:,:)=spatialMap(ii,:,:)./dt;
 end
 spatialMap(isnan(spatialMap))=0;
-smoothSigma = 4/binsize;
+smoothSigma = ops.smoothSigma/ops.binsize;
 smoothWindow = floor(smoothSigma*5/2)*2+1;
 gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
 filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
@@ -50,22 +50,12 @@ sPF = sPF(:,iidx,:);
 spatialMap = sPF;
 
 
-
-
-mm=sum(spatialMap(:,:,1:6),3);
-mm=sum(mm,2);
 %pp=bsxfun(@rdivide,spatialMap,mm);
 fr_mat = squeeze(nanmean(spatialMap));
 spatialMap=spatialMap(data.sp.cgs==2 & reg,:,:);
-%spatialMap = spatialMap(this_stab>0.0 & this_MEC,:,:);
-%normalize by dwell time in each bin
 
-% do spatial smoothing
-% filt = gausswin(11);
-% filt = filt/sum(filt);
-% filt = reshape(filt,[1, numel(filt),1]);
 
-template1_trials = template_trials;
+template1_trials = ops.template_trials;
 template1={};
 cntr = 0;
 
@@ -81,13 +71,11 @@ for ii=template1_trials
     template1{cntr}=tmp;
 end
 template1{numel(template1_trials)+1}=nanmean(spatialMap(:,:,template1_trials),3);
-%template1 = nanmean(spatialMap(:,:,template1_trials),3);
-%template1 = template1-mean(template1,2);
-%template2 = nanmean(spatialMap(:,:,template2_trials),3);
+
 
 %%
 nBins = size(spatialMap,2);
-startVec = stride_start:stride:(nBins-chunksize+1);
+startVec = ops.stride_start:ops.stride:(nBins-ops.chunksize+1);
 nReps = numel(startVec);
 maxlag = 10;
 nTrials = size(spatialMap,3);
@@ -96,10 +84,10 @@ PEAKS = SHIFTS;
 repidx = 0;
 %stable cells: have a peak xcorr across the whole thing of greater than
 %thresh for each trial
-idx = find(triu(true(numel(template_trials)),1));
+idx = find(triu(true(numel(ops.template_trials)),1));
 stability = zeros(1,size(spatialMap,1));
 for ii=1:numel(stability)
-    tmp = squeeze(spatialMap(ii,:,template_trials));
+    tmp = squeeze(spatialMap(ii,:,ops.template_trials));
     tmp = corr(tmp);
     stability(ii)=mean(tmp(idx));
 end
@@ -113,7 +101,7 @@ end
 %     glmscore(:,iC)=mean(glmData(iC).allModelTestFits{1});
 %     end
 % end
-stable_cells = stability>stability_threshold;
+stable_cells = stability>ops.stability_threshold;
 %stable_cells = glmscore(2,:)>0 & glmscore(2,:)>glmscore(1,:);
 
 % subset = calc_xcorr_snippet(spatialMap(:,:,1:10),template1,1,200,20);
@@ -131,7 +119,7 @@ trial2templateMap=zeros(1,size(spatialMap,3));
 cntr=1;
 aa=numel(template1_trials)+1;
 for iT = 1:numel(trial2templateMap)
-    if ~ismember(iT,template_trials)
+    if ~ismember(iT,ops.template_trials)
         trial2templateMap(iT)=aa;
     else
         trial2templateMap(iT)=cntr;
@@ -140,10 +128,10 @@ for iT = 1:numel(trial2templateMap)
 end
 
 %spatialMap = spatialMap-mean(spatialMap,2);
-for iStart = stride_start:stride:(nBins-chunksize)
+for iStart = ops.stride_start:ops.stride:(nBins-ops.chunksize)
     repidx = repidx+1;
     startbin = iStart;
-    stopbin = iStart+chunksize;
+    stopbin = iStart+ops.chunksize;
     %xcorr relative to template trials: 4 before gain onset for all except
     %these 4
     [xcorrs,lags] = calc_xcorr_snippet(spatialMap,template1,startbin,stopbin,maxlag,trial2templateMap);

@@ -13,8 +13,9 @@ for iF = 1:numel(files)
         if strcmp(gain_to_look_at,'baseline') || any(gain_to_look_at == 1)
             %find condition with given contrast and no gain change
             bin = data.trial_gain == gain_to_look_at & data.trial_contrast == contrast;
-            trigger_tmp = strfind(bin',ones(1,16)) +8;
+            trigger_tmp = strfind(bin',ones(1,16)) +6;
             trigger_tmp(trigger_tmp <10) = [];
+            trigger_tmp(trigger_tmp>(numel(data.trial_gain)-11))=[];
             gaincontrastcombo = nnz(trigger_tmp)>0;
         elseif any(gain_to_look_at == 0)
             %special case: find where gain ==1 and for a given contrast

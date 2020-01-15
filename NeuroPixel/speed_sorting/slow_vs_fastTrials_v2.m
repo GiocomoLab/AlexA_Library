@@ -1,4 +1,4 @@
-function data_out=slow_vs_fastTrials_v2(data,image_save_dir,params)
+function data_out=slow_vs_fastTrials_v2(data,image_save_dir,params,savepath)
 %make it more consistent with xcorr for other shifts
 
 if ~isempty(image_save_dir)
@@ -80,7 +80,7 @@ spatialMap = sPF;
 
 %% calc speed differential
 speed = calcSpeed(posx,params);
-posWindow= [10 390];
+posWindow= [10 150];
 %posWindow= [120 200];
 posBin = [find(edges == posWindow(1)), find(edges == posWindow(2))];
 trial_speed = zeros(1,max(trial));
@@ -170,5 +170,5 @@ data_out.slow = mean(trial_speed(slow_idx));
 data_out.fast = mean(trial_speed(fast_idx));
 data_out.slow_trials = trials_slow;
 data_out.fast_trials = trials_fast;
-
+save(savepath,'data_out')
 end
