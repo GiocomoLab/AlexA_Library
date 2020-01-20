@@ -38,7 +38,9 @@ for ii=1:size(spatialMap,1)
 end
 spatialMap(isnan(spatialMap))=0;
 smoothSigma = ops.smoothSigma/ops.binsize;
-smoothWindow = floor(smoothSigma*5/2)*2+1;
+smoothWindo
+
+w = floor(smoothSigma*5/2)*2+1;
 gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
 filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
 sPF = repmat(spatialMap,[1,3,1]);

@@ -16,9 +16,9 @@ data_dir = 'F:\NP_DATA\CL_OL_Towers';
 session_name = {};
 sn = dir(fullfile(data_dir,'*mismatch*.mat'));
 for iS = 1:numel(sn)
-    if ~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback'))
+    %if ~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback'))
         session_name{end+1}=sn(iS).name(1:end-4);
-    end
+    %end
 end
 % all the values we ever use
 gains_all = [0.8 0.7 0.6 0.5 0.2];
@@ -29,16 +29,16 @@ for session_num = 1:numel(session_name)
     % load data
     fprintf('session %d/%d: %s\n',session_num,numel(session_name),session_name{session_num});
     load(fullfile(data_dir,strcat(session_name{session_num},'.mat')));
-
+    
     cells_to_plot = sp.cids(sp.cgs==2); % all good cells
     
-    if isfield(anatomy,'parent_shifted')
-        region = anatomy.parent_shifted;
-    else
-        region = anatomy.cluster_parent;
-    end
-    reg = startsWith(region,'VISp');
-    cells_to_plot = sp.cids(sp.cgs==2 & reg');
+%     if isfield(anatomy,'parent_shifted')
+%         region = anatomy.parent_shifted;
+%     else
+%         region = anatomy.cluster_parent;
+%     end
+    %reg = startsWith(region,'VISp');
+    cells_to_plot = sp.cids(sp.cgs==2);
     
     % make image dir if it doesn't exist
     image_save_dir = strcat('F:\images\',...
@@ -51,25 +51,8 @@ for session_num = 1:numel(session_name)
     [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
         templatePositionsAmplitudes(sp.temps, sp.winv, sp.ycoords, sp.spikeTemplates, sp.tempScalingAmps);
 
-    % get plot colors for gains
-    gains = sort(unique(trial_gain),'descend');
-    contrasts = sort(unique(trial_contrast),'descend');
-    gains = gains(2:end);
-    if contains(session_name{session_num},'dark')
-       gains = [];
-       contrasts = 100;
-       trial_gain = 1*ones(1,max(trial));
-       trial_contrast = 100*ones(1,max(trial));
-    end
+   
     
-    [~,gain_plot_idx] = ismember(gains,gains_all);
-    plot_colors_gain = cool(numel(gains_all));
-
-    % get plot colors for contrasts
-    
-    [~,contrast_plot_idx] = ismember(contrasts,contrasts_all);
-    plot_colors_contrast = gray(numel(contrasts_all)+1);
-    plot_colors_contrast = plot_colors_contrast(1:end-1,:);
     
     
     % get spike depths
@@ -82,6 +65,26 @@ for session_num = 1:numel(session_name)
     [spike_depth,sort_idx] = sort(spike_depth,'descend');
     cells_to_plot = cells_to_plot(sort_idx);
     
+    % get the mismatch trials
+    speed_t=0.05;
+% figure('Name',filenames{iF});; plot(speed)
+%
+if size(mismatch_trigger,1) ~=1
+    mismatch_trigger=mismatch_trigger';
+end
+
+if nnz(mismatch_trigger>.5)>nnz(mismatch_trigger<.5)
+    warning('flipping mismatch trigger');
+    all_mm_trigs=strfind(mismatch_trigger<0.1,[0 0 1 1])+2;
+else
+   all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
+end
+speed=true_speed';
+run_periods=smooth(speed,25)>speed_t;
+run_window=-30:30;
+possibles=strfind(run_periods',ones(1,length(run_window)))+floor(.5*length(run_window));
+mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
+mm_trials = trial(mm_trigs);    
     %% make raster plots for all cells
     h = figure('Position',[100 100 160 500]); hold on;
     
@@ -98,15 +101,13 @@ for session_num = 1:numel(session_name)
 
         % plot spike raster
         % baseline trials for all contrasts
-        for j = 1:numel(contrasts)
-            keep = trial_contrast(trial(spike_idx))==contrasts(j) & ...
-                trial_gain(trial(spike_idx))==1;
-            plot(posx(spike_idx(keep)),trial(spike_idx(keep)),'.','Color',plot_colors_contrast(contrast_plot_idx(j),:));
-        end
+   
+            plot(posx(spike_idx),trial(spike_idx),'k.');
+      
         % gain trials
-        for j = 1:numel(gains)
-            keep = trial_gain(trial(spike_idx))==gains(j);
-            plot(posx(spike_idx(keep)),trial(spike_idx(keep)),'.','Color',plot_colors_gain(gain_plot_idx(j),:));
+        for jj = 1:numel(mm_trials)
+            keep = trial(spike_idx)==mm_trials(jj);
+            plot(posx(spike_idx(keep)),trial(spike_idx(keep)),'r.');
         end
         xlim([params.TrackStart params.TrackEnd]);
         ylim([0 max(trial)+1]);
