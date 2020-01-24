@@ -1,29 +1,52 @@
 %%
 ops.region = 'MEC';
-ops.binsize=10;
+ops.binsize=5;
 ops.smoothSigma = 4;
 ops.maxlag = 10;
-f_vec = linspace(0,1/ops.binsize/2,500);
+ops.filter = 7;
+%f_vec = linspace(0,1/ops.binsize/2,500);
+p=700:-1:10;
+f_vec=[0 1./(600:-.5:10)];
+%sigma =1.5;
+%window=floor(sigma*5/2)*2+1;
+%fi = fspecial('gaussian',[1 window],sigma);.
+fi=gausswin(ops.filter)';
+fi=fi/sum(fi);
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+savepath = '/oak/stanford/groups/giocomo/attialex/distance_coding3';
+if ~isfolder(savepath)
+    mkdir(fullfile(savepath,'data'))
+    mkdir(fullfile(savepath,'images'))
+end
+
+save(sprintf('%s/ops.mat',savepath),'ops')
 %%
-files = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*dark*')
+files = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*dark*');
 filenames={};
 for ii=1:numel(files)
     filenames{ii}=fullfile(files(ii).folder,files(ii).name);
 end
+%%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(6);
+    parpool(12);
 end
 
 %%
 binsize=ops.binsize;
 
-parfor iF=1:numel(filenames)
+for iF=numel(filenames)
     
     try
         data = load(filenames{iF});
         if ~ismember('anatomy',fieldnames(data))
+            continue
+        end
+        [~,sn,~]=fileparts(filenames{iF});
+
+        datafile = sprintf('%s/data/%s.mat',savepath,sn);
+        if isfile(datafile)
+            disp(datafile)
             continue
         end
         
@@ -33,6 +56,9 @@ parfor iF=1:numel(filenames)
         speed(isnan(speed)) = interp1(find(~isnan(speed)), speed(~isnan(speed)), find(isnan(speed)), 'pchip'); % interpolate NaNs
         speed = [0;speed];
         distance = cumsum(speed);
+        total_dist = data.posx+400*(data.trial-min(data.trial));
+        total_dist = total_dist - total_dist(1);
+        distance= total_dist;
         distance(distance<0)=0;
         edges=[0:binsize:(max(distance)+binsize)];
         
@@ -50,12 +76,13 @@ parfor iF=1:numel(filenames)
         
         spatialMap=bsxfun(@rdivide,spM(data.sp.cids+1,:,:),dT);
         spatialMap(isnan(spatialMap))=0;
+        spatialMap = convn(spatialMap,fi,'valid');
         
         
         
         
-        
-        good_cells = data.sp.cgs==2 & strcmp(data.anatomy.cluster_parent,'MEC')';
+        %good_cells = data.sp.cgs==2 & strcmp(data.anatomy.cluster_parent,'MEC')';
+        good_cells = data.sp.cgs==2;
         depth = data.anatomy.tip_distance(good_cells);
         [~,sid]=sort(depth,'descend');
         zSpatialMap = zscore(spatialMap(good_cells,:),0,[2]);
@@ -63,7 +90,7 @@ parfor iF=1:numel(filenames)
         
         
         
-        lags = 100;
+        lags = 150;
         nUnits = size(zSpatialMap,1);
         ACG = zeros(nUnits,lags+1);
         
@@ -75,8 +102,7 @@ parfor iF=1:numel(filenames)
         
         n_spikes = numel(data.sp.st);
         nUnits = size(zSpatialMap,1);
-        lags=100;
-        n_it = 200;
+        n_it = 300;
         abs_min = min(data.sp.st);
         clu_list = data.sp.cids(good_cells);
         ACG_temp = zeros(numel(clu_list),lags+1,n_it);
@@ -88,7 +114,6 @@ parfor iF=1:numel(filenames)
             if numel(spike_t)<3
                 continue
             end
-            quantiles = NaN(2,4001);
             
             max_t = spike_t(end);
             shuffles=max_t*rand(n_it,1);
@@ -103,7 +128,9 @@ parfor iF=1:numel(filenames)
                 [aa,~]=histcounts(spike_distance,edges);
                 
                 %moothing
-                firing_rate = aa./dT;
+                firing_rate = aa./dT; %help
+                firing_rate(isnan(firing_rate))=0;
+                firing_rate = convn(firing_rate,fi,'valid');
                 firing_rate =zscore(firing_rate);
                 [acg,spacing] = xcorr(firing_rate,lags,'coeff');
                 ACG_temp(iCell,:,num_it)=acg((lags+1):end);
@@ -116,9 +143,13 @@ parfor iF=1:numel(filenames)
         upper_bound_pxx = quantile(PXX_temp,0.99,3);
         
         fig = figure('visible','off');
-        subplot(1,2,1)
+        subplot(1,3,1)
         [~,sid]=sort(depth,'descend');
-        imagesc(ACG(sid,1:50),[0 0.5])
+        imagesc(ACG(sid,1:100),[0 0.5])
+        [mi,miii]=min(abs(depth(sid)-data.anatomy.z2));
+        hold on
+        plot([1 100],[miii miii],'k--')
+        %yline(miii,'k-');
         hold on
         keep = false(numel(sid),1);
         peak_list = struct();
@@ -128,7 +159,7 @@ parfor iF=1:numel(filenames)
         for ii=1:nUnits
             
             %[p,ip]=findpeaks(ACG(sid(ii),1:50),'SortStr','descend');
-            [p,ip]=findpeaks(ACG(sid(ii),1:50),'MinPeakHeight',0);
+            [p,ip]=findpeaks(ACG(sid(ii),1:100),'MinPeakHeight',0);
             
             if ~isempty(ip)
                 peak_list(sid(ii)).peak_val = p;
@@ -144,24 +175,53 @@ parfor iF=1:numel(filenames)
             else
             end
         end
-        subplot(1,2,2)
+        subplot(1,3,2)
         tmpACG = ACG(keep,:);
         [~,tmpsid] = sort(depth(keep),'descend');
-        imagesc(tmpACG(tmpsid,1:50),[0 0.4])
+        imagesc(tmpACG(tmpsid,:),[0 0.4])
+        
+        [mi,miii]=min(abs(sort(depth(keep),'descend')-data.anatomy.z2));
+        hold on
+        plot([1 100],[miii miii],'k--')
+        
+        subplot(1,3,3)
+        v_idx =1./f_vec > 25 &  1./f_vec<600;
+        [map,mip]=max(PXX(v_idx,:));
+        offset = strfind(v_idx,[0 1]);
+        mip=mip+offset;
+        i_vec=-1:1;
+        %mip = mip+10;
+        keep = false(size(map));
+        for iC=1:numel(map)
+            if all(PXX(mip(iC)+i_vec,iC)>upper_bound_pxx(iC,mip(iC)+i_vec)')
+                keep(iC)=true;
+            end
+        end
+        tmpACG = ACG(keep,:);
+        [~,tmpsid] = sort(depth(keep),'descend');
+        imagesc(tmpACG(tmpsid,:),[0 0.4])
+        
+        
         [~,sn,~]=fileparts(filenames{iF});
-        saveas(fig,sprintf('/oak/stanford/groups/giocomo/attialex/distance_coding/images/%s.png',sn))
+        saveas(fig,sprintf('%s/images/%s.png',savepath,sn))
         mec_depth=depth-data.anatomy.z2;
-        m=matfile(sprintf('/oak/stanford/groups/giocomo/attialex/distance_coding/data/%s',sn));
+        m=matfile(sprintf('%s/data/%s',savepath,sn),'Writable',true);
         m.peak_list = peak_list;
         m.mec_depth = mec_depth;
         m.ACG=ACG;
         m.PXX=PXX;
         m.upper_bound_pxx=upper_bound_pxx;
         m.f_vec = f_vec;
+        m.cluster_anatomy = data.anatomy.cluster_parent(good_cells);
         %save(sprintf('/oak/stanford/groups/giocomo/attialex/distance_coding/data/%s',sn),'peak_list','mec_depth','ACG','PXX','upper_bound_pxx','f_vec')
         
         close(fig)
     catch ME
+        sprintf('in file %s \n',filenames{iF})
+        [~,sn,~]=fileparts(filenames{iF});
+        fi=fopen(sprintf('%s/data/%s.err',savepath,sn),'w');
+        fprintf(fi,ME.message);
+        fclose(fi);
         disp(ME.message)
     end
     
