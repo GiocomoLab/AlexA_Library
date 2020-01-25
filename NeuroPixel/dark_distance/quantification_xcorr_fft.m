@@ -4,6 +4,8 @@ ops.binsize=5;
 ops.smoothSigma = 4;
 ops.maxlag = 10;
 ops.filter = 7;
+ops.nIterations = 300;
+ops.quantile = .99;
 %f_vec = linspace(0,1/ops.binsize/2,500);
 p=700:-1:10;
 f_vec=[0 1./(600:-.5:10)];
@@ -11,7 +13,7 @@ f_vec=[0 1./(600:-.5:10)];
 %window=floor(sigma*5/2)*2+1;
 %fi = fspecial('gaussian',[1 window],sigma);.
 fi=gausswin(ops.filter)';
-fi=fi/sum(fi);
+ops.fi=fi/sum(fi);
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 savepath = '/oak/stanford/groups/giocomo/attialex/distance_codingfft';
 %savepath = 'F:/temp/xcorrFFT';
@@ -37,7 +39,7 @@ end
 %%
 binsize=ops.binsize;
 
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         data = load(filenames{iF});
@@ -78,7 +80,7 @@ for iF=1:numel(filenames)
         
         spatialMap=bsxfun(@rdivide,spM(data.sp.cids+1,:,:),dT);
         spatialMap(isnan(spatialMap))=0;
-        spatialMap = convn(spatialMap,fi,'valid');
+        spatialMap = convn(spatialMap,ops.fi,'valid');
         
         
         
@@ -89,11 +91,11 @@ for iF=1:numel(filenames)
         [~,sid]=sort(depth,'descend');
         zSpatialMap = zscore(spatialMap(good_cells,:),0,[2]);
         clus = data.sp.cids(good_cells);
-        firing_rate = zeros(1,numel(clus));
+        firing_rate_units = zeros(1,numel(clus));
         max_time = max(data.sp.st);
         for ii=1:numel(clus)
             clu_id = clus(ii);
-            firing_rate(ii)=sum(data.sp.clu==clu_id)/max_time;
+            firing_rate_units(ii)=sum(data.sp.clu==clu_id)/max_time;
         end
         
         
@@ -122,7 +124,7 @@ for iF=1:numel(filenames)
         
         n_spikes = numel(data.sp.st);
         nUnits = size(zSpatialMap,1);
-        n_it = 100;
+        n_it = ops.nIterations;
         abs_min = min(data.sp.st);
         clu_list = data.sp.cids(good_cells);
         ACG_temp = zeros(numel(clu_list),lags+1,n_it);
@@ -150,7 +152,7 @@ for iF=1:numel(filenames)
                 %moothing
                 firing_rate = aa./dT; %help
                 firing_rate(isnan(firing_rate))=0;
-                firing_rate = convn(firing_rate,fi,'valid');
+                firing_rate = convn(firing_rate,ops.fi,'valid');
                 firing_rate =zscore(firing_rate);
                 [acg,spacing] = xcorr(firing_rate,lags,'coeff');
                 ACG_temp(iCell,:,num_it)=acg((lags+1):end);
@@ -165,8 +167,8 @@ for iF=1:numel(filenames)
             end
         end
         
-        upper_bound = quantile(ACG_temp,0.99,3);
-        upper_bound_pxx = quantile(PXX_temp,0.99,3);
+        upper_bound = quantile(ACG_temp,ops.quantile,3);
+        upper_bound_pxx = quantile(PXX_temp,ops.quantile,3);
         
         fig = figure('visible','off');
         subplot(1,3,1)
@@ -236,6 +238,7 @@ for iF=1:numel(filenames)
         m.mec_depth = mec_depth;
         m.ACG=ACG;
         m.PXX=PXX;
+	m.firing_rate = firing_rate_units;
         m.upper_bound_pxx=upper_bound_pxx;
         m.f_vec = f_vec;
         m.cluster_anatomy = data.anatomy.cluster_parent(good_cells);
