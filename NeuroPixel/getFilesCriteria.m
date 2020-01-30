@@ -36,7 +36,11 @@ for iF = 1:numel(files)
         end
     containsregion = false;
     if isfield(data,'anatomy')
-        containsregion = any(startsWith(data.anatomy.cluster_parent,region));
+        if isempty(region)
+            containsregion = true; % all files containing gaincontrastcombo
+        else
+            containsregion = any(startsWith(data.anatomy.cluster_parent,region));
+        end
     end
     
     if gaincontrastcombo && containsregion
