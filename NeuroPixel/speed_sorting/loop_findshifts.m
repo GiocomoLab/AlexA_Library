@@ -8,11 +8,11 @@ ops.TimeBin = 0.02;
 ops.idx = [10:390];
 fi = gausswin(5);
 fi=fi'/sum(fi);
-ops.filter = [];
+ops.filter = fi;
 ops.plotfig = false;
 OAK='/oak/stanford/groups/giocomo/';
 %% savedir = 
-savedir = fullfile(OAK,'attialex','speed_shiftNoFilter');
+savedir = fullfile(OAK,'attialex','speed_shiftFilter');
 if ~isfolder(savedir)
     mkdir(savedir);
 end
