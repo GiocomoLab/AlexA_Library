@@ -1,5 +1,6 @@
 function data_out = findBestShifts(data,ops)
 
+%prepare variables
 if isfield(data.anatomy,'parent_shifted')
     reg = data.anatomy.parent_shifted;
 else
@@ -10,14 +11,13 @@ if iscolumn(reg)
 end
 
 reg = reg(data.sp.cgs==2);
-
-
 good_cells=data.sp.cids(data.sp.cgs==2);
 factors = ops.factors;
 trials = ops.trials;
-
 nT = numel(trials);
 edges = ops.edges;
+
+%create trial map that only contains numbers for trials to be included
 trialMap = nan(1,numel(data.trial_gain));
 cntr = 1;
 for iT =1:numel(data.trial_gain)
@@ -26,19 +26,19 @@ for iT =1:numel(data.trial_gain)
         cntr=cntr+1;
     end
 end
-
+%recreate data.trial map that resets numbers of included trials and sets
+%all else to nan
 trial_sorted = nan(size(data.trial));
 for iT=1:numel(trial_sorted)
     trial_sorted(iT)=trialMap(data.trial(iT));
 end
 
 [~,speed_raw]=calcSpeed(data.posx,ops);
-
 if ~isempty(ops.filter)
     speed_raw = conv(speed_raw,ops.filter,'same');
 end
-
-OCC=zeros(nT,max(ops.edges),numel(factors));
+% occupancy matrix
+OCC=zeros(nT,ops.nBins,numel(factors)); %occupancy matrix, calculates occupancy for each space bin for each shift
 
 for iFactor = 1:numel(factors)
     posxhat = data.posx+factors(iFactor)*speed_raw;
@@ -52,26 +52,31 @@ for iFactor = 1:numel(factors)
         end
     end
 end
+
 all_stability=zeros(numel(good_cells),numel(factors));
 if ops.plotfig
     figure
 end
 
 for cellIDX=1:numel(good_cells)
-    
+    % extract spike times for this cell
     spike_id=data.sp.clu==good_cells(cellIDX);
     spike_t = data.sp.st(spike_id);
+    % convert to VR idx
     [~,~,spike_idx] = histcounts(spike_t,data.post);
     posx=mod(data.posx,max(ops.edges));
-    spike_loc = discretize(posx,edges);
     
+    %spike_loc = discretize(posx,edges);
     idx=triu(true(nT),1);
     
     factors = ops.factors;
     VAR=zeros(size(factors));
     STAB=VAR;
+    % for each shift, calculate a spatial firing rate map and calculate
+    % trial by trial correlation
+    % average of this correlation is the STAB for this factor
     for iFactor = 1:numel(factors)
-        spMatHat = zeros(nT,max(ops.edges));
+        spMatHat = zeros(nT,ops.nBins);
         posxhat = posx+factors(iFactor)*speed_raw;
         posxhat = mod(posxhat,max(ops.edges));
         spike_loc_hat = discretize(posxhat,edges);

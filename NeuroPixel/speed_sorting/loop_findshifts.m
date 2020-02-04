@@ -2,10 +2,12 @@
 
 ops.factors = -.25:0.01:.25;
 ops.edges = 0:2:400;
+ops.nBins = numel(ops.edges)-1;
+
 %ops.trials = find(data.trial_gain ==1 & data.trial_contrast==100);
 ops.trials = 3:20;
 ops.TimeBin = 0.02;
-ops.idx = [10:390];
+ops.idx = [10:2:390]/2;% in bins
 fi = gausswin(5);
 fi=fi'/sum(fi);
 ops.filter = fi;
