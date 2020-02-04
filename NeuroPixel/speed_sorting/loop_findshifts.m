@@ -11,12 +11,17 @@ ops.idx = [10:2:390]/2;% in bins
 fi = gausswin(5);
 fi=fi'/sum(fi);
 ops.filter = fi;
-ops.plotfig = false;
+ops.plotfig = true;
 OAK='/oak/stanford/groups/giocomo/';
-%% savedir = 
+%% savedir =
 savedir = fullfile(OAK,'attialex','speed_shiftFilter');
+imdir = fullfile(savedir(imdir));
 if ~isfolder(savedir)
     mkdir(savedir);
+    
+end
+if ~isfolder(imdir)
+    mkdir(imdir)
 end
 mf = matfile(fullfile(savedir,'parameters'),'Writable',true);
 mf.ops = ops;
@@ -45,14 +50,19 @@ end
 
 parfor iF=1:numel(filenames)
     try
-    data = load(fullfile(data_dir,filenames{iF}));
-    ops_here = ops;
-    %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
-    data_out = findBestShifts(data,ops);
-    [~,session_name,~]=fileparts(filenames{iF});
-    mf =matfile(fullfile(savedir,session_name));
-    mf.stability = data_out.all_stability;
-    mf.region = data_out.region;
+        data = load(fullfile(data_dir,filenames{iF}));
+        ops_here = ops;
+        %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
+        [data_out,fighandles] = findBestShifts(data,ops);
+        [~,session_name,~]=fileparts(filenames{iF});
+        if ops.plotfig
+            for ifig = 1:numel(fighandles)
+                saveas(fighandles{ifig},fullfile(imdir,sprintf('%s.png',session_name)))
+            end
+        end
+        mf =matfile(fullfile(savedir,session_name));
+        mf.stability = data_out.all_stability;
+        mf.region = data_out.region;
     catch ME
         fprintf('%s \nFailed for %s: %d \n',ME.message,filenames{iF},iF)
     end

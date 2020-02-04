@@ -1,4 +1,4 @@
-function data_out = findBestShifts(data,ops)
+function [data_out,fighandles] = findBestShifts(data,ops)
 
 %prepare variables
 if isfield(data.anatomy,'parent_shifted')
@@ -54,9 +54,7 @@ for iFactor = 1:numel(factors)
 end
 
 all_stability=zeros(numel(good_cells),numel(factors));
-if ops.plotfig
-    figure
-end
+
 
 for cellIDX=1:numel(good_cells)
     % extract spike times for this cell
@@ -103,15 +101,31 @@ for cellIDX=1:numel(good_cells)
         
         STAB(iFactor)=stability;
     end
-    if ops.plotfig
+    
+    
+    
+    all_stability(cellIDX,:)=STAB;
+end
+fighandles = {};
+if ops.plotfig
+    tmp_stability = all_stability(:,find(factors==0));
+    [a,b]=sort(tmp_stability,'descend','MissingPlacement','last');
+    for ii=1:15
+        fighandles{ii}=figure('visible','off');
+        this_cell=b(ii);
+        
+        
         subplot(3,1,1)
-        plot(factors,STAB)
+        plot(factors,all_stability(this_cell,:))
         xlim([min(factors) max(factors)])
-        [ma,mi]=max(STAB);
+        [ma,mi]=max(all_stability(this_cell,:));
         posxhat = posx+factors(mi)*speed_raw;
         posxhat = mod(posxhat,max(ops.edges));
-        title(sprintf('facto %.2f',factors(mi)))
-        
+        title(sprintf('%s, facto %.2f',reg{this_cell},factors(mi)))
+        spike_id=data.sp.clu==good_cells(this_cell);
+        spike_t = data.sp.st(spike_id);
+        % convert to VR idx
+        [~,~,spike_idx] = histcounts(spike_t,data.post);
         subplot(3,1,2)
         scatter(posx(spike_idx),trial_sorted(spike_idx),2);
         xlim([0 max(ops.edges)])
@@ -120,13 +134,10 @@ for cellIDX=1:numel(good_cells)
         scatter(posxhat(spike_idx),trial_sorted(spike_idx),2);
         xlim([0 max(ops.edges)])
         ylim([0 nT])
-        pause
-        clf
+
     end
-    
-    
-    all_stability(cellIDX,:)=STAB;
 end
+
 data_out.all_stability=all_stability;
 data_out.region = reg;
 end
