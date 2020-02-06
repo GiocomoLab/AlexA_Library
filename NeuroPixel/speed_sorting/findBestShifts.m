@@ -54,6 +54,13 @@ for iFactor = 1:numel(factors)
 end
 
 all_stability=zeros(numel(good_cells),numel(factors));
+good_idx = ismember(data.sp.clu,good_cells);
+clu_tmp = data.sp.clu(good_idx);
+st_tmp = data.sp.st(good_idx);
+[a,~,clus]=unique(clu_tmp);
+nClu = numel(a);
+
+[spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed_raw,0);
 
 
 for cellIDX=1:numel(good_cells)
@@ -126,14 +133,41 @@ if ops.plotfig
         spike_t = data.sp.st(spike_id);
         % convert to VR idx
         [~,~,spike_idx] = histcounts(spike_t,data.post);
+        
+                spMatHat = zeros(nT,ops.nBins);
+
+        for iS=1:numel(spike_idx)
+            if ~isnan(trial_sorted(spike_idx(iS)))
+                spMatHat(trial_sorted(spike_idx(iS)),spike_loc_hat(spike_idx(iS)))=spMatHat(trial_sorted(spike_idx(iS)),spike_loc_hat(spike_idx(iS)))+1;
+            end
+        end
+        %spMatHat = medfilt1(spMatHat);
+        %divide by occupancy
+        spMatHat = spMatHat./squeeze(OCC(:,:,iFactor));
+        spMatHat(isnan(spMatHat))=0;
+        iidx = (size(spMatHat,2)+1):(2*size(spMatHat,2));
+        
+        if ~isempty(ops.filter)
+            spF = [spMatHat spMatHat spMatHat];
+            spF = convn(spF,ops.filter,'same');
+            spMatHat = spF(:,iidx);
+        end
         subplot(3,1,2)
-        scatter(posx(spike_idx),trial_sorted(spike_idx),2);
-        xlim([0 max(ops.edges)])
-        ylim([0 nT])
+        imagesc(spMapBL(:,:,this_cell))
+        
         subplot(3,1,3)
-        scatter(posxhat(spike_idx),trial_sorted(spike_idx),2);
-        xlim([0 max(ops.edges)])
-        ylim([0 nT])
+        imagesc(spMatHat);
+        
+
+        
+%         subplot(3,1,2)
+%         scatter(posx(spike_idx),trial_sorted(spike_idx),2);
+%         xlim([0 max(ops.edges)])
+%         ylim([0 nT])
+%         subplot(3,1,3)
+%         scatter(posxhat(spike_idx),trial_sorted(spike_idx),2);
+%         xlim([0 max(ops.edges)])
+%         ylim([0 nT])
 
     end
 end
