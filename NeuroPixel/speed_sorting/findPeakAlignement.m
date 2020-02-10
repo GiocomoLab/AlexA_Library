@@ -3,11 +3,19 @@ function [data_out] = findPeakAlignement(data,ops)
 %prepare variables
 if isfield(data.anatomy,'parent_shifted')
     reg = data.anatomy.parent_shifted;
-    sub_reg = data.anatomy.region_shifted;
 else
     reg = data.anatomy.cluster_parent;
-    sub_reg = data.anatomy.cluster_region;
 end
+
+
+if isfield(data.anatomy,'parent_shifted')
+    sub_reg = data.anatomy.region_shifted;
+elseif isfield(data.anatomy,'cluster_region')
+    
+    sub_reg = data.anatomy.cluster_region;
+else
+    sub_reg = {};
+
 if iscolumn(reg)
     reg = reg';
     sub_reg = sub_reg';
@@ -52,7 +60,10 @@ st_tmp = data.sp.st(good_idx);
 [uClu,~,clus]=unique(clu_tmp);
 nClu = numel(uClu);
 reg = reg(ismember(data.sp.cids,uClu));
+if ~isempty(sub_reg)
 sub_reg = sub_reg(ismember(data.sp.cids,uClu));
+
+end
 
 
 [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
@@ -68,7 +79,8 @@ allSlow = nan(size(spMapBL,3),numel(include_idx));
 allFast = allSlow;
 allGain = allSlow;
 stability = nan(size(spMapBL,3),1);
-idx = triu(numel(ops.trials));
+%idx = triu(numel(ops.trials));
+idx = (triu(true(numel(ops.trials)-4),1));
 allSpikes = cell(1,nClu);
 maxInd=nan(1,nClu);
 post_valid = data.post( ismember(data.trial,[ops.trials]));
@@ -77,7 +89,10 @@ trial_valid = trial_sorted( ismember(data.trial,[ops.trials]));
 for iC = 1:size(spMapBL,3)
     %%% neends fixing for small bins
     cc=corr(spMapBL(:,:,iC)');
-    stability(iC)=nanmean(cc(idx));
+    tmp=sum(spMapBL(:,:,iC),2);
+    if nnz(tmp==0)<=2 %more than 2 trials without spikes
+        stability(iC)=nanmean(cc(idx));
+    end
     avFR = mean(spMapBL(:,:,iC));
     [ma,mi]=max(avFR(ops.search_range));
     [ma2,mi2]=max(avFR([ min(ops.search_range)-1 max(ops.search_range)+1] ));
@@ -86,7 +101,12 @@ for iC = 1:size(spMapBL,3)
         maxInd(iC)=ops.midpoints(mi);
         trial_speed = getSpeedAroundPoint(speed,data.posx,data.trial,ops,ops.midpoints(mi),ops.speedWindow);
         trial_speed=trial_speed(1:(numel(ops.trials)-4)); %exclude gain trials
+        if nnz(isnan(trial_speed))>0
+            keyboard
+            error('nan speed')
+        end
         [~,sidx]=sort(trial_speed);
+        
         sl=mean(spMapBL(sidx(1:2),:,iC))/ma;
         fa = mean(spMapBL(sidx(end-1:end),:,iC))/ma;
         ga = mean(spMapGain(:,:,iC))/ma';
