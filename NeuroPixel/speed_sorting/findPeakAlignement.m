@@ -15,13 +15,13 @@ elseif isfield(data.anatomy,'cluster_region')
     sub_reg = data.anatomy.cluster_region;
 else
     sub_reg = {};
+end
 
 if iscolumn(reg)
     reg = reg';
     sub_reg = sub_reg';
 end
 
-good_cells=data.sp.cids(data.sp.cgs==2);
 trials = ops.trials;
 
 
@@ -54,6 +54,8 @@ if ~isempty(ops.filter)
 end
 
 
+
+good_cells = data.sp.cids(data.sp.cgs==2);
 good_idx = ismember(data.sp.clu,good_cells);
 clu_tmp = data.sp.clu(good_idx);
 st_tmp = data.sp.st(good_idx);
@@ -61,10 +63,22 @@ st_tmp = data.sp.st(good_idx);
 nClu = numel(uClu);
 reg = reg(ismember(data.sp.cids,uClu));
 if ~isempty(sub_reg)
-sub_reg = sub_reg(ismember(data.sp.cids,uClu));
-
+    sub_reg = sub_reg(ismember(data.sp.cids,uClu));
+end
+if nClu ~= numel(good_cells) % in case there are 'good cells' that don't have a spike in this data strct
+    only_good = ~ismember(good_cells,uClu);
+    only_good = good_cells(only_good);
+    for iC = 1:numel(only_good)
+        idx =  data.sp.cids==only_good(iC);
+        data.sp.cgs(idx)=1; %set to MUA;
+    end
 end
 
+ops_tmp = ops;
+ops_tmp.trials=ops.trials(1:end-4);
+[data_shift,fighandles] = findBestShifts(data,ops_tmp); %align posx
+[~,mi]=max(data_shift.all_stability,[],2);
+factors = ops.factors(mi);
 
 [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
 
@@ -115,30 +129,34 @@ for iC = 1:size(spMapBL,3)
         allGain(iC,:)=ga(mi+include_idx );
         this_cell_st = data.sp.st(data.sp.clu==uClu(iC));
         this_cell_spikeIdx = discretize(this_cell_st,post_valid);
+        posx_hat = data.posx+factors(iC)*speed;
+        posx_hat_valid = posx_hat( ismember(data.trial,[ops.trials]));
+
         
         nonzero_idx = ~isnan(this_cell_spikeIdx);
         spike_pos = posx_valid(this_cell_spikeIdx(nonzero_idx));
+        spike_pos_hat = posx_hat_valid(this_cell_spikeIdx(nonzero_idx));
         spike_trial = trial_valid(this_cell_spikeIdx(nonzero_idx));
-        tmp = [spike_pos, spike_trial];
+        tmp = [spike_pos, spike_trial,spike_pos_hat];
         allSpikes{iC}=tmp;
-%         subplot(2,1,1)
-%         plot(sl/ma)
-%         hold on
-%         plot(ga/ma)
-%         plot(fa/ma);
-%         plot(avFR/ma)
-%         legend({'slow','fast','gain','all'})
-%         xline(mi);
-%         xlim([mi-20,mi+20])
-%         subplot(2,1,2)
-%         plot(spike_pos,spike_trial,'.')
-%         gain_idx = spike_trial>(numel(ops.trials)-4);
-%         hold on
-%         plot(spike_pos(gain_idx),spike_trial(gain_idx),'r.')
-%         xline(ops.midpoints(mi));
-%         xlim(ops.midpoints(mi) +[-20 20])
-%         pause
-%         clf
+        %         subplot(2,1,1)
+        %         plot(sl/ma)
+        %         hold on
+        %         plot(ga/ma)
+        %         plot(fa/ma);
+        %         plot(avFR/ma)
+        %         legend({'slow','fast','gain','all'})
+        %         xline(mi);
+        %         xlim([mi-20,mi+20])
+        %         subplot(2,1,2)
+        %         plot(spike_pos,spike_trial,'.')
+        %         gain_idx = spike_trial>(numel(ops.trials)-4);
+        %         hold on
+        %         plot(spike_pos(gain_idx),spike_trial(gain_idx),'r.')
+        %         xline(ops.midpoints(mi));
+        %         xlim(ops.midpoints(mi) +[-20 20])
+        %         pause
+        %         clf
     end
 end
 data_out.all_slow = allSlow;
@@ -150,6 +168,8 @@ data_out.stability = stability;
 data_out.allSpikes = allSpikes;
 data_out.speed = speed;
 data_out.max_ind = maxInd;
+data_out.factors = factors;
+data_out.CID = uClu;
 end
 
 
