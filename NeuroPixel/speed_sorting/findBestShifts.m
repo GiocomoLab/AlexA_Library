@@ -33,10 +33,11 @@ for iT=1:numel(trial_sorted)
     trial_sorted(iT)=trialMap(data.trial(iT));
 end
 
-[~,speed_raw]=calcSpeed(data.posx,ops);
+[speed,speed_raw]=calcSpeed(data.posx,ops);
 if ~isempty(ops.filter)
     speed_raw = conv(speed_raw,ops.filter,'same');
 end
+speed_raw = speed;
 % occupancy matrix
 OCC=zeros(nT,ops.nBins,numel(factors)); %occupancy matrix, calculates occupancy for each space bin for each shift
 
@@ -132,7 +133,7 @@ if ops.plotfig
         spike_id=data.sp.clu==good_cells(this_cell);
         spike_t = data.sp.st(spike_id);
         % convert to VR idx
-        [~,~,spike_idx] = histcounts(spike_t,data.post);
+        	
         
                 spMatHat = zeros(nT,ops.nBins);
 
