@@ -1,17 +1,20 @@
 
 %%
-files = dir('F:\temp\xcorrSpeed\*.mat');
+files = dir('F:\temp\xcorrSpeed1\*.mat');
 
 ALL_SLOPES = struct();
 ALL_SESSIONS=struct();
 ALL_CLUSTERS = struct();
 for iF=1:numel(files)
     d=load(fullfile(files(iF).folder,files(iF).name));
+    if ~isfield(d,'data_out')
+        continue
+    end
     data_out = d.data_out;
     
     models = cell(numel(data_out.stability),1);
-SLOPES = nan(numel(data_out.stability),2);
-INTERC = SLOPES;
+SLOPES = nan(numel(data_out.stability),3);
+INTERC = nan(numel(data_out.stability),2);
 [~,sn,~]=fileparts(files(iF).name);
 SESSIONS= repmat({sn},numel(data_out.stability),1);
 CLUSTERS = data_out.goodCells';
@@ -23,13 +26,13 @@ for iC=1:numel(data_out.stability)
         data_out.region{iC}='NULL';
     end
     
-    if data_out.stability(iC)>0.4
+   
         x=data_out.allDelays(iC,:,3);
         y=data_out.allDelays(iC,:,1);
         mdl = fitlm(x(:),y(:),'linear');
         INTERC(iC,:)=mdl.Coefficients{1,[1 4]};
-        SLOPES(iC,:)=mdl.Coefficients{2,[1 4]};
-
+        SLOPES(iC,:)=[mdl.Coefficients{2,[1 4]} data_out.stability(iC)];
+        
         
         models{iC}=mdl;
 %         plot(x,y,'ro')
@@ -37,9 +40,7 @@ for iC=1:numel(data_out.stability)
 %         plot(mdl)
 %         pause
 %         clf
-    else
-        models{iC}=nan(1);
-    end
+   
 end
 
 regs = unique(data_out.region);
@@ -65,16 +66,16 @@ end
    
 end
 %%
-regions = {'VISp','MEC'};
+regions = {'ECT','VISp'};
 figure
 hold on
 for iR=1:numel(regions)
     dat = ALL_SLOPES.(regions{iR});
-    %tmp = dat(:,1);
+    tmp = dat(:,1);
     %tmp(dat(:,2)>0.05)=0;
-    idx = dat(:,2)<0.05;
+    idx = dat(:,3)>0.4;
     %idx = dat(:,2)<1;
-    histogram(dat(idx,1),'Normalization','probability')
+    histogram(tmp(idx),50,'Normalization','probability','BinLimits',[-.6 .6])
 end
 
 legend(regions)
