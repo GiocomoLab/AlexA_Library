@@ -1,24 +1,25 @@
 %%
 
 %files = dir('Z:\giocomo\attialex\distance_coding\data\*.mat');
-files = dir('/oak/stanford/groups/giocomo/attialex/distance_coding2/data/*.mat');
+files = dir('/oak/stanford/groups/giocomo/attialex/distance_coding3/data/np*dark*.mat');
 data_dir = '/oak/stanford/groups/giocomo/attialex/NP_DATA';
 %data_dir = 'F:\NP_DATA';
 %figure('Position',[680   321   826   657],'visible',false)
 
 p=gcp('nocreate');
 if isempty(p)
-    parpool(12);
+    parpool(6);
 end
 
 f_vec = 0:0.5:500;
-parfor iF=1:numel(files)
+for iF=1:numel(files)
 
     xc_data = matfile(fullfile(files(iF).folder,files(iF).name),'Writable',true);
-    if ismember('ACG_THETA',fieldnames(xc_data))
+    if ismember('avg_corr',fieldnames(xc_data))
+        disp(files(iF).name)
         continue
     end
-    
+    sprintf('now working on %s \n',files(iF).name);
     [~,sid]=sort(xc_data.mec_depth,'descend');
     v_idx =1./xc_data.f_vec > 25 &  1./xc_data.f_vec<600;
     data = load(fullfile(data_dir,files(iF).name));
@@ -38,19 +39,19 @@ for ii=1:nnz(selected_cells)
     end
 end
 
+fig=figure('Position',[680   321   826   657],'visible',false);
 
-% 
-% subplot(1,3,1)
-% ACG=xc_data.ACG;
-% imagesc(ACG(sid,:),[0 0.3])
-% title('Spatial ACG')
-% xlabel('Bin (5cm)')
-% ylabel('V->D')
-% subplot(1,3,2)
-% imagesc(ACG_TIME(sid,:),[0 1])
-% title('Temporal ACG')
-% xlabel('Time [ms]')
-% ylabel('V->D')
+subplot(1,3,1)
+ACG=xc_data.ACG;
+imagesc(ACG(sid,:),[0 0.3])
+title('Spatial ACG')
+xlabel('Bin (5cm)')
+ylabel('V->D')
+subplot(1,3,2)
+imagesc(ACG_TIME(sid,:),[0 1])
+title('Temporal ACG')
+xlabel('Time [ms]')
+ylabel('V->D')
 
 xc_data.ACG_TIME = ACG_TIME;
 xc_data.tvec = 0:0.001:0.25;
@@ -89,26 +90,46 @@ xc_data.normalized_theta = thetaPowerN;
 xc_data.normalized_theta2 = thetaPowerN2;
 xc_data.theta = thetaPower;
 xc_data.firing_rate = firing_rate;
-% subplot(1,3,3)
-% %plot(thetaPowerN,xc_data.mec_depth,'.')
-% plot(thetaPowerN(sid),1:numel(sid),'.')
+subplot(1,3,3)
+%plot(thetaPowerN,xc_data.mec_depth,'.')
+%plot(thetaPowerN(sid),1:numel(sid),'.')
 % set(gca, 'YDir','reverse')
 % xlim([0 3])
 % ylim([1 numel(sid)])
 
 
+%filter in theta band
+bp_spikes = bandpass(spikeMat',theta_range,1/time_bins);
 
+%for each depth bin, calculate pairwise correlations
 
-
-
+midpoints= -2300:200:1500;
+half_width = 200;
+DEPTH = xc_data.mec_depth;
+    vals = nan(1,numel(midpoints));
+    valsT = vals;
+    for iv=1:numel(vals)
+    idx = DEPTH>midpoints(iv)-half_width & DEPTH<midpoints(iv)+half_width;
+    if nnz(idx)>1
+        p=corr(bp_spikes(:,idx));
+        vals(iv)=mean(diag(p,1));
+        valsT(iv)=mean(thetaPowerN(idx));
+    end
+    end
 %pause
+% plot(vals,midpoints)
+% hold on
+xc_data.corr_midpoints = midpoints;
+xc_data.corr_binwidht = half_width;
+xc_data.avg_corr = vals;
 
-%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/distance_coding2/acg_images/%s.png',files(iF).name))
+plot(valsT,midpoints)
+saveas(fig,sprintf('/oak/stanford/groups/giocomo/attialex/distance_codingfft2/acg_images/%s.png',files(iF).name))
 
 
 
 
 
-clf
+close(fig)
 end
 
