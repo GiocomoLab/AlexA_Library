@@ -8,14 +8,14 @@ ops.nIterations = 300;
 ops.quantile = .99;
 %f_vec = linspace(0,1/ops.binsize/2,500);
 p=700:-1:10;
-f_vec=[0 1./(600:-.5:10)];
+f_vec=[0 1./(800:-.5:10)];
 %sigma =1.5;
 %window=floor(sigma*5/2)*2+1;
 %fi = fspecial('gaussian',[1 window],sigma);.
 fi=gausswin(ops.filter)';
 ops.fi=fi/sum(fi);
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-savepath = '/oak/stanford/groups/giocomo/attialex/distance_codingfft';
+savepath = '/oak/stanford/groups/giocomo/attialex/distance_codingfft2';
 %savepath = 'F:/temp/xcorrFFT';
 if ~isfolder(savepath)
     mkdir(fullfile(savepath,'data'))
@@ -101,7 +101,7 @@ parfor iF=1:numel(filenames)
         
         
         
-        lags = 150;
+        lags = 200;
         nUnits = size(zSpatialMap,1);
         ACG = zeros(nUnits,lags+1);
         
@@ -142,7 +142,7 @@ parfor iF=1:numel(filenames)
             tmp_acg=zeros(n_it,lags+1);
             for num_it = 1:n_it
                 shuffle_idx = shuffles(num_it);
-                spike_t_shuffled = mod(spike_t+shuffle_idx,max_t)+abs_min;
+                spike_t_shuffled = mod(spike_t+shuffle_idx,max_t-abs_min)+abs_min;
                 
                 
                 [~,~,spike_idx] = histcounts(spike_t_shuffled,data.post);
@@ -173,7 +173,7 @@ parfor iF=1:numel(filenames)
         fig = figure('visible','off');
         subplot(1,3,1)
         [~,sid]=sort(depth,'descend');
-        imagesc(ACG(sid,1:100),[0 0.5])
+        imagesc(ACG(sid,:),[0 0.5])
         [mi,miii]=min(abs(depth(sid)-data.anatomy.z2));
         hold on
         plot([1 100],[miii miii],'k--')
@@ -187,7 +187,7 @@ parfor iF=1:numel(filenames)
         for ii=1:nUnits
             
             %[p,ip]=findpeaks(ACG(sid(ii),1:50),'SortStr','descend');
-            [p,ip]=findpeaks(ACG(sid(ii),1:100),'MinPeakHeight',0);
+            [p,ip]=findpeaks(ACG(sid(ii),:),'MinPeakHeight',0);
             
             if ~isempty(ip)
                 peak_list(sid(ii)).peak_val = p;
