@@ -50,14 +50,16 @@ for iF=1:numel(filenames)
 end
 
 %%
-region = 'RSP';
+region = 'ECT';
 
 %shift_dir = sprintf('Z:/giocomo/attialex/images/xcorrv9/%s_0.80_100',region);
 matfiles = dir('F:\temp\tbtxcorr\*.mat');
 allM = [];
+allM_MEC=[];
 allS = [];
 baseline_shifts = [];
 similarity_score = [];
+similarity_score_MEC=[];
 cntr = 0;
 for iF=1:numel(matfiles)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
@@ -78,6 +80,13 @@ for iF=1:numel(matfiles)
         allM=cat(3,allM,tmp);
         allS = cat(3,allS,tmpS);
         %baseline_shifts = cat(1,baseline_shifts,reshape(tmp_peak',1,[]));
+        if startsWith(region,'ECT')
+            idx_MEC = data_out.stability>.4 & startsWith(data_out.region,'MEC')';
+            tmp_MEC = squeeze(nanmean(data_out.corrMat(idx_MEC,:,:)));
+            allM_MEC = cat(3,allM_MEC,tmp_MEC);
+            ff=tmp_MEC(7:16,1:6);
+            similarity_score_MEC(end+1)=mean(ff(:));
+        end
     else
         nstab = nnz(idx);
             ntot = nnz(idx_region);
@@ -168,7 +177,7 @@ end
 corrmat_sort = allM(:,:,sort_idx_gc);
 
 savefig{2} = figure('Position',[100 100 1000 800],'Renderer','Painters');
-ha = tight_subplot(8,10);
+ha = tight_subplot(5,6);
 for i = 1:size(corrmat_sort,3)
     axes(ha(i)); hold on;
     imagesc(squeeze(corrmat_sort(:,:,i)));
@@ -203,7 +212,7 @@ set(gca,'box','off');
 
 
 %%
-for iF=1:numel(savefig)
-    set(savefig{iF},'Renderer','Painters');
-    saveas(savefig{iF},fullfile('F:/temp/figures',sprintf('tbtx_%s_%d.pdf',region,iF)));
-end
+% for iF=1:numel(savefig)
+%     set(savefig{iF},'Renderer','Painters');
+%     saveas(savefig{iF},fullfile('F:/temp/figures',sprintf('tbtx_%s_%d.pdf',region,iF)));
+% end

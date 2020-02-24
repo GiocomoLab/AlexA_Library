@@ -1,4 +1,4 @@
-showXcorrResults('Z:\giocomo\attialex\Images\xcorrv7','MEC',{'1.0','0.8','0.5'})
+showXcorrResults('Z:\giocomo\attialex\images\xcorrv8','VISp',{'0.8'})
     
 %%
 shiftfig = figure();
