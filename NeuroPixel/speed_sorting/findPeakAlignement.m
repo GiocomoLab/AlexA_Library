@@ -74,7 +74,7 @@ if nClu ~= numel(good_cells) % in case there are 'good cells' that don't have a 
     end
 end
 
-ops_tmp = ops;
+ops_tmp = ops.ops_shifts;
 ops_tmp.trials=ops.trials(1:end-4);
 [data_shift,fighandles] = findBestShifts(data,ops_tmp); %align posx
 [~,mi]=max(data_shift.all_stability,[],2);
@@ -95,6 +95,8 @@ allGain = allSlow;
 stability = nan(size(spMapBL,3),1);
 %idx = triu(numel(ops.trials));
 idx = (triu(true(numel(ops.trials)-4),1));
+idx_sim = triu(true(10),1);
+similarity = stability;
 allSpikes = cell(1,nClu);
 maxInd=nan(1,nClu);
 post_valid = data.post( ismember(data.trial,[ops.trials]));
@@ -107,6 +109,15 @@ for iC = 1:size(spMapBL,3)
     if nnz(tmp==0)<=2 %more than 2 trials without spikes
         stability(iC)=nanmean(cc(idx));
     end
+    
+    spMap = squeeze(cat(1,spMapBL(end-5:end,:,iC),spMapGain(:,:,iC)));
+    mS=squeeze(spMap)';
+    mS=mS-mean(mS);
+    [xcorr_this,~]=xcorr(mS,'coeff',10);
+    [xcorr_this,max_idx] = max(xcorr_this,[],1); % take max over lag
+    xcorr_this = reshape(xcorr_this,10,10);
+    similarity(iC) = nanmean(xcorr_this(idx_sim));
+    
     avFR = mean(spMapBL(:,:,iC));
     [ma,mi]=max(avFR(ops.search_range));
     [ma2,mi2]=max(avFR([ min(ops.search_range)-1 max(ops.search_range)+1] ));
@@ -165,8 +176,9 @@ data_out.all_gain = allGain;
 data_out.region = reg;
 data_out.subregion = sub_reg;
 data_out.stability = stability;
+data_out.similarity = similarity;
 data_out.allSpikes = allSpikes;
-data_out.speed = speed;
+data_out.speed = [speed, data.posx,data.trial];
 data_out.max_ind = maxInd;
 data_out.factors = factors;
 data_out.CID = uClu;

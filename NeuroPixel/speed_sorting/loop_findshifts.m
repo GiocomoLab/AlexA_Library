@@ -14,8 +14,8 @@ ops.filter = fi;
 ops.plotfig = true;
 OAK='/oak/stanford/groups/giocomo/';
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_shiftFilter');
-imdir = fullfile(savedir(imdir));
+savedir = fullfile(OAK,'attialex','speed_filtered_showMap');
+imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
     mkdir(savedir);
     
@@ -42,7 +42,7 @@ end
 %%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(12);
+    parpool(6);
 end
 
 %%
@@ -57,7 +57,8 @@ parfor iF=1:numel(filenames)
         [~,session_name,~]=fileparts(filenames{iF});
         if ops.plotfig
             for ifig = 1:numel(fighandles)
-                saveas(fighandles{ifig},fullfile(imdir,sprintf('%s.png',session_name)))
+                saveas(fighandles{ifig},fullfile(imdir,sprintf('%s_%d.png',session_name,ifig)))
+                close(fighandles{ifig})
             end
         end
         mf =matfile(fullfile(savedir,session_name));
