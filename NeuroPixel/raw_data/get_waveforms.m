@@ -1,4 +1,4 @@
-function [mean_waveforms,mean_template_waveforms,amplitudes,aux] = get_waveforms(ks_dir,imec_file,nchannels)
+function [mean_waveforms,mean_template_waveforms,amplitudes,aux,clusters_good] = get_waveforms(ks_dir,imec_file,nchannels)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 chanMaps = '/oak/stanford/groups/giocomo/attialex/channelMaps';
@@ -17,6 +17,7 @@ ks = Neuropixel.KiloSortDataset(ks_dir,'channelMap',chanMap,'imecDataset',imec_f
 ks.load()
 metrics = ks.computeMetrics();
 nC=numel(ks.clusters_good);
+clusters_good = ks.clusters_good;
 mean_template_waveforms = metrics.cluster_waveform(ismember(ks.cluster_groups,'good'),:);
 mean_waveforms =zeros(nC,82);
 amplitudes = metrics.cluster_amplitude(ismember(ks.cluster_groups,'good'));

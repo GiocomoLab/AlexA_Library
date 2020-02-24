@@ -29,25 +29,28 @@ end
 %%
 p=gcp('nocreate')
 if isempty(p)
-    p=parpool(2);
+    p=parpool(3);
 end
 
 %%
-parfor iF =1:200%numel(filenames)
+parfor iF =1:numel(filenames)
     try
-        data = load(fullfile(filenames(iF).folder,filenames(iF).name));
         [~,session_name]=fileparts(filenames(iF).name);
         if isfile(fullfile(savedir,[session_name '.mat']))
-            sprintf('%s already exists \n',session_name)
-            %continue
+            a=who('-file',fullfile(savedir,[session_name '.mat']));
+            if ismember('mean_waveforms',a)
+                sprintf('%s already exists \n',session_name)
+                continue
+            end
         end
+        data = load(fullfile(filenames(iF).folder,filenames(iF).name));
         dat_path = data.sp.dat_path;
         n_chan = data.sp.n_channels_dat;
         %find full path
         imec_dir = getRawDataPath(dat_path,file_location);
         ks_dir = fileparts(imec_dir);
         
-        [mean_waveforms,mean_template_waveforms,amplitude,aux]=get_waveforms(ks_dir,imec_dir,n_chan);
+        [mean_waveforms,mean_template_waveforms,amplitude,aux,clusters_good]=get_waveforms(ks_dir,imec_dir,n_chan);
         
         %data.mean_waveforms = mean_waveforms;
         %data.mean_template_waveforms = mean_template_waveforms;
@@ -56,6 +59,7 @@ parfor iF =1:200%numel(filenames)
         m.mean_template_waveforms = mean_template_waveforms;
         m.amplitudes = amplitude;
         m.aux = aux;
+        m.clusters_good = clusters_good;
         % save(fullfile(savedir,session_name),'mean_waveforms','mean_waveforms','amplitude','aux')
     catch ME
         disp(ME.message);
