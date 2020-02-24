@@ -11,7 +11,8 @@ f_vec=[0 1./(600:-.5:10)];
 %window=floor(sigma*5/2)*2+1;
 %fi = fspecial('gaussian',[1 window],sigma);.
 fi=gausswin(ops.filter)';
-fi=fi/sum(fi);
+ops.fi=fi/sum(fi);
+gaussfilt = ops.fi;
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 savepath = '/oak/stanford/groups/giocomo/attialex/distance_coding3';
 if ~isfolder(savepath)
@@ -21,21 +22,21 @@ end
 
 save(sprintf('%s/ops.mat',savepath),'ops')
 %%
-files = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*dark*');
+files = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/npI1_0414*dark*');
 filenames={};
 for ii=1:numel(files)
     filenames{ii}=fullfile(files(ii).folder,files(ii).name);
 end
 %%
-p=gcp('nocreate');
-if isempty(p)
-    parpool(12);
-end
+% p=gcp('nocreate');
+% if isempty(p)
+%     parpool(3);
+% end
 
 %%
 binsize=ops.binsize;
 
-for iF=numel(filenames)
+for iF=1:numel(filenames)
     
     try
         data = load(filenames{iF});
@@ -49,7 +50,7 @@ for iF=numel(filenames)
             disp(datafile)
             continue
         end
-        
+        disp(['now working on ' datafile])
         speed = diff(data.posx);
         
         speed(speed<-10) = NaN;
@@ -76,7 +77,7 @@ for iF=numel(filenames)
         
         spatialMap=bsxfun(@rdivide,spM(data.sp.cids+1,:,:),dT);
         spatialMap(isnan(spatialMap))=0;
-        spatialMap = convn(spatialMap,fi,'valid');
+        spatialMap = convn(spatialMap,gaussfilt,'valid');
         
         
         
@@ -120,7 +121,7 @@ for iF=numel(filenames)
             tmp_acg=zeros(n_it,lags+1);
             for num_it = 1:n_it
                 shuffle_idx = shuffles(num_it);
-                spike_t_shuffled = mod(spike_t+shuffle_idx,max_t)+abs_min;
+                spike_t_shuffled = mod(spike_t+shuffle_idx,max_t-abs_min)+abs_min;
                 
                 
                 [~,~,spike_idx] = histcounts(spike_t_shuffled,data.post);
@@ -130,7 +131,7 @@ for iF=numel(filenames)
                 %moothing
                 firing_rate = aa./dT; %help
                 firing_rate(isnan(firing_rate))=0;
-                firing_rate = convn(firing_rate,fi,'valid');
+                firing_rate = convn(firing_rate,gaussfilt,'valid');
                 firing_rate =zscore(firing_rate);
                 [acg,spacing] = xcorr(firing_rate,lags,'coeff');
                 ACG_temp(iCell,:,num_it)=acg((lags+1):end);
