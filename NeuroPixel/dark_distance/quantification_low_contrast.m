@@ -13,6 +13,7 @@ f_vec=[0 1./(600:-.5:10)];
 %fi = fspecial('gaussian',[1 window],sigma);.
 fi=gausswin(ops.filter)';
 fi=fi/sum(fi);
+gaussfilt = fi;
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 savepath = '/oak/stanford/groups/giocomo/attialex/distance_coding3';
 if ~isfolder(savepath)
@@ -20,7 +21,7 @@ if ~isfolder(savepath)
     mkdir(fullfile(savepath,'images'))
 end
 
-save(sprintf('%s/ops.mat',savepath),'ops')
+save(sprintf('%s/ops_contrast.mat',savepath),'ops')
 [filenames,triggers] = getFilesCriteria(ops.region,ops.contrast_to_look_at,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %%
 %files = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*dark*')
@@ -36,7 +37,7 @@ end
 %%
 binsize=ops.binsize;
 
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         data = load(filenames{iF});
@@ -88,7 +89,8 @@ parfor iF=1:numel(filenames)
         
         spatialMap=bsxfun(@rdivide,spM(data.sp.cids+1,:,:),dT);
         spatialMap(isnan(spatialMap))=0;
-        
+        spatialMap = convn(spatialMap,gaussfilt,'valid');
+
         
         
         
@@ -138,7 +140,7 @@ parfor iF=1:numel(filenames)
                 %moothing
                 firing_rate = aa./dT; %help
                 firing_rate(isnan(firing_rate))=0;
-                firing_rate = convn(firing_rate,fi,'valid');
+                firing_rate = convn(firing_rate,gaussfilt,'valid');
                 firing_rate =zscore(firing_rate);
                 [acg,spacing] = xcorr(firing_rate,lags,'coeff');
                 ACG_temp(iCell,:,num_it)=acg((lags+1):end);
@@ -229,6 +231,7 @@ parfor iF=1:numel(filenames)
                 sprintf('in file %s \n',filenames{iF})
         [~,sn,~]=fileparts(filenames{iF});
         fi=fopen(sprintf('%s/data/%s.err',savepath,sn),'w');
+        fprintf(fi,ME.message);
         fclose(fi);
         disp(ME.message)
     end
