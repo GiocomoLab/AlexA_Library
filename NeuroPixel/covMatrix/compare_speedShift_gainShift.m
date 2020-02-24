@@ -15,7 +15,7 @@ ops.smoothSigma = 4;
 [filenames,triggers] = getFilesCriteria(ops.region,ops.contrast,ops.gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 %%
 %shift_path = 'Z:\giocomo\attialex\speed_shiftFilter';
-shift_path = '/oak/stanford/groups/giocomo/attialex/speed_shiftFilter';
+shift_path = '/oak/stanford/groups/giocomo/attialex/speed_shiftFilter_corrected';
 params = load(fullfile(shift_path,'parameters.mat'));
 ALLSHIFTS = [];
 REGIONS = {};
@@ -54,12 +54,12 @@ ID = cat(1,ID,iF*ones(numel(stability),1));
 end
 %%
 figure
-idx = STABILITY>0 & ismember(REGIONS,'VISp');
+idx = STABILITY>0.5 & ismember(REGIONS,'VISp');
 for iT=1:4
     subplot(1,4,iT)
     
     scatter(nanmean(ALLSHIFTS(idx,iT,:),3),ESTIMATED(idx,iT),'.')
     axis image
-    xlim([-10 10])
-    ylim([-10 10])
+    xlim([-5 5])
+    ylim([-5 5])
 end
