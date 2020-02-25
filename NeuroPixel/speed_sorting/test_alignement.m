@@ -1,9 +1,8 @@
-function [correlation_shifted,correlation_noshift]=test_alignement(data,ops,factors)
+function [correlation_shifted,correlation_noshift]=test_alignement(data,ops,factors,good_cells)
 
 [speed,speed_raw]=calcSpeed(data.posx,ops);
 test_trials = ops.trials;
 %% test alignement
-good_cells = data.sp.cids(data.sp.cgs==2);
 %create trial map that only contains numbers for trials to be included
 trialMap = nan(1,numel(data.trial_gain));
 

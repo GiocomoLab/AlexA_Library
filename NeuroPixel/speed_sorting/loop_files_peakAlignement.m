@@ -77,7 +77,7 @@ x_vec =-20/ops.BinWidth:1:20/ops.BinWidth;
 %%
 plotFigures=true;
 output = cell(numel(filenames),1);
-parfor iF=1:numel(filenames)
+for iF=14%1:numel(filenames)
     try
         %data = load(fullfile(data_dir,filenames{iF}));
         data = load(filenames{iF});
@@ -92,7 +92,7 @@ parfor iF=1:numel(filenames)
             data_out{iRep} = findPeakAlignement(data,ops_temp);
             test_trials = triggers{iF}(iRep)+[4:13];
             ops_temp.ops_shifts.trials=test_trials;
-            [correlation_shifted,correlation_noshift]=test_alignement(data,ops_temp.ops_shifts,data_out{iRep}.factors);
+            [correlation_shifted,correlation_noshift]=test_alignement(data,ops_temp.ops_shifts,data_out{iRep}.factors,data_out{iRep}.CID);
             data_out{iRep}.correlation_shifted = correlation_shifted;
             data_out{iRep}.correlation_noshift = correlation_noshift;
             if plotFigures
@@ -128,7 +128,7 @@ parfor iF=1:numel(filenames)
                     scatter(data_out{iRep}.allSpikes{iC}(gain_idx,1),tmp(gain_idx),15,get_color(gain,contrast),'.')
                     xlim(data_out{iRep}.max_ind(iC)+[-60 40] )
                     ylim([0 23])
-                    xline(data_out{iRep}.max_ind(iC))
+                    xline(data_out{iRep}.max_ind(iC));
                     box off
                     title(data_out{iRep}.region{iC})
                     
@@ -147,7 +147,7 @@ parfor iF=1:numel(filenames)
                     xlabel(sprintf('%.2f, diff: %.2f',data_out{iRep}.factors(iC),tmp_d))
                     xlim(data_out{iRep}.max_ind(iC)+[-60 40] )
                     ylim([0 23])
-                    xline(data_out{iRep}.max_ind(iC))
+                    xline(data_out{iRep}.max_ind(iC));
                     if ~isempty(data_out{iRep}.subregion)
                         title(data_out{iRep}.subregion{iC})
                     end
@@ -194,7 +194,7 @@ GAIN = [];
 STAB=[];
 FACT = [];
 reg= [];
-order = [2,1];
+order = [1,2];
 for iF=1:size(output,1)
     for iRep=1:2
     if isempty(output{iF}{iRep})
@@ -243,6 +243,7 @@ GAIN = [];
 STAB=[];
 FACT = [];
 reg= [];
+DCORR=[];
 for iF=1:size(output,1)
     
     
@@ -254,18 +255,22 @@ for iF=1:size(output,1)
             STAB = cat(1,STAB,output{iF}{iRep}.stability);
             FACT = cat(1,FACT,output{iF}{iRep}.factors');
             reg = cat(2,reg,output{iF}{iRep}.region);
+            tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
+            DCORR = cat(1,DCORR,(tmp'));
         end
     end
 end
 
 
 figure
-region = 'ECT';
+region = 'VISp';
 idx = STAB>.5 & startsWith(reg,region)';
-plot(x_vec,nanmean(FAST(idx,:)))
+idx = DCORR<0 & startsWith(reg,region)' & STAB>.4;
+boundedline(x_vec,nanmean(FAST(idx,:)),nanstd(FAST(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha','cmap',[0 0 0])
 hold on
-plot(x_vec,nanmean(SLOW(idx,:)));
-plot(x_vec,nanmean(GAIN(idx,:)))
+%plot(x_vec,nanmean(FAST))
+boundedline(x_vec,nanmean(SLOW(idx,:)),nanstd(SLOW(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha')
+boundedline(x_vec,nanmean(GAIN(idx,:)),nanstd(GAIN(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha','cmap',get_color(gain,100))
 legend({'fast','slow','gain'})
 set(gcf,'Renderer','Painters')
 grid on
@@ -277,6 +282,7 @@ SLOW=[];
 GAIN = [];
 STAB=[];
 FACT = [];
+DCORR = [];
 reg= [];
 region = 'VISp';
 
@@ -298,53 +304,82 @@ for iF=1:size(output,1)
                 FAST =cat(1,FAST,nanmean(output{iF}{iRep}.all_fast(idx,:),1));
                 SLOW = cat(1,SLOW,nanmean(output{iF}{iRep}.all_slow(idx,:),1));
                 GAIN = cat(1,GAIN,nanmean(output{iF}{iRep}.all_gain(idx,:),1));
+                tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
+                DCORR = cat(1,DCORR,nanmean(tmp(idx)));
             end
         end
     end
 end
 
 
-figure
+figure('Position',[1356         405         475         525])
+subplot(4,1,[1 2 3])
 boundedline(x_vec,nanmean(FAST),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',[0 0 0])
 hold on
 %plot(x_vec,nanmean(FAST))
-boundedline(x_vec,nanmean(SLOW),nanstd(FAST)/sqrt(size(FAST,1)),'alpha')
-boundedline(x_vec,nanmean(GAIN),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',get_color(gain,100))
-
+boundedline(x_vec,nanmean(SLOW),nanstd(SLOW)/sqrt(size(FAST,1)),'alpha')
+boundedline(x_vec,nanmean(GAIN),nanstd(GAIN)/sqrt(size(FAST,1)),'alpha','cmap',get_color(gain,100))
+title(region)
 
 legend({'fast','slow','gain'})
 set(gcf,'Renderer','Painters')
 grid on
 box off
-
-%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
+subplot(4,1,4)
+plotSpread(DCORR,'xyOri','flipped')
+title('Change in Correlation testset')
+saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
 
 %%
 FAST =[];
 SLOW=[];
 GAIN = [];
 STAB=[];
+FACT = [];
+DCORR = [];
 reg= [];
-for iF=1:numel(output)
+region = 'VISp6';
+
+for iF=1:size(output,1)
     if isempty(output{iF})
         continue
     end
-    if numel(output{iF}.stability) ~= numel(output{iF}.region)
+    if numel(output{iF}{1}.stability) ~= numel(output{iF}{1}.region)
         disp(iF)
         continue
     end
-    FAST =cat(1,FAST,output{iF}.all_fast);
-    SLOW = cat(1,SLOW,output{iF}.all_slow);
-    GAIN = cat(1,GAIN,output{iF}.all_gain);
-    STAB = cat(1,STAB,output{iF}.stability);
-    reg = cat(2,reg,output{iF}.subregion);
+    for iRep =1:2
+        if ~isempty(output{iF}{iRep})
+            idx_region = startsWith(output{iF}{iRep}.subregion,region)';
+            idx = output{iF}{iRep}.similarity>.4 & startsWith(output{iF}{iRep}.subregion,region)';
+            if nnz(idx)>2 && nnz(idx)/nnz(idx_region)>.2
+                sel_reg = mean(output{iF}{iRep}.similarity(idx));
+
+                FAST =cat(1,FAST,nanmean(output{iF}{iRep}.all_fast(idx,:),1));
+                SLOW = cat(1,SLOW,nanmean(output{iF}{iRep}.all_slow(idx,:),1));
+                GAIN = cat(1,GAIN,nanmean(output{iF}{iRep}.all_gain(idx,:),1));
+                tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
+                DCORR = cat(1,DCORR,nanmean(tmp(idx)));
+            end
+        end
+    end
 end
 
 
-figure
-idx = STAB>.2 & ismember(reg,'VISp2/3')';
-plot(nanmean(FAST(idx,:)))
+figure('Position',[1356         405         475         525])
+subplot(4,1,[1 2 3])
+boundedline(x_vec,nanmean(FAST),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',[0 0 0])
 hold on
-plot(nanmean(SLOW(idx,:)));
-plot(nanmean(GAIN(idx,:)))
+%plot(x_vec,nanmean(FAST))
+boundedline(x_vec,nanmean(SLOW),nanstd(FAST)/sqrt(size(FAST,1)),'alpha')
+boundedline(x_vec,nanmean(GAIN),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',get_color(gain,100))
+title(region)
+
 legend({'fast','slow','gain'})
+set(gcf,'Renderer','Painters')
+grid on
+box off
+subplot(4,1,4)
+plotSpread(DCORR,'xyOri','flipped')
+title('Change in Correlation testset')
+%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
