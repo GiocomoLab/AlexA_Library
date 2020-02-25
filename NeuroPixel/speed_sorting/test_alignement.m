@@ -1,7 +1,7 @@
-function [correlation_shifted,correlation_noshift]=test_alignement(data,ops,factors,test_trials)
+function [correlation_shifted,correlation_noshift]=test_alignement(data,ops,factors)
 
 [speed,speed_raw]=calcSpeed(data.posx,ops);
-
+test_trials = ops.trials;
 %% test alignement
 good_cells = data.sp.cids(data.sp.cgs==2);
 %create trial map that only contains numbers for trials to be included
@@ -34,11 +34,11 @@ for iC=1:nC
     
         
     [spMapShifted]=shiftAllMapsByFactor(ops,clus,st_tmp,1,data.posx,data.post,trial_sorted,speed_raw,factor_this);
-    cc=corr(spMapShifted');
+    cc=corr(spMapShifted(:,ops.idx)');
     correlation_shifted(iC)=nanmean(cc(idx));
     
     [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,1,data.posx,data.post,trial_sorted,speed,0);
-    cc=corr(spMapBL');
+    cc=corr(spMapBL(:,ops.idx)');
     correlation_noshift(iC)=nanmean(cc(idx));
 end
 end

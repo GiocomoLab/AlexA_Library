@@ -75,7 +75,7 @@ if nClu ~= numel(good_cells) % in case there are 'good cells' that don't have a 
 end
 
 ops_tmp = ops.ops_shifts;
-ops_tmp.trials=ops.trials(1:end-4);
+ops_tmp.trials=ops.trials(1:end-4); %only use pre gain trials
 [data_shift,fighandles] = findBestShifts(data,ops_tmp); %align posx
 [~,mi]=max(data_shift.all_stability,[],2);
 factors = ops.factors(mi);
@@ -142,7 +142,7 @@ for iC = 1:size(spMapBL,3)
         this_cell_spikeIdx = discretize(this_cell_st,post_valid);
         posx_hat = data.posx+factors(iC)*speed;
         posx_hat_valid = posx_hat( ismember(data.trial,[ops.trials]));
-
+        
         
         nonzero_idx = ~isnan(this_cell_spikeIdx);
         spike_pos = posx_valid(this_cell_spikeIdx(nonzero_idx));
