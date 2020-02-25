@@ -33,7 +33,7 @@ for iC=1:nC
     [uClu,~,clus]=unique(clu_tmp);
     
         
-    [spMapShifted]=shiftAllMapsByFactor(ops,clus,st_tmp,1,data.posx,data.post,trial_sorted,speed_raw,factor_this);
+    [spMapShifted]=shiftAllMapsByFactor(ops,clus,st_tmp,1,data.posx,data.post,trial_sorted,speed,factor_this);
     cc=corr(spMapShifted(:,ops.idx)');
     correlation_shifted(iC)=nanmean(cc(idx));
     
