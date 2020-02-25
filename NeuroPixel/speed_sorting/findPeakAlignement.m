@@ -22,6 +22,14 @@ if iscolumn(reg)
     sub_reg = sub_reg';
 end
 
+if isfield(data.anatomy,'depth_shifted')
+    depth = data.anatomy.depth_shifted;
+elseif isfield(data.anatomy,'depth')
+    depth = data.anatomy.depth;
+else % for MEC cases
+    depth = data.anatomy.tip_distance - data.anatomy.z2;
+end
+
 trials = ops.trials;
 
 
@@ -62,6 +70,7 @@ st_tmp = data.sp.st(good_idx);
 [uClu,~,clus]=unique(clu_tmp);
 nClu = numel(uClu);
 reg = reg(ismember(data.sp.cids,uClu));
+depth = depth(ismember(data.sp.cids,uClu));
 if ~isempty(sub_reg)
     sub_reg = sub_reg(ismember(data.sp.cids,uClu));
 end
@@ -182,6 +191,7 @@ data_out.speed = [speed, data.posx,data.trial];
 data_out.max_ind = maxInd;
 data_out.factors = factors;
 data_out.CID = uClu;
+data_out.depth = depth;
 end
 
 

@@ -75,9 +75,9 @@ end
 x_vec =-20/ops.BinWidth:1:20/ops.BinWidth;
 
 %%
-plotFigures=true;
+plotFigures=false;
 output = cell(numel(filenames),1);
-for iF=14%1:numel(filenames)
+parfor iF=1:numel(filenames)
     try
         %data = load(fullfile(data_dir,filenames{iF}));
         data = load(filenames{iF});
