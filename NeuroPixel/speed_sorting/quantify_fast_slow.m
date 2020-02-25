@@ -1,12 +1,15 @@
-files = dir('Z:\giocomo\attialex\speed_sort4\*.mat');
+%% OUTPUT from loop_files_speed, goes across all trials and excludes gain/contrast trials
+
+files = dir('Z:\giocomo\attialex\speed_sort7\*.mat');
 delays = [];
 region = {};
 slow_trials = [];
 fast_trials = [];
 for iF=1:numel(files)
-    load(fullfile(files(iF).folder,files(iF).name));
+    data=load(fullfile(files(iF).folder,files(iF).name));
+    data = data.data_out;
     delays = cat(2,delays,data.delay);
-    region = cat(2,region,data.region);
+    region = cat(1,region,data.region);
     slow_trials = cat(2,slow_trials,data.slow_trials);
     fast_trials = cat(2,fast_trials,data.fast_trials);
 
@@ -15,7 +18,7 @@ end
 %%
 [aa,max_i]=max((fast_trials+slow_trials)/2);
 
-reg_idx = startsWith(region,'VISp') & delays(2,:)>0.01;
+reg_idx = startsWith(region,'VISp')' & delays(2,:)>0.01;
 
 figure
 n_B=4;
@@ -35,12 +38,12 @@ end
 %%
 delays(1,:)=round(delays(1,:));
 %%
-idx = startsWith(region,'VISp') & delays(2,:)>0.01;
+idx = startsWith(region,'VISp')' & delays(2,:)>0.01;
 figure
 h1 = histogram(delays(1,idx));
 
 hold on
-idx = startsWith(region,'MEC') & delays(2,:)>0.01;
+idx = startsWith(region,'MEC')' & delays(2,:)>0.01;
 h2 = histogram(delays(1,idx));
 
 h1.Normalization = 'probability';
@@ -57,7 +60,7 @@ legend({'V1','MEC'})
 avg = (slow_trials+fast_trials/2);
 
 avgNorm = avg-mean(avg);
-idx = startsWith(region,'CA') & delays(2,:)>0.01;
+idx = startsWith(region,'CA')' & delays(2,:)>0.01;
 
 visTC=avgNorm(:,idx)';
 nClu=6;

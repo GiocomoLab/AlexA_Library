@@ -86,6 +86,8 @@ parfor iF=1:numel(filenames)
             
             ops_temp.trials=triggers{iF}(iRep)+[-18:3];
             data_out{iRep} = findPeakAlignement(data,ops_temp);
+            test_trials = triggers{iF}(iRep)+[4:13];
+            [correlation_shifted,correlation_noshift]=test_alignement(data,ops.ops_shift,data_out{iRep}.factors,test_trials)
             
             if plotFigures
                 fig = figure('Position',[680   758   560   220],'visible','off','Renderer','Painters');
@@ -129,7 +131,7 @@ parfor iF=1:numel(filenames)
                     scatter(trial_speed_gain(sidx_gain),[19:22],15,get_color(gain,contrast),'.')
                     box off
                     xlabel('cm/s')
-                    
+                    %plot the corrected spikes, they are in column 3
                     subplot(2,3,4)
                     scatter(data_out{iRep}.allSpikes{iC}(:,3),tmp,15,get_color(1,contrast),'.')
                     hold on

@@ -359,7 +359,38 @@ xlabel('Frac distance tuned')
 
 
 
-%%
+%% firing rate and such
+
+aid = unique(SID);
+midpoints= -2300:200:1500;
+half_width = 100;
+allSitesRate = nan(numel(aid),numel(midpoints));
+
+for ii=1:numel(aid)
+    site_idx = SID==ii;
+    valid_idx = idx_value & site_idx;
+    vals = nan(1,numel(midpoints));
+    for iv=1:numel(vals)
+        d_idx = DEPTH>midpoints(iv)-half_width & DEPTH<midpoints(iv)+half_width;
+        idx = d_idx & valid_idx;
+        vals(iv)=mean(FIRING_RATE(idx));
+        
+    end
+    allSitesRate(ii,:)=vals;
+end
+figure
+subplot(1,2,1)
+errF = nanstd(allSitesRate)./sqrt(sum(~isnan(allSitesRate)));
+errorbar(nanmean(allSitesRate(:,enough_idx)),midpoints(:,enough_idx),[],[],errF(:,enough_idx),errF(:,enough_idx),'r')
+ylabel('Depth')
+xlabel('Firing Rate')
+subplot(1,2,2)
+errC = nanstd(AVG_CORR)./sqrt(sum(~isnan(AVG_CORR)));
+errorbar(nanmean(AVG_CORR),corr_midpoints,[],[],errC,errC)
+ylim([-2500 1000])
+ylabel('Depth')
+xlabel('Theta correlation')
+        
 %% normalize for pxx peaks
 aid = unique(SID);
 size_idx=~isnan(PXXPeak) & FIRING_RATE>1;
@@ -488,8 +519,8 @@ scatter(peaks_raw,DEPTH_THIS,30,col,'.')
 % XBIN = linspace(0.4,5,51);
 % h = histogram2(peaks_norm,DEPTH_THIS,'YBinEdges',YBIN,'XBinEdges',XBIN,'FaceColor','flat','DisplayStyle','tile','ShowEmptyBins','on');
 %%
-% figHandles = findobj('Type', 'figure');
-% for iF=1:numel(figHandles)
-%     set(figHandles(iF),'Renderer','Painters')
-%     saveas(figHandles(iF),sprintf('F:/temp/figures/fig1_baseline_xcorr_%d.pdf',iF))
-% end
+figHandles = findobj('Type', 'figure');
+for iF=1:numel(figHandles)
+    set(figHandles(iF),'Renderer','Painters')
+    saveas(figHandles(iF),sprintf('F:/temp/figures/fig1_baseline_xcorr_%d.pdf',iF))
+end

@@ -1,3 +1,5 @@
+%% will run across all baseline trials
+
 addpath(genpath('/home/users/attialex/AlexA_Library'));
 params = readtable('UniversalParams.xlsx');
 xbincent = params.TrackStart+params.SpatialBin/2:params.SpatialBin:params.TrackEnd-params.SpatialBin/2;

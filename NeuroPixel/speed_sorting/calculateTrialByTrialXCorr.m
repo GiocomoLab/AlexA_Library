@@ -1,8 +1,7 @@
-function data_out = calculateTrialByTrialXCorr(data,trials)
+function data_out = calculateTrialByTrialXCorr(data,ops)
 
 %housekeeping
-binsize=2;
-good_cells = data.sp.cids(data.sp.cgs==2);
+
 data_out = struct();
 if ~isfield(data,'anatomy')
     return
@@ -12,12 +11,12 @@ end
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:binsize:400];
+edges=[0:ops.binsize:400];
 edges(1)=-.01;
 data.posx(data.posx<0)=0;
 data.posx(data.posx>=400)=399.00;
-for iT=1:length(trials)
-    idxVR=data.trial==trials(iT);
+for iT=1:length(ops.trials)
+    idxVR=data.trial==ops.trials(iT);
     t_time=data.post(idxVR);
     start=min(t_time);
     stop=max(t_time);
@@ -45,9 +44,10 @@ for ii=1:size(spatialMap,1)
     spatialMap(ii,:,:)=spatialMap(ii,:,:)./dt;
 end
 spatialMap(isnan(spatialMap))=0;
-smoothSigma = 4/binsize;
-smoothWindow = floor(smoothSigma*5/2)*2+1;
-gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+% smoothSigma = 4/ops.binsize;
+% smoothWindow = floor(smoothSigma*5/2)*2+1;
+% gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
+gauss_filter = ops.filter;
 filt = reshape(gauss_filter,[1, numel(gauss_filter),1]);
 sPF = repmat(spatialMap,[1,3,1]);
 sPF=convn(sPF,filt,'same');
@@ -57,7 +57,7 @@ sPF = sPF(:,iidx,:);
 spatialMap = sPF;
 
 % calculate stability
-idx = (triu(true(numel(trials)),1));
+idx = (triu(true(numel(ops.trials)),1));
 stability = zeros(1,size(spatialMap,1));
 for ii=1:numel(stability)
     tmp = squeeze(spatialMap(ii,:,:));
@@ -69,11 +69,12 @@ data_out.stability=stability;
 data_out.region = reg;
 
 % calculate speed
-posWindow= [300 390];
+posWindow= ops.posWindow;
 %posWindow= [120 200];
-[speed,~] = calc_speed(data.posx,data.trial,trials,edges);
+[speed,~] = calc_speed(data.posx,data.trial,ops.trials,edges);
 
 posBin = [find(edges == posWindow(1)), find(edges == posWindow(2))];
+posBin(posBin>200)=200;
 trial_speed = zeros(1,max(data.trial));
 for ii = 1:max(data.trial)
     idx = data.posx>posWindow(1) & data.posx<posWindow(2) & data.trial == ii;
@@ -85,21 +86,21 @@ end
 
 % calculate pairwise xcorrs for all cells
 nC=size(spatialMap,1);
-nPairs = length(trials)*(length(trials)-1)/2;
+nPairs = length(ops.trials)*(length(ops.trials)-1)/2;
 nDat = 3;
 allDelays = zeros(nC,nPairs,nDat);
 for cellIDX = 1:size(spatialMap,1)
  
     mS=squeeze(spatialMap(cellIDX,:,:));
     
-    mS=mS-mean(mS);
-    
+    %mS=mS-mean(mS);
+    mS=zscore(mS);
     %%
     [rr,lags]=xcorr(mS(posBin(1):posBin(2),:),'coeff',10);
     nR=size(mS,2);
     delay_list=zeros(nR*(nR-1)/2,3); %delay,value, speed_diff, 
     idx = 0;
-    nT = numel(trials);
+    nT = numel(ops.trials);
     for iT = 1:nT
         for jT=(iT+1):nT
             idx = idx+1;
@@ -110,7 +111,7 @@ for cellIDX = 1:size(spatialMap,1)
             end
             
             tmp_d = min(lags)-1;
-            delay_list(idx,:)=[midx+tmp_d,mm,trial_speed(trials(iT))-trial_speed(trials(jT))];
+            delay_list(idx,:)=[midx+tmp_d,mm,trial_speed(ops.trials(iT))-trial_speed(ops.trials(jT))];
         end
     end
     allDelays(cellIDX,:,:)=delay_list;
