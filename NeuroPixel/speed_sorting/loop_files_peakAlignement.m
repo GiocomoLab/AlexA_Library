@@ -48,11 +48,21 @@ ops.ops_shifts = ops_shifts;
 % end
 gain = 0.8;
 contrast = 100;
-region = 'RS';
+region = 'ECT';
 [filenames,triggers] = getFilesCriteria(region,contrast,gain,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
 savepath='/oak/stanford/groups/giocomo/attialex/images_peak';
 if ~isfolder(savepath)
     mkdir(savepath)
+end
+%%
+if isfile(fullfile(savepath,[region '.mat']))
+    resp = input([region 'output file already exists,continue [1/0]']);
+    if resp==0
+        disp('abort, load ouput file')
+        load(fullfile(savepath,[region '.mat']))
+        return
+    end
+    
 end
 %%
 
@@ -163,6 +173,8 @@ parfor iF=1:numel(filenames)
         disp('whoopsie')
     end
 end
+%%
+save(fullfile(savepath,region),'output')
 
 %%
 
@@ -238,7 +250,7 @@ end
 
 
 figure
-region = 'RS';
+region = 'ECT';
 idx = STAB>.5 & startsWith(reg,region)';
 plot(x_vec,nanmean(FAST(idx,:)))
 hold on
@@ -256,7 +268,7 @@ GAIN = [];
 STAB=[];
 FACT = [];
 reg= [];
-region = 'RS';
+region = 'VISp';
 
 for iF=1:size(output,1)
     if isempty(output{iF})
@@ -295,7 +307,7 @@ set(gcf,'Renderer','Painters')
 grid on
 box off
 
-saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
+%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
 
 %%
 FAST =[];
