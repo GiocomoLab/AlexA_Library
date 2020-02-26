@@ -1,5 +1,5 @@
 
-ops.factors = -.25:0.01:.25;
+ops.factors = -.35:0.01:.35;
 ops.BinWidth = 1;
 
 ops.edges = 0:ops.BinWidth:400;
@@ -65,6 +65,7 @@ if isfile(fullfile(savepath,[region '.mat']))
     end
     
 end
+save(fullfile(savepath,'parameters.mat'),'ops')
 %%
 
 p=gcp('nocreate');
@@ -299,7 +300,7 @@ for iF=1:size(output,1)
             idx_region = startsWith(output{iF}{iRep}.region,region)';
             idx = output{iF}{iRep}.similarity>.4 & startsWith(output{iF}{iRep}.region,region)';
             if nnz(idx)>2 && nnz(idx)/nnz(idx_region)>.2
-                sel_reg = mean(output{iF}{iRep}.similarity(idx))
+                sel_reg = mean(output{iF}{iRep}.similarity(idx));
 
                 FAST =cat(1,FAST,nanmean(output{iF}{iRep}.all_fast(idx,:),1));
                 SLOW = cat(1,SLOW,nanmean(output{iF}{iRep}.all_slow(idx,:),1));
@@ -328,7 +329,7 @@ box off
 subplot(4,1,4)
 plotSpread(DCORR,'xyOri','flipped')
 title('Change in Correlation testset')
-saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
+%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
 
 %%
 FAST =[];

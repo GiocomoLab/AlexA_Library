@@ -26,7 +26,8 @@ if isfield(data.anatomy,'depth_shifted')
     depth = data.anatomy.depth_shifted;
 elseif isfield(data.anatomy,'depth')
     depth = data.anatomy.depth;
-else % for MEC cases
+end
+if isfield(data.anatomy,'z2') % for MEC cases
     depth = data.anatomy.tip_distance - data.anatomy.z2;
 end
 
