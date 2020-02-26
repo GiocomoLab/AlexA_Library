@@ -1,5 +1,4 @@
 
-ops.factors = -.35:0.01:.35;
 ops.BinWidth = 1;
 
 ops.edges = 0:ops.BinWidth:400;
@@ -22,7 +21,7 @@ ops.idx = ops.search_range;% in bins, for calculating corr
 
 OAK='/oak/stanford/groups/giocomo/';
 
-ops_shifts.factors = -.25:0.01:.25;
+ops_shifts.factors = -.55:0.01:.55;
 ops_shifts.edges = 0:2:400;
 ops_shifts.nBins = numel(ops_shifts.edges)-1;
 
@@ -51,7 +50,7 @@ gain = 0.8;
 contrast = 100;
 region = 'VISp';
 [filenames,triggers] = getFilesCriteria(region,contrast,gain,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-savepath='/oak/stanford/groups/giocomo/attialex/images_peakTest';
+savepath='/oak/stanford/groups/giocomo/attialex/images_peakLong';
 if ~isfolder(savepath)
     mkdir(savepath)
 end
