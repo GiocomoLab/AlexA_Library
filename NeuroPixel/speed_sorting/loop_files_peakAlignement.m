@@ -9,7 +9,7 @@ ops.nBins = numel(ops.edges)-1;
 
 %ops.trials = find(data.trial_gain ==1 & data.trial_contrast==100);
 ops.trials = [];
-ops.n_preceeding = 18;
+ops.n_preceeding = 10;
 ops.TimeBin = 0.02;
 ops.speedWindow = [-10 -1]; % in cm
 
@@ -22,14 +22,14 @@ ops.idx = ops.search_range;% in bins, for calculating corr
 OAK='/oak/stanford/groups/giocomo/';
 
 ops_shifts.factors = -.55:0.01:.55;
-ops_shifts.edges = 0:2:400;
+ops_shifts.edges = 0:1:400;
 ops_shifts.nBins = numel(ops_shifts.edges)-1;
 
 %ops.trials = find(data.trial_gain ==1 & data.trial_contrast==100);
 ops_shifts.trials = 3:20;
 ops_shifts.TimeBin = 0.02;
-ops_shifts.idx = [10:2:390]/2;% in bins
-fi = gausswin(5);
+ops_shifts.idx = [10:1:390]/1;% in bins
+fi = gausswin(11);
 fi=fi'/sum(fi);
 ops_shifts.filter = fi;
 ops_shifts.plotfig = false;
@@ -50,7 +50,7 @@ gain = 0.8;
 contrast = 100;
 region = 'VISp';
 [filenames,triggers] = getFilesCriteria(region,contrast,gain,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-savepath='/oak/stanford/groups/giocomo/attialex/images_peakLong';
+savepath='/oak/stanford/groups/giocomo/attialex/images_peak10Trials';
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -90,6 +90,7 @@ parfor iF=1:numel(filenames)
             end
             ops_temp.trials=triggers{iF}(iRep)+[-ops_temp.n_preceeding:3];
             data_out{iRep} = findPeakAlignement(data,ops_temp);
+            data_out{iRep}.trials = ops_temp.trials;
             test_trials = triggers{iF}(iRep)+[4:13];
             ops_temp.ops_shifts.trials=test_trials;
             [correlation_shifted,correlation_noshift]=test_alignement(data,ops_temp.ops_shifts,data_out{iRep}.factors,data_out{iRep}.CID);

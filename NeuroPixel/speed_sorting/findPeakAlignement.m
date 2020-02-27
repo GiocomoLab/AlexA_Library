@@ -89,6 +89,7 @@ ops_tmp.trials=ops.trials(1:end-4); %only use pre gain trials
 [data_shift,fighandles] = findBestShifts(data,ops_tmp); %align posx
 [~,mi]=max(data_shift.all_stability,[],2);
 factors = ops_tmp.factors(mi);
+factors_all = data_shift.all_stability;
 
 [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
 
@@ -191,6 +192,7 @@ data_out.allSpikes = allSpikes;
 data_out.speed = [speed, data.posx,data.trial];
 data_out.max_ind = maxInd;
 data_out.factors = factors;
+data_out.factors_all = factors_all;
 data_out.CID = uClu;
 data_out.depth = depth;
 end
