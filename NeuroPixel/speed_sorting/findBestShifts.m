@@ -6,11 +6,35 @@ if isfield(data.anatomy,'parent_shifted')
 else
     reg = data.anatomy.cluster_parent;
 end
+
+if isfield(data.anatomy,'parent_shifted')
+    sub_reg = data.anatomy.region_shifted;
+elseif isfield(data.anatomy,'cluster_region')
+    
+    sub_reg = data.anatomy.cluster_region;
+else
+    sub_reg = {};
+end
+
 if iscolumn(reg)
     reg = reg';
+    sub_reg = sub_reg';
+end
+
+if isfield(data.anatomy,'depth_shifted')
+    depth = data.anatomy.depth_shifted;
+elseif isfield(data.anatomy,'depth')
+    depth = data.anatomy.depth;
+end
+if isfield(data.anatomy,'z2') % for MEC cases
+    depth = data.anatomy.tip_distance - data.anatomy.z2;
 end
 
 reg = reg(data.sp.cgs==2);
+if ~isempty(sub_reg)
+    sub_reg=sub_reg(data.sp.cgs==2);
+end
+depth = depth(data.sp.cgs==2);
 good_cells=data.sp.cids(data.sp.cgs==2);
 factors = ops.factors;
 trials = ops.trials;
@@ -175,5 +199,8 @@ end
 
 data_out.all_stability=all_stability;
 data_out.region = reg;
+data_out.sub_reg = sub_reg;
+data_out.depth = depth;
+data_out.CID = good_cells;
 end
 
