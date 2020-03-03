@@ -37,7 +37,7 @@ end
 if ~isempty(ops.filter)
     speed_raw = conv(speed_raw,ops.filter,'same');
 end
-speed_raw = speed;
+% speed_raw = speed;
 % occupancy matrix
 OCC=zeros(nT,ops.nBins,numel(factors)); %occupancy matrix, calculates occupancy for each space bin for each shift
 
