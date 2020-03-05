@@ -27,7 +27,7 @@ elseif isfield(data.anatomy,'depth')
     depth = data.anatomy.depth;
 end
 if isfield(data.anatomy,'z2') % for MEC cases
-    depth = data.anatomy.tip_distance - data.anatomy.z2;
+    depth = data.anatomy.tip_distance' - data.anatomy.z2;
 end
 
 reg = reg(data.sp.cgs==2);
@@ -118,7 +118,7 @@ for cellIDX=1:numel(good_cells)
         %spMatHat = medfilt1(spMatHat);
         %divide by occupancy
         spMatHat = spMatHat./squeeze(OCC(:,:,iFactor));
-        spMatHat(isnan(spMatHat))=0;
+        spMatHat = fillmissing(spMatHat,'pchip',2);
         iidx = (size(spMatHat,2)+1):(2*size(spMatHat,2));
         
         if ~isempty(ops.filter)
