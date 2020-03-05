@@ -116,10 +116,7 @@ trial_valid = trial_sorted( ismember(data.trial,[ops.trials]));
 for iC = 1:size(spMapBL,3)
     %%% neends fixing for small bins
     cc=corr(spMapBL(:,:,iC)');
-    tmp=sum(spMapBL(:,:,iC),2);
-    if nnz(tmp==0)<=2 %more than 2 trials without spikes
-        stability(iC)=nanmean(cc(idx));
-    end
+
     
     spMap = squeeze(cat(1,spMapBL(end-5:end,:,iC),spMapGain(:,:,iC)));
     mS=squeeze(spMap)';
@@ -127,7 +124,12 @@ for iC = 1:size(spMapBL,3)
     [xcorr_this,~]=xcorr(mS,'coeff',10);
     [xcorr_this,max_idx] = max(xcorr_this,[],1); % take max over lag
     xcorr_this = reshape(xcorr_this,10,10);
-    similarity(iC) = nanmean(xcorr_this(idx_sim));
+    
+    tmp=sum(spMapBL(:,:,iC),2);
+    if nnz(tmp==0)<=2 %more than 2 trials without spikes
+        stability(iC)=nanmean(cc(idx));
+        similarity(iC) = nanmean(xcorr_this(idx_sim));
+    end
     
     avFR = mean(spMapBL(:,:,iC));
     [ma,mi]=max(avFR(ops.search_range));
