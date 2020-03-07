@@ -3,22 +3,25 @@ ops.BinWidth = 2;
 
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
-
+ops.midpoints = ops.edges(1:end-1)*.5 + ops.edges(2:end)*.5;
+ops.search_range=[round(20/ops.BinWidth):round(380/ops.BinWidth)];
 %ops.trials = find(data.trial_gain ==1 & data.trial_contrast==100);
 ops.TimeBin = 0.02;
 ops.plotfig = false;
 
 ops.smoothSigma = 4;
 ops.maxLag = 20; % in cm
+ops.filter = gausswin(11);
+ops.filter = ops.filter/sum(ops.filter);
 
 %%
-[filenames,triggers] = getFilesCriteria('ECT',100,0.8,'F:/NP_DATA');
-savepath = 'F:/temp/tbtxcorr';
+[filenames,triggers] = getFilesCriteria('VISp',100,0.8,'F:/NP_DATA');
+savepath = 'F:/temp/tbtxcorr05';
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 %%
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     
     
@@ -37,23 +40,51 @@ for iF=1:numel(filenames)
         end
         
         
+        ops_here = ops;
+        %calculate spatial firing rate
+        ops_here.trials = triggers{iF}(iRep)+[-10:-1];
+        pp=findPeakFiringRate(data,ops_here);
+        ops_here.trials=triggers{iF}(iRep)+[-6:9];
+
+        %find max location for each cell
+        nC=numel(pp.region);
+        window=[-9:10];
+        window_length = numel(window);
+        bins2correlate = zeros(nC,window_length);
+        for ii=1:nC
+            bins2correlate(ii,:)=pp.maxBin_index(ii)+window;
+        end
         
-        ops.trials=triggers{iF}(iRep)+[-6:9];
-        [corrMat,shiftMat,stability]=calculateTrialByTrialXCorr(data,ops);
+        %calculate trial by trial correlation across all bins
+        [corrMat,shiftMat,stability]=calculateTrialByTrialXCorr(data,ops_here);
+        
+        %calculate trial by trial correlation around max locations
+        [corrMatPartial,shiftMatPartial,stabilityPartial]=calculateTrialByTrialXCorr(data,ops_here,bins2correlate);
+
         data_out.corrMat = corrMat;
         data_out.shiftMat = shiftMat;
+        data_out.corrMatPartial = corrMatPartial;
+        data_out.shiftMatPartial = shiftMatPartial;
+        data_out.bins2correlate = bins2correlate;
+        data_out.speedMat = pp.speedMat;
+        data_out.maxInd = pp.maxBin_index;
+        data_out.maxLoc = pp.maxLoc;
+        data_out.depth = pp.depth;
+        data_out.region = pp.region;
+        data_out.subregion = pp.subregion;
         stability2 = nanmean(nanmean(corrMat(:,1:6,1:6),3),2);
         data_out.stability = stability2;
 
         data_out.region = reg(data.sp.cgs==2);
+        data_out.trials = ops_here.trials;
     end
 end
 
 %%
-region = 'ECT';
+region = 'VISp';
 
 %shift_dir = sprintf('Z:/giocomo/attialex/images/xcorrv9/%s_0.80_100',region);
-matfiles = dir('F:\temp\tbtxcorr\*.mat');
+matfiles = dir('F:\temp\tbtxcorr05\*.mat');
 allM = [];
 allM_MEC=[];
 allS = [];
@@ -72,7 +103,7 @@ for iF=1:numel(matfiles)
 %             continue
 %         end
         cntr = cntr+1;
-        tmp=squeeze(nanmean(data_out.corrMat(idx,:,:)));
+        tmp=squeeze(nanmean(data_out.corrMatPartial(idx,:,:)));
         ff=tmp(7:16,1:6);
         similarity_score(end+1) = mean(ff(:));
         

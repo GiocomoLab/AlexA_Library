@@ -1,4 +1,4 @@
-function data_out = compare_speedShift_gainShift(data,ops)
+function data_out = compare_speedShift_gainShift(data,ops,shift_data_path)
 if isfield(data.anatomy,'parent_shifted')
     reg = data.anatomy.parent_shifted;
 else
@@ -75,19 +75,33 @@ if nClu ~= numel(good_cells) % in case there are 'good cells' that don't have a 
     end
 end
 
-[speed,~]=calcSpeed(data.posx,ops);
+[speed,speed_raw]=calcSpeed(data.posx,ops);
 ops_tmp = ops; 
 ops_tmp.trials=ops.trials(ops.bl_pre); % to exclude gain trials
+if nargin == 2 || isempty(shift_data_path)
 [data_shift,~] = findBestShifts(data,ops); %align posx
 [~,mi]=max(data_shift.all_stability,[],2);
 factors = ops.factors(mi);
+speed = conv(speed_raw,ops.filter,'same');
 
+else
+    pn = fileparts(shift_data_path);
+    pp = load(fullfile(pn,'parameters.mat'));
+    a=load(shift_data_path);
+    factors = nanmean(a.all_factors);
+    if nClu ~=numel(factors)
+        only_good = ismember(a.CID,uClu);
+        factors = factors(only_good);
+    end
+    speed = conv(speed_raw,pp.ops.filter,'same'); %make sure speed is filtered same was as to calculate for shifts
+    
+end
 
 [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
 spMapShifted = shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,factors);
 
-[a,b]=spMapXcorr(spMapBL,10,ops.BinWidth);
-[ahat,bhat]=spMapXcorr(spMapShifted,10,ops.BinWidth);
+[a,b]=spMapXcorr(spMapBL(:,ops.idx,:),ops.maxLag,ops.BinWidth);
+[ahat,bhat]=spMapXcorr(spMapShifted(:,ops.idx,:),ops.maxLag,ops.BinWidth);
 nC=size(spMapBL,3);
 similarity = nan(nC,1);
 idx_sim = triu(true(10),1);

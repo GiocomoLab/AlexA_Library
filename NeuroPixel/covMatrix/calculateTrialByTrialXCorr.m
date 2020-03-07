@@ -1,11 +1,19 @@
-function [corrMat,shiftMat,stability]=calculateTrialByTrialXCorr(data,ops)
+function [corrMat,shiftMat,stability]=calculateTrialByTrialXCorr(data,ops,bins2correlate)
 %extract spatial maps
-
+if nargin ==2
+    bins2correlate = 1:ops.nBins;
+end
+nCells = nnz(data.sp.cgs==2);
+if isvector(bins2correlate)
+    if iscolumn(bins2correlate)
+        bins2correlate=bins2correlate';
+    end
+    bins2correlate = repmat(bins2correlate,nCells,1);
+end
 %trials = trials(trial_gain == 1 & trial_contrast == 100);
 spatialMap=[];
 dwell_time=[];
-edges=[0:ops.BinWidth:400];
-edges(1)=-.01;
+edges=ops.edges;
 trials = ops.trials;
 data.posx(data.posx<0)=0;
 data.posx(data.posx>=400)=399.00;
@@ -30,7 +38,8 @@ dt=reshape(dt,[1 size(dt,1),size(dt,2)]);
 for ii=1:size(spatialMap,1)
     spatialMap(ii,:,:)=spatialMap(ii,:,:)./dt;
 end
-spatialMap(isnan(spatialMap))=0;
+%spatialMap(isnan(spatialMap))=0;
+spatialMap = fillmissing(spatialMap,'pchip',2);
 smoothSigma = ops.smoothSigma/ops.BinWidth;
 smoothWindow = floor(smoothSigma*5/2)*2+1;
 gauss_filter = fspecial('gaussian',[smoothWindow 1], smoothSigma);
@@ -45,11 +54,15 @@ spatialMap = sPF;
 
 
 idx = (triu(true(numel(ops.trials)),1));
-stability = zeros(1,size(spatialMap,1));
+stability = nan(1,size(spatialMap,1));
 for ii=1:numel(stability)
-    tmp = squeeze(spatialMap(ii,:,:));
+    if any(isnan(bins2correlate(ii,:)))
+        continue
+        
+    end
+    tmp = squeeze(spatialMap(ii,bins2correlate(ii,:),:));
     tmp = corr(tmp);
-    stability(ii)=mean(tmp(idx));
+    stability(ii)=nanmean(tmp(idx));
 end
 
 
@@ -59,10 +72,15 @@ corrMat = nan(numel(stability),numel(trials),numel(trials));
 shiftMat = nan(numel(stability),numel(trials),numel(trials));
 shift_all = -ops.maxLag:ops.BinWidth:ops.maxLag;
 for cellIDX = 1:size(spatialMap,1)
+    if any(isnan(bins2correlate(cellIDX,:)))
+        continue
+        
+    end
     
     mS=squeeze(spatialMap(cellIDX,:,:));
     
     mS=mS-mean(mS);
+    mS = mS(bins2correlate(cellIDX,:),:);
     %mS=zscore(mS);
     %%
     [xcorr_this,~]=xcorr(mS,'coeff',ops.maxLag/ops.BinWidth);
