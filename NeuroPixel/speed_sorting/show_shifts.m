@@ -1,6 +1,8 @@
 %% struct_names
-dataset = 'smallbin';
-path = ['Z:\giocomo\attialex\speed_' dataset];
+OAK='/oak/stanford/groups/giocomo/';
+
+dataset = 'filtered_new_11binfilt';
+path = fullfile(OAK,'attialex',['speed_' dataset]);
 filenames = dir(fullfile(path,'*.mat'));
 
 %% 
@@ -8,14 +10,18 @@ filenames = dir(fullfile(path,'*.mat'));
 STABILITY = struct();
 
 for iF=1:numel(filenames)
-    try
-    filename=filenames(iF).name;
+        filename=filenames(iF).name;
+
+    if startsWith(filename,'para')
+        continue
+    end
     a=load(fullfile(path,filename));
     [unique_regions,~,ridx]=unique(a.region);
     for iR=1:numel(unique_regions)
-        
+        try
         r=unique_regions{iR};
         iidx = ridx==iR;
+        factors = nanmean(a.all_factors)';
         if startsWith(r,'RS')
             r='RSC';
         end
@@ -24,16 +30,17 @@ for iF=1:numel(filenames)
         end
         try
         if ismember(r,fieldnames(STABILITY))
-        STABILITY.(r) = cat(1,STABILITY.(r),a.stability(iidx,:));
+        STABILITY.(r) = cat(1,STABILITY.(r),factors(iidx));
         else
-            STABILITY.(r)=a.stability(iidx,:);
+            STABILITY.(r)=factors(iidx);
         end
         catch ME
             disp(ME.message)
         end
-    end
+    
     catch ME
         disp(ME.message)
+        end
     end
         
 end
@@ -42,22 +49,18 @@ end
 ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
 fn = fieldnames(STABILITY);
-fn = {'MEC','VISp'};
+fn = {'RSC'};
 histfig=figure;
 for iF=1:numel(fn)
     dat = STABILITY.(fn{iF});
-    figure
-    [ma,mi]=max(dat,[],2);
-    %idx = ma>0.1; %correlaton at 0 lag
-    idx = dat(:,26)>0.2;
-    plot(ops.factors(mi),ma,'.')
+    
     figure(histfig)
     subplot(1,2,1)
     hold on
-    histogram(ops.factors(mi(idx)),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
+    histogram(dat,'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
     subplot(1,2,2)
     hold on
-    [f,xi]=ksdensity(ops.factors(mi(idx)));
+    [f,xi]=ksdensity(dat);
     plot(xi,f)
 end
     legend(fn)

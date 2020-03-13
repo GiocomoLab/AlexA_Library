@@ -58,8 +58,11 @@ for iT=1:numel(trial_sorted)
 end
 
 [speed,speed_raw]=calcSpeed(data.posx,ops);
-if ~isempty(ops.filter)
-    speed_raw = conv(speed_raw,ops.filter,'same');
+if ~isfield(ops,'speed_filter')
+    ops.speed_filter = ops.filter;
+end
+if ~isempty(ops.speed_filter)
+    speed_raw = conv(speed_raw,ops.speed_filter,'same');
 end
 % speed_raw = speed;
 % occupancy matrix
