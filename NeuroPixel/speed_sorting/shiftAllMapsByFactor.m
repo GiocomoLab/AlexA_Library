@@ -2,6 +2,15 @@ function spMatHat = shiftAllMapsByFactor(ops,clus,st,nClu,posx,post,trial_sorted
 nTrials = numel(ops.trials);
 spMatHat = zeros(nTrials,ops.nBins,nClu);
 
+        
+        
+        
+        if ~isempty(ops.filter)
+            if iscolumn(ops.filter)
+                ops.filter = ops.filter'; % make sure filtering goes along correct dimension!
+            end
+        end
+
 if numel(factor)==1
     %one factor for all maps
     % occupancy matrix
@@ -42,8 +51,11 @@ if numel(factor)==1
         %divide by occupancy
         
         tmpMat = tmpMat./OCC;
-        tmpMat(isnan(tmpMat))=0;
+        tmpMat = fillmissing(tmpMat,'pchip',2);
+        %tmpMat(isnan(tmpMat))=0;
         iidx = (size(tmpMat,2)+1):(2*size(tmpMat,2));
+        
+        
         
         if ~isempty(ops.filter)
             spF = [tmpMat tmpMat tmpMat];
@@ -95,7 +107,7 @@ else
         %divide by occupancy
         
         tmpMat = tmpMat./OCC;
-        tmpMat(isnan(tmpMat))=0;
+        tmpMat = fillmissing(tmpMat,'pchip',2);
         iidx = (size(tmpMat,2)+1):(2*size(tmpMat,2));
         
         if ~isempty(ops.filter)
