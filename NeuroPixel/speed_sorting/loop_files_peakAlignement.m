@@ -21,7 +21,7 @@ ops.idx = ops.search_range;% in bins, for calculating corr
 
 OAK='/oak/stanford/groups/giocomo/';
 
-ops_shifts.factors = -.55:0.01:.55;
+ops_shifts.factors = -1:0.01:1;
 ops_shifts.edges = 0:1:400;
 ops_shifts.nBins = numel(ops_shifts.edges)-1;
 
@@ -29,7 +29,7 @@ ops_shifts.nBins = numel(ops_shifts.edges)-1;
 ops_shifts.trials = 3:20;
 ops_shifts.TimeBin = 0.02;
 ops_shifts.idx = [10:1:390]/1;% in bins
-fi = gausswin(11);
+fi = gausswin(5);
 fi=fi'/sum(fi);
 ops_shifts.filter = fi;
 ops_shifts.plotfig = false;
@@ -48,9 +48,9 @@ ops.ops_shifts = ops_shifts;
 % end
 gain = 0.8;
 contrast = 100;
-region = 'VISp';
+region = 'MEC';
 [filenames,triggers] = getFilesCriteria(region,contrast,gain,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-savepath='/oak/stanford/groups/giocomo/attialex/images_peak10Trials';
+savepath='/oak/stanford/groups/giocomo/attialex/images_peakLong_gausswin_5';
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -188,199 +188,3 @@ end
 save(fullfile(savepath,region),'output')
 
 %%
-
-FAST =[];
-SLOW=[];
-GAIN = [];
-STAB=[];
-FACT = [];
-reg= [];
-order = [1,2];
-for iF=1:size(output,1)
-    for iRep=1:2
-    if isempty(output{iF}{iRep})
-        disp('help')
-        continue
-    end
- 
-    FAST =cat(1,FAST,output{iF}{iRep}.all_fast);
-    SLOW = cat(1,SLOW,output{iF}{iRep}.all_slow);
-    GAIN = cat(1,GAIN,output{iF}{iRep}.all_gain);
-    STAB = cat(1,STAB,output{iF}{iRep}.similarity);
-    FACT = cat(1,FACT,output{iF}{order(iRep)}.factors');
-    reg = cat(2,reg,output{iF}{iRep}.region);
-    end
-end
-
-
-figure
-idx = STAB>.4 & ismember(reg,'VISp')';
-med_fact = nanmedian(FACT(idx));
-
-idx_1 = idx & FACT<-.1;
-idx_2 = idx & FACT>-0.05;
-subplot(2,1,1)
-plot(x_vec,nanmean(FAST(idx_1,:)))
-hold on
-plot(x_vec,nanmean(SLOW(idx_1,:)));
-plot(x_vec,nanmean(GAIN(idx_1,:)))
-legend({'fast','slow','gain'})
-grid on
-box off
-title('delayed cells')
-subplot(2,1,2)
-plot(x_vec,nanmean(FAST(idx_2,:)))
-hold on
-plot(x_vec,nanmean(SLOW(idx_2,:)));
-plot(x_vec,nanmean(GAIN(idx_2,:)))
-legend({'fast','slow','gain'})
-grid on
-box off
-title('non delayed cells')
-%% mean across all cells
-FAST =[];
-SLOW=[];
-GAIN = [];
-STAB=[];
-FACT = [];
-reg= [];
-DCORR=[];
-for iF=1:size(output,1)
-    
-    
-    for iRep = 1:2
-        if ~isempty(output{iF}{iRep})
-            FAST =cat(1,FAST,output{iF}{iRep}.all_fast);
-            SLOW = cat(1,SLOW,output{iF}{iRep}.all_slow);
-            GAIN = cat(1,GAIN,output{iF}{iRep}.all_gain);
-            STAB = cat(1,STAB,output{iF}{iRep}.stability);
-            FACT = cat(1,FACT,output{iF}{iRep}.factors');
-            reg = cat(2,reg,output{iF}{iRep}.region);
-            tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
-            DCORR = cat(1,DCORR,(tmp'));
-        end
-    end
-end
-
-
-figure
-region = 'VISp';
-idx = STAB>.5 & startsWith(reg,region)';
-idx = DCORR<0 & startsWith(reg,region)' & STAB>.4;
-boundedline(x_vec,nanmean(FAST(idx,:)),nanstd(FAST(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha','cmap',[0 0 0])
-hold on
-%plot(x_vec,nanmean(FAST))
-boundedline(x_vec,nanmean(SLOW(idx,:)),nanstd(SLOW(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha')
-boundedline(x_vec,nanmean(GAIN(idx,:)),nanstd(GAIN(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha','cmap',get_color(gain,100))
-legend({'fast','slow','gain'})
-set(gcf,'Renderer','Painters')
-grid on
-box off
-%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s.pdf',region))
-%% mean across site
-FAST =[];
-SLOW=[];
-GAIN = [];
-STAB=[];
-FACT = [];
-DCORR = [];
-reg= [];
-region = 'VISp';
-
-for iF=1:size(output,1)
-    if isempty(output{iF})
-        continue
-    end
-    if numel(output{iF}{1}.stability) ~= numel(output{iF}{1}.region)
-        disp(iF)
-        continue
-    end
-    for iRep =1:2
-        if ~isempty(output{iF}{iRep})
-            idx_region = startsWith(output{iF}{iRep}.region,region)';
-            idx = output{iF}{iRep}.similarity>.4 & startsWith(output{iF}{iRep}.region,region)';
-            if nnz(idx)>2 && nnz(idx)/nnz(idx_region)>.2
-                sel_reg = mean(output{iF}{iRep}.similarity(idx));
-
-                FAST =cat(1,FAST,nanmean(output{iF}{iRep}.all_fast(idx,:),1));
-                SLOW = cat(1,SLOW,nanmean(output{iF}{iRep}.all_slow(idx,:),1));
-                GAIN = cat(1,GAIN,nanmean(output{iF}{iRep}.all_gain(idx,:),1));
-                tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
-                DCORR = cat(1,DCORR,nanmean(tmp(idx)));
-            end
-        end
-    end
-end
-
-
-figure('Position',[1356         405         475         525])
-subplot(4,1,[1 2 3])
-boundedline(x_vec,nanmean(FAST),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',[0 0 0])
-hold on
-%plot(x_vec,nanmean(FAST))
-boundedline(x_vec,nanmean(SLOW),nanstd(SLOW)/sqrt(size(FAST,1)),'alpha')
-boundedline(x_vec,nanmean(GAIN),nanstd(GAIN)/sqrt(size(FAST,1)),'alpha','cmap',get_color(gain,100))
-title(region)
-
-legend({'fast','slow','gain'})
-set(gcf,'Renderer','Painters')
-grid on
-box off
-subplot(4,1,4)
-plotSpread(DCORR,'xyOri','flipped')
-title('Change in Correlation testset')
-%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
-
-%%
-FAST =[];
-SLOW=[];
-GAIN = [];
-STAB=[];
-FACT = [];
-DCORR = [];
-reg= [];
-region = 'VISp6';
-
-for iF=1:size(output,1)
-    if isempty(output{iF})
-        continue
-    end
-    if numel(output{iF}{1}.stability) ~= numel(output{iF}{1}.region)
-        disp(iF)
-        continue
-    end
-    for iRep =1:2
-        if ~isempty(output{iF}{iRep})
-            idx_region = startsWith(output{iF}{iRep}.subregion,region)';
-            idx = output{iF}{iRep}.similarity>.4 & startsWith(output{iF}{iRep}.subregion,region)';
-            if nnz(idx)>2 && nnz(idx)/nnz(idx_region)>.2
-                sel_reg = mean(output{iF}{iRep}.similarity(idx));
-
-                FAST =cat(1,FAST,nanmean(output{iF}{iRep}.all_fast(idx,:),1));
-                SLOW = cat(1,SLOW,nanmean(output{iF}{iRep}.all_slow(idx,:),1));
-                GAIN = cat(1,GAIN,nanmean(output{iF}{iRep}.all_gain(idx,:),1));
-                tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
-                DCORR = cat(1,DCORR,nanmean(tmp(idx)));
-            end
-        end
-    end
-end
-
-
-figure('Position',[1356         405         475         525])
-subplot(4,1,[1 2 3])
-boundedline(x_vec,nanmean(FAST),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',[0 0 0])
-hold on
-%plot(x_vec,nanmean(FAST))
-boundedline(x_vec,nanmean(SLOW),nanstd(FAST)/sqrt(size(FAST,1)),'alpha')
-boundedline(x_vec,nanmean(GAIN),nanstd(FAST)/sqrt(size(FAST,1)),'alpha','cmap',get_color(gain,100))
-title(region)
-
-legend({'fast','slow','gain'})
-set(gcf,'Renderer','Painters')
-grid on
-box off
-subplot(4,1,4)
-plotSpread(DCORR,'xyOri','flipped')
-title('Change in Correlation testset')
-%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))

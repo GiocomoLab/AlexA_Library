@@ -1,4 +1,4 @@
-function [corrMat,shiftMat,stability]=calculateTrialByTrialXCorr(data,ops,bins2correlate)
+function [corrMat,shiftMat,stability,spatialMap]=calculateTrialByTrialXCorr(data,ops,bins2correlate)
 %extract spatial maps
 if nargin ==2
     bins2correlate = 1:ops.nBins;

@@ -1,3 +1,7 @@
+x_vec =-20/ops.BinWidth:1:20/ops.BinWidth;
+gain = 0.8;
+contrast = 100;
+
 
 %% mean across all cells
 FAST =[];
@@ -9,6 +13,7 @@ DEPTH = [];
 reg= [];
 DCORR=[];
 BLCORR = [];
+CORR=[];
 for iF=1:size(output,1)
     
     
@@ -23,6 +28,7 @@ for iF=1:size(output,1)
             tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
             DCORR = cat(1,DCORR,(tmp'));
             BLCORR = cat(1,BLCORR,output{iF}{iRep}.correlation_noshift');
+            CORR=cat(1,CORR,output{iF}{iRep}.factors_all);
             tmp = output{iF}{iRep}.depth;
             if isrow(tmp)
                 tmp = tmp';
@@ -37,7 +43,7 @@ end
 figure
 region = 'VISp';
 idx = STAB>.5 & startsWith(reg,region)';
-idx = DCORR>0 & startsWith(reg,region)' & STAB>.4 & FACT<-.1;
+idx = DCORR>0 & startsWith(reg,region)';
 boundedline(x_vec,nanmean(FAST(idx,:)),nanstd(FAST(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha','cmap',[0 0 0])
 hold on
 %plot(x_vec,nanmean(FAST))
@@ -48,6 +54,10 @@ set(gcf,'Renderer','Painters')
 grid on
 box off
 title(region)
+%%
+figure
+idx = DCORR>0 & startsWith(reg,region)' & STAB>.4 & FACT<=-.99;
+plot(ops.ops_shifts.factors,(CORR(idx,:))')
 %%
 f=figure();
 f.Name = region;
@@ -89,6 +99,9 @@ scatter(FACT(idx),DCORR(idx))
 xlabel('Factor')
 ylabel('Diff')
 grid on
+figure
+histogram(FACT(idx))
+%scatter(FACT(idx),DEPTH(idx),15,DCORR(idx),'.')
 %saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s.pdf',region))
 %% mean across site
 FAST =[];
@@ -98,7 +111,7 @@ STAB=[];
 FACT = [];
 DCORR = [];
 reg= [];
-region = 'VISp';
+region = 'MEC';
 
 for iF=1:size(output,1)
     if isempty(output{iF})
@@ -144,7 +157,8 @@ box off
 subplot(4,1,4)
 plotSpread(DCORR,'xyOri','flipped')
 title('Change in Correlation testset')
-saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
+%saveas(gcf,sprintf('/oak/stanford/groups/giocomo/attialex/FIGURES/peaks_%s_new.pdf',region))
+
 
 %%
 FAST =[];

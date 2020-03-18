@@ -16,7 +16,7 @@ ops.plotfig = false;
 ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_new_5binfilt');
+savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -43,9 +43,9 @@ mf.ops = ops;
 % end
 
 gain = 0.8;
-contrast = 100;
+contrast = 10;
 region = 'VISp';
-regions = {'VISp','RS','MEC'};
+regions = {'VISp'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -76,30 +76,62 @@ parfor iF=1:numel(filenames)
     try
         data = load(filenames{iF});
         ops_temp = ops;
-        bl_trials = 1:numel(data.trial_contrast);
-        bl_trials = bl_trials(data.trial_contrast==100 & data.trial_gain==1);
-        not_done = true;
-        start=1;
-        good_starts = [];
-        while not_done
-            t_vec = start:(start+ops.n_trials-1);
-            if all(ismember(t_vec,bl_trials))
-                good_starts(end+1)=start;
-                start=start+ops.n_trials;
-            else
-                start=start+1;
-            end
-            if start>max(bl_trials)
-                not_done = false;
-            end
+        
+        good_chunks = {};
+        chunk_contrast = [];
+        current_chunk = 1;
+        chunk_size = [];
+        tmp = [];
+        current_contrast = data.trial_contrast(1);
+        current_gain = data.trial_gain(1);
+        start_new = false;
+        for iT = 1:numel(data.trial_gain)
+            bl_gain = data.trial_gain(iT) ==1;
+            old_contrast = current_contrast;
+            current_contrast = data.trial_contrast(iT);
+
+            contrast_switch = current_contrast ~= old_contrast;
             
+            old_gain = current_gain;
+            current_gain= data.trial_gain(iT);
+            gain_switch = old_gain ~= current_gain;
+            
+            
+            if ~contrast_switch && bl_gain && ~gain_switch % add to list
+                tmp(end+1)=iT;
+            elseif contrast_switch %end of chunk
+                %sprintf('contrast_switch at %d',iT)
+                good_chunks{current_chunk}=tmp;
+                chunk_size(current_chunk)=numel(tmp);
+                chunk_contrast(current_chunk)=old_contrast;
+                start_new = true;
+            elseif gain_switch && ~bl_gain
+                %sprintf('gain_switch at %d',iT)
+                
+                    good_chunks{current_chunk}=tmp;
+                    chunk_size(current_chunk)=numel(tmp);
+                    chunk_contrast(current_chunk)=current_contrast;
+
+            elseif gain_switch && bl_gain
+                %sprintf('gain_switch at %d',iT)
+                start_new = true;
+            end
+            if start_new
+                tmp=[];
+                tmp(end+1)=iT;
+                current_chunk = current_chunk+1;
+                start_new = false;
+            end
+
         end
+            
+    
         nC=nnz(data.sp.cgs==2);
-        all_factors = nan(numel(good_starts),nC);
+        all_factors = nan(numel(good_chunks),nC);
         all_stability = all_factors;
         %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
-        for iRep=1:numel(good_starts)
-            ops_temp.trials = good_starts(iRep)+[0:ops_temp.n_trials-1];
+        for iRep=1:numel(good_chunks)
+            ops_temp.trials = good_chunks{iRep};
             [data_out,fighandles] = findBestShifts(data,ops_temp);
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
@@ -113,7 +145,8 @@ parfor iF=1:numel(filenames)
         mf.subregion = data_out.sub_reg;
         mf.depth = data_out.depth;
         mf.CID = data_out.CID;
-        mf.start_idx = good_starts;
+        mf.start_idx = good_chunks;
+        mf.chunk_contrast = chunk_contrast;
         mf.all_factors = all_factors;
         mf.all_stability = all_stability;
     catch ME

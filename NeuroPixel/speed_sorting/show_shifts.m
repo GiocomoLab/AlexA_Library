@@ -8,14 +8,18 @@ filenames = dir(fullfile(path,'*.mat'));
 FACTOR = struct();
 DEPTH = struct();
 for iF=1:numel(filenames)
-    try
-    filename=filenames(iF).name;
+        filename=filenames(iF).name;
+
+    if startsWith(filename,'para')
+        continue
+    end
     a=load(fullfile(path,filename));
     [unique_regions,~,ridx]=unique(a.region);
     for iR=1:numel(unique_regions)
-        
+        try
         r=unique_regions{iR};
         iidx = ridx==iR;
+        factors = nanmean(a.all_factors)';
         if startsWith(r,'RS')
             r='RSC';
         end
@@ -23,21 +27,18 @@ for iF=1:numel(filenames)
             r='VISp';
         end
         try
-            tmp = nanmean(a.all_factors);
-            tmp_stab = nanmean(a.all_stability);
-        if ismember(r,fieldnames(FACTOR))
-        FACTOR.(r) = cat(2,FACTOR.(r),[tmp(iidx);tmp_stab(iidx)]);
-        DEPTH.(r) = cat(2,DEPTH.(r),a.depth(iidx));
+        if ismember(r,fieldnames(STABILITY))
+        STABILITY.(r) = cat(1,STABILITY.(r),factors(iidx));
         else
-            FACTOR.(r)=[tmp(iidx);tmp_stab(iidx)];
-            DEPTH.(r) = a.depth(iidx);
+            STABILITY.(r)=factors(iidx);
         end
         catch ME
             disp(ME.message)
         end
-    end
+    
     catch ME
         disp(ME.message)
+        end
     end
         
 end
@@ -45,58 +46,19 @@ end
 %%
 ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
-fn = fieldnames(FACTOR);
-fn = {'MEC','VISp','RSC'};
+fn = fieldnames(STABILITY);
+fn = {'RSC'};
 histfig=figure;
 for iF=1:numel(fn)
-    dat = FACTOR.(fn{iF});
-    %figure
-    if ismember(fn{iF},{'MEC','ECT'})
-        mult = -1;
-    else
-        mult = 1;
-    end
-    %idx = ma>0.1; %correlaton at 0 lag
+    dat = STABILITY.(fn{iF});
     
-    tmp_fact = dat(1,:);
-    tmp_stab = dat(2,:);
-    idx = tmp_stab>0.2;
-    subplot(5,3,[1 4 7 10]+iF-1)
-    plot(tmp_fact(idx),DEPTH.(fn{iF})(idx)*mult,'.')
-    set(gca,'YDir','reverse')
-    title(fn{iF})
-    xlim([-.3 .3])
-    xlabel('speed correction lag [s]')
-    grid on
-    subplot(5,3,12+iF)
-    histogram(tmp_fact(idx),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5],'EdgeColor','none')
-    xlim([-.3 .3])
-    xlabel('speed correction lag [s]')
-end
-    
-   
-%%
-ops = load(fullfile(path,'parameters'));
-ops = ops.ops;
-fn = fieldnames(FACTOR);
-fn = {'MEC','VISp','RSC'};
-histfig=figure;
-for iF=1:numel(fn)
-    dat = FACTOR.(fn{iF});
-    %figure
-    
-    %idx = ma>0.1; %correlaton at 0 lag
-    
-    tmp_fact = dat(1,:);
-    tmp_stab = dat(2,:);
-    idx = tmp_stab>.1;
     figure(histfig)
     subplot(1,2,1)
     hold on
-    histogram(tmp_fact(idx),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
+    histogram(dat,'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
     subplot(1,2,2)
     hold on
-    [f,xi]=ksdensity(tmp_fact(idx));
+    [f,xi]=ksdensity(dat);
     plot(xi,f)
 end
     legend(fn)
