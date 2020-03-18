@@ -1,8 +1,9 @@
 %% struct_names
-dataset = 'shiftFilter_corrected';
+dataset = 'filtered_new_11binfilt';
+%dataset = 'filtered_new_5binfiltSpace_1binfiltSpeed';
 path = ['Z:\giocomo\attialex\speed_' dataset];
 filenames = dir(fullfile(path,'*.mat'));
-ops = load(fullfile(path,'parameters'));
+ops = load(fullfile(path,'parameters.mat'));
 ops = ops.ops;
 %% 
 
@@ -24,9 +25,10 @@ for iF=1:numel(filenames)
             r='VISp';
         end
         try
-            [ma,mi]=max(a.stability(iidx,:),[],2);
-            stab = a.stability(iidx,26);
-            tmp = [stab,mi,ones(size(ma))*iF];
+            dat = nanmean(a.all_factors(:,iidx))';
+            
+            stab = nanmean(a.all_stability(:,iidx))';
+            tmp = [stab,dat,ones(size(dat))*iF]; %stability, factors,recording_id
             
         if ismember(r,fieldnames(STABILITY))
         STABILITY.(r) = cat(1,STABILITY.(r),tmp);
@@ -51,8 +53,8 @@ for iR = 1:numel(reg)
     [a,b]=unique(data_this(:,3));
     averages  = zeros(size(a));
     for iP = 1:numel(a)
-        idx = data_this(:,3)==a(iP) & data_this(:,1)>.20;
-        averages(iP)=nanmean(ops.factors(data_this(idx,2)));
+        idx = data_this(:,3)==a(iP) & data_this(:,1)>.10;
+        averages(iP)=nanmean((data_this(idx,2)));
     end
     AV_ALL.(reg{iR}) = averages;
     AV{iR}=averages;
@@ -60,8 +62,8 @@ end
 %%
 figure
 data_this = STABILITY.VISp;
-idx = data_this(:,1)>.2;
-tmp = ops.factors(data_this(idx,2));
+idx = data_this(:,1)>.1;
+tmp = (data_this(idx,2));
 histogram(tmp,'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
 
 figure
@@ -69,9 +71,10 @@ plotSpread(AV)
 set(gca,'XTickLabel',reg,'XTickLabelRotation',90)
 
 %%
-reg = {'VISp','RSC','MEC','RHP'};
+reg = {'VISp','RSC','MEC','RHP','ECT'};
 [cb] = cbrewer('qual', 'Set3', 12, 'pchip');
 AV={};
+AV_ALL={};
 figure
 for iR = 1:numel(reg)
     subplot(numel(reg),1,iR)
@@ -79,8 +82,8 @@ for iR = 1:numel(reg)
     [a,b]=unique(data_this(:,3));
     averages  = zeros(size(a));
     for iP = 1:numel(a)
-        idx = data_this(:,3)==a(iP) & data_this(:,1)>.20;
-        averages(iP)=nanmean(ops.factors(data_this(idx,2)));
+        idx = data_this(:,3)==a(iP) & data_this(:,1)>.1;
+        averages(iP)=nanmean((data_this(idx,2)));
     end
     AV_ALL.(reg{iR}) = averages;
     AV{iR}=averages;

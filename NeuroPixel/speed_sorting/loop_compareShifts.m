@@ -17,7 +17,7 @@ ops.maxLag = 20; % in cm
 %%
 gain = 0.8;
 contrast = 100;
-region = 'VISp';
+region = 'MEC';
 [filenames,triggers] = getFilesCriteria(region,contrast,gain,'F:/NP_DATA');
 %%
 p=gcp('nocreate');
@@ -56,8 +56,10 @@ allM=[];
 allS=[];
 allMHat = [];
 allSHat = [];
-region = 'VISp';
+region = 'MEC';
 DEPTH =[] ;
+cntr = 0;
+STAB = [];
 for iF=1:numel(output)
     if isempty(output{iF})
         continue
@@ -71,10 +73,17 @@ for iF=1:numel(output)
         data_out = output{iF}{iRep};
         dcorr = data_out.correlation_shifted - data_out.correlation_noshift;
         idx_region  = startsWith(data_out.region,region);
-        idx = data_out.similarity>.4 & startsWith(data_out.region,region)';% & dcorr'>0;
+        bl_pre = ops.similarity_trials(1:6);
+        similarity = nanmean(nanmean(data_out.corrMat(:,bl_pre,bl_pre),2),3);
+        idx = similarity>.4 & startsWith(data_out.region,region)';% & dcorr'>0;
+        if any(startsWith(data_out.region,region))
+            cntr = cntr+1;
+        end
         if nnz(idx)>2 && nnz(idx)/nnz(idx_region)>.2
-
-            tmp = squeeze(nanmean(data_out.corrMat(idx,:,:)));  
+            
+            tmp = squeeze(nanmean(data_out.corrMat(idx,:,:))); 
+            stability_score = mean(tmp(ops.gain_trials,ops.gain_trials),'all');
+            STAB=cat(1,STAB,stability_score);
             tmpS = squeeze(nanmean(data_out.shiftMat(idx,:,:)));
             allM=cat(3,allM,tmp);
             allS = cat(3,allS,tmpS);

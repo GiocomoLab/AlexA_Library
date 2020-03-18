@@ -100,7 +100,7 @@ end
 [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
 spMapShifted = shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,factors);
 
-[a,b]=spMapXcorr(spMapBL(:,ops.idx,:),ops.maxLag,ops.BinWidth);
+[a,b]=spMapXcorr                          (spMapBL(:,ops.idx,:),ops.maxLag,ops.BinWidth);
 [ahat,bhat]=spMapXcorr(spMapShifted(:,ops.idx,:),ops.maxLag,ops.BinWidth);
 nC=size(spMapBL,3);
 similarity = nan(nC,1);
