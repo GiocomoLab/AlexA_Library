@@ -1,12 +1,12 @@
 %% struct_names
-dataset = 'smallbin';
+dataset = 'filtered_new_11binfilt';
 path = ['Z:\giocomo\attialex\speed_' dataset];
 filenames = dir(fullfile(path,'*.mat'));
 
 %% 
 
-STABILITY = struct();
-
+FACTOR = struct();
+DEPTH = struct();
 for iF=1:numel(filenames)
     try
     filename=filenames(iF).name;
@@ -23,10 +23,14 @@ for iF=1:numel(filenames)
             r='VISp';
         end
         try
-        if ismember(r,fieldnames(STABILITY))
-        STABILITY.(r) = cat(1,STABILITY.(r),a.stability(iidx,:));
+            tmp = nanmean(a.all_factors);
+            tmp_stab = nanmean(a.all_stability);
+        if ismember(r,fieldnames(FACTOR))
+        FACTOR.(r) = cat(2,FACTOR.(r),[tmp(iidx);tmp_stab(iidx)]);
+        DEPTH.(r) = cat(2,DEPTH.(r),a.depth(iidx));
         else
-            STABILITY.(r)=a.stability(iidx,:);
+            FACTOR.(r)=[tmp(iidx);tmp_stab(iidx)];
+            DEPTH.(r) = a.depth(iidx);
         end
         catch ME
             disp(ME.message)
@@ -41,74 +45,108 @@ end
 %%
 ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
-fn = fieldnames(STABILITY);
-fn = {'MEC','VISp'};
+fn = fieldnames(FACTOR);
+fn = {'MEC','VISp','RSC'};
 histfig=figure;
 for iF=1:numel(fn)
-    dat = STABILITY.(fn{iF});
-    figure
-    [ma,mi]=max(dat,[],2);
+    dat = FACTOR.(fn{iF});
+    %figure
+    if ismember(fn{iF},{'MEC','ECT'})
+        mult = -1;
+    else
+        mult = 1;
+    end
     %idx = ma>0.1; %correlaton at 0 lag
-    idx = dat(:,26)>0.2;
-    plot(ops.factors(mi),ma,'.')
+    
+    tmp_fact = dat(1,:);
+    tmp_stab = dat(2,:);
+    idx = tmp_stab>0.2;
+    subplot(5,3,[1 4 7 10]+iF-1)
+    plot(tmp_fact(idx),DEPTH.(fn{iF})(idx)*mult,'.')
+    set(gca,'YDir','reverse')
+    title(fn{iF})
+    xlim([-.3 .3])
+    xlabel('speed correction lag [s]')
+    grid on
+    subplot(5,3,12+iF)
+    histogram(tmp_fact(idx),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5],'EdgeColor','none')
+    xlim([-.3 .3])
+    xlabel('speed correction lag [s]')
+end
+    
+   
+%%
+ops = load(fullfile(path,'parameters'));
+ops = ops.ops;
+fn = fieldnames(FACTOR);
+fn = {'MEC','VISp','RSC'};
+histfig=figure;
+for iF=1:numel(fn)
+    dat = FACTOR.(fn{iF});
+    %figure
+    
+    %idx = ma>0.1; %correlaton at 0 lag
+    
+    tmp_fact = dat(1,:);
+    tmp_stab = dat(2,:);
+    idx = tmp_stab>.1;
     figure(histfig)
     subplot(1,2,1)
     hold on
-    histogram(ops.factors(mi(idx)),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
+    histogram(tmp_fact(idx),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
     subplot(1,2,2)
     hold on
-    [f,xi]=ksdensity(ops.factors(mi(idx)));
+    [f,xi]=ksdensity(tmp_fact(idx));
     plot(xi,f)
 end
     legend(fn)
     xlabel('speed correction lag [s]')
     
 %%
-fn = fieldnames(STABILITY);
+fn = fieldnames(FACTOR);
 
-N = zeros(numel(fn));
+N = zeros(numel(fn),1);
 for iF=1:numel(fn)
-    N(iF)=size(STABILITY.(fn{iF}),1);
+    N(iF)=size(FACTOR.(fn{iF}),2);
 end
 
 [a,sid]=sort(N,'descend');
 figure
 for iF=1:5
     
-    dat = STABILITY.(fn{sid(iF)});
+    dat = FACTOR.(fn{sid(iF)});
     subplot(5,2,iF*2)
-    
-    [ma,mi]=max(dat,[],2);
-    %idx = ma>0.01;
-     idx = dat(:,26)>0.2;
-    plot(ops.factors(mi),ma,'.')
+    idx = dat(2,:)>.1;
+   
+%     %idx = ma>0.01;
+%      idx = dat(:,26)>0.2;
+%     plot(ops.factors(mi),ma,'.')
     subplot(5,2,iF*2-1)
     hold on
-    histogram(ops.factors(mi(idx)),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
+    histogram(dat(1,idx),'Normalization','probability','BinEdges',[ops.factors-mean(diff(ops.factors))*.5])
         legend(fn{sid(iF)})
     xlabel('speed correction lag [s]')
 end
 %%
 [cb] = cbrewer('qual', 'Set3', 5, 'pchip');
 
-fn = fieldnames(STABILITY);
+fn = fieldnames(FACTOR);
 
-N = zeros(numel(fn));
+N = zeros(numel(fn),1);
 for iF=1:numel(fn)
-    N(iF)=size(STABILITY.(fn{iF}),1);
+    N(iF)=size(FACTOR.(fn{iF}),2);
 end
 
 [a,sid]=sort(N,'descend');
 figure('Position',[680   188   290   790])
 for iF=1:5
     
-    dat = STABILITY.(fn{sid(iF)});
-    subplot(5,1,iF)
+    dat = FACTOR.(fn{sid(iF)});
     
-    [ma,mi]=max(dat,[],2);
-    %idx = ma>0.01;
-     idx = dat(:,26)>0.2;
-    raincloud_plot(ops.factors(mi(idx)), 'box_on', 1, 'box_dodge', 1, 'box_dodge_amount',...
+    subplot(5,1,iF)
+    idx = dat(2,:)>.2;
+
+    raincloud_plot(dat(1,idx), 'box_on', 1, 'box_dodge', 1, 'box_dodge_amount',...
 .3, 'dot_dodge_amount', .3, 'color', cb(iF,:), 'cloud_edge_col', cb(iF,:),'line_width',1);
 title(fn{sid(iF)});
 set(gca, 'XLim', [-.2 .2]);
@@ -120,18 +158,15 @@ set(gcf,'Renderer','Painters')
     %%
     ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
-fn = fieldnames(STABILITY);
+fn = fieldnames(FACTOR);
 fn = {'MEC','VISp','RSC'};
 histfig=figure;
 DAT={};
 for iF=1:numel(fn)
-    dat = STABILITY.(fn{iF});
-    figure
-    [ma,mi]=max(dat,[],2);
-    %idx = ma>0.1; %correlaton at 0 lag
-    idx = dat(:,26)>0.2;
+    dat = FACTOR.(fn{iF});
     
-    DAT{iF}=ops.factors(mi(idx));
+    idx = dat(2,:)>0.1;
+    DAT{iF}=dat(1,idx);
 end
   
     figure
