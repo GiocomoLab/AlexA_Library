@@ -6,10 +6,10 @@ ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
 ops.TimeBin = 0.02;
 ops.idx = [10:ops.BinWidth:390]/ops.BinWidth;% in bins
-fi = gausswin(5);
+fi = gausswin(11);
 fi=fi'/sum(fi);
 ops.filter = fi;
-spfi = fi;
+spfi = gausswin(5)'/sum(gausswin(5));
 ops.speed_filter = spfi; 
 ops.n_trials = 10;
 ops.plotfig = false;
@@ -67,7 +67,7 @@ end
 %%
 zero_idx = find(ops.factors==0);
 
-parfor iF=1:2%numel(filenames)
+parfor iF=1:numel(filenames)
     [~,session_name]=fileparts(filenames{iF});
 
     if isfile(fullfile(savedir,[session_name '.mat']))
