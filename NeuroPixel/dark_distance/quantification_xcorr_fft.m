@@ -15,16 +15,18 @@ f_vec=[0 1./(800:-.5:10)];
 fi=gausswin(ops.filter)';
 ops.fi=fi/sum(fi);
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-savepath = '/oak/stanford/groups/giocomo/attialex/distance_codingfft2';
+%oak = '/oak/stanford/groups/giocomo/attialex';
+oak = 'F:';
+savepath = fullfile(oak,'/distance_codingfft3');
 %savepath = 'F:/temp/xcorrFFT';
 if ~isfolder(savepath)
     mkdir(fullfile(savepath,'data'))
     mkdir(fullfile(savepath,'images'))
 end
 
-%save(sprintf('%s/ops.mat',savepath),'ops')
+save(sprintf('%s/ops.mat',savepath),'ops')
 %%
-files = dir('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*dark*');
+files = dir(fullfile(oak,'/NP_DATA/np*dark*'));
 %files = dir('F:/NP_DATA/np*dark*');
 filenames={};
 for ii=1:numel(files)
@@ -33,13 +35,13 @@ end
 %%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(6);
+    parpool(4);
 end
 
 %%
 binsize=ops.binsize;
 
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         data = load(filenames{iF});
@@ -79,7 +81,8 @@ parfor iF=1:numel(filenames)
         [spM, dT]=getSpikeMatPosition(data.sp.st(idxNP),data.sp.clu(idxNP),distance,data.post(idxVR),'edges',edges,'max_clust',max(data.sp.clu)+1);
         
         spatialMap=bsxfun(@rdivide,spM(data.sp.cids+1,:,:),dT);
-        spatialMap(isnan(spatialMap))=0;
+        spatialMap = fillmissing(spatialMap,'pchip',2);
+        %spatialMap(isnan(spatialMap))=0;
         spatialMap = convn(spatialMap,ops.fi,'valid');
         
         
@@ -89,7 +92,8 @@ parfor iF=1:numel(filenames)
         good_cells = data.sp.cgs==2;
         depth = data.anatomy.tip_distance(good_cells);
         [~,sid]=sort(depth,'descend');
-        zSpatialMap = zscore(spatialMap(good_cells,:),0,[2]);
+        %zSpatialMap = zscore(spatialMap(good_cells,:),0,[2]);
+        zSpatialMap = spatialMap(good_cells,:)-mean(spatialMap(good_cells,:),2);
         clus = data.sp.cids(good_cells);
         firing_rate_units = zeros(1,numel(clus));
         max_time = max(data.sp.st);

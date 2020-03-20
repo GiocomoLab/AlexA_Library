@@ -122,12 +122,13 @@ end
 ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
 fn = fieldnames(FACTOR_HIGH);
-fn = {'VISp','MEC'};
+fn = {'VISp','MEC','RSC'};
 histfig=figure;
 lims=[-.4 .6];
+difference=cell(1,numel(fn));
 for iF=1:numel(fn)
     subplot(1,numel(fn),iF)
-    idx = STABILITY.(fn{iF})>.2;
+    idx = STABILITY.(fn{iF})>.4;
     scatter(FACTOR_HIGH.(fn{iF})(idx),FACTOR_LOW.(fn{iF})(idx))
     axis image
     xlim(lims)
@@ -135,17 +136,28 @@ for iF=1:numel(fn)
     grid on
     xlabel('shift high contrast')
     ylabel('shift low contrast')
+    difference{iF}=FACTOR_HIGH.(fn{iF})(idx)-FACTOR_LOW.(fn{iF})(idx);
 end
+
+figure
+ax = plotSpread(difference);
+for ii=1:numel(fn)
+    [p,h]=signrank(difference{ii});
+    fn{ii}=sprintf('%s: %.3f',fn{ii},p);
+end
+set(gca,'XTickLabel',fn)
+
 %%
 ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
 fn = fieldnames(FACTOR_HIGH);
-fn = {'VISp','MEC'};
+fn = {'VISp','MEC','RSC'};
 histfig=figure;
 lims=[-.4 .6];
+difference=cell(1,numel(fn));
 for iF=1:numel(fn)
     subplot(1,numel(fn),iF)
-    idx = STABILITY.(fn{iF})>.2;
+    idx = STABILITY.(fn{iF})>.4;
     [a,b,c]=unique(SITE.(fn{iF}));
     tmp_high=nan(numel(a),1);
     tmp_low = tmp_high;
@@ -155,6 +167,7 @@ for iF=1:numel(fn)
         tmp_low(iS) = nanmean(FACTOR_LOW.(fn{iF})(idx_s));
     end
     scatter(tmp_high,tmp_low)
+    difference{iF}=tmp_high-tmp_low;
     axis image
     xlim(lims)
     ylim(lims)
@@ -162,3 +175,11 @@ for iF=1:numel(fn)
     xlabel('shift high contrast')
     ylabel('shift low contrast')
 end
+
+figure
+ax = plotSpread(difference);
+for ii=1:numel(fn)
+    [p,h]=signrank(difference{ii});
+    fn{ii}=sprintf('%s: %.3f',fn{ii},p);
+end
+set(gca,'XTickLabel',fn)
