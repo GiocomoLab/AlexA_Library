@@ -15,8 +15,8 @@ f_vec=[0 1./(800:-.5:10)];
 fi=gausswin(ops.filter)';
 ops.fi=fi/sum(fi);
 % [filenames,triggers] = getFilesCriteria(ops.region,0,0,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
-%oak = '/oak/stanford/groups/giocomo/attialex';
-oak = 'F:';
+oak = '/oak/stanford/groups/giocomo/attialex';
+%oak = 'F:';
 savepath = fullfile(oak,'/distance_codingfft3');
 %savepath = 'F:/temp/xcorrFFT';
 if ~isfolder(savepath)
@@ -35,7 +35,7 @@ end
 %%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(4);
+    parpool(6);
 end
 
 %%
