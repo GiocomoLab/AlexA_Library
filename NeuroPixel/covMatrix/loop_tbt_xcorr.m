@@ -10,6 +10,9 @@ ops.plotfig = false;
 
 ops.smoothSigma = 4;
 ops.maxLag = 20; % in cm
+ops.matched_bl_range=[-16:-1];
+ops.trial_range = [-6:9];
+
 
 smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
@@ -28,8 +31,8 @@ for iR = 1:numel(regions)
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
-savepath = '/oak/stanford/groups/giocomo/attialex/tbtxcorr_2cmbinShift_speed5';
-shiftDir = fullfile(OAK,'attialex','speed_filtered_new_5binfilt');
+savepath = '/oak/stanford/groups/giocomo/attialex/tbtxcorr_with_baseline';
+shiftDir = fullfile(OAK,'attialex','speed_filtered_greedy3');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -60,9 +63,7 @@ parfor iF=1:numel(filenames)
         
         ops_here = ops;
         %calculate spatial firing rate
-        ops_here.trials = triggers{iF}(iRep)+[-10:-1];
         pp=findPeakFiringRate(data,ops_here);
-        ops_here.trials=triggers{iF}(iRep)+[-6:9];
         
         %find max location for each cell
         nC=numel(pp.region);
@@ -72,8 +73,26 @@ parfor iF=1:numel(filenames)
         for ii=1:nC
             bins2correlate(ii,:)=pp.maxBin_index(ii)+window;
         end
+        ops_here.trials=triggers{iF}(iRep)+ops.matched_bl_range;
+        
+        if ~all(data.trial_contrast(ops_here.trials)==contrast) || ~ all(data.trial_gain(ops_here.trials)==1)
+            disp('bl trials violating bl condition, skipping this rep')
+            continue
+        end
+        
+        [corrMatBL,shiftMatBL,~,~]=calculateTrialByTrialXCorr(data,ops_here);
+        
         
         %calculate trial by trial correlation across all bins
+        ops_here.trials=triggers{iF}(iRep)+ops.trial_range;
+        if ~all(data.trial_contrast(ops_here.trials)==contrast)
+            error('gain trials violating contrast condition')
+            
+        end
+        if ~all(data.trial_gain((0:3)+triggers{iF}(iRep))==gain)
+            error('gain trials wrong gain')
+            
+        end
         [corrMat,shiftMat,stability,spatialMap]=calculateTrialByTrialXCorr(data,ops_here);
         
         %calculate trial by trial correlation around max locations
@@ -141,7 +160,9 @@ parfor iF=1:numel(filenames)
         data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
 
         data_out.corrMat = corrMat;
+        data_out.corrMatBL = corrMatBL;
         data_out.shiftMat = shiftMat;
+        data_out.shiftMatBL = shiftMatBL;
         data_out.corrMatPartial = corrMatPartial;
         data_out.shiftMatPartial = shiftMatPartial;
         data_out.corrMatShifted = corrMatShifted;
@@ -165,10 +186,11 @@ parfor iF=1:numel(filenames)
 end
 
 %%
-region = 'VISp';
+region = 'MEC';
 
 %shift_dir = sprintf('Z:/giocomo/attialex/images/xcorrv9/%s_0.80_100',region);
-matfiles = dir(fullfile(savepath,'*.mat'));
+%matfiles = dir(fullfile(savepath,'*.mat'));
+matfiles = dir('/Volumes/Samsung_T5/tbtxcorr_2cmbinShift_speed5/*.mat')
 allCorrMat = [];
 allM_MEC=[];
 allShiftMat = [];
