@@ -44,7 +44,7 @@ ALL_SG = cat(2,ALL_SG,delta_sg);
 end
 %%
 figure
-idx = STABILITY>.2 & ismember(REGION,'VISp');
+idx = STABILITY>.2 & ismember(REGION,'MEC');
 plot(ALL_M(idx),ALL_PRED(idx),'.')
 xlabel('actual difference between peak loc')
 ylabel('predicted difference between peak loc')

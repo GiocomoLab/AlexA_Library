@@ -90,11 +90,17 @@ nClu = numel(a);
 
 [spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed_raw,0);
 
+firing_rate = nan(numel(good_cells,1));
+idxVR = ismember(data.trial,ops.trials);
+start_t = min(data.post(idxVR));
+stop_t = max(data.post(idxVR));
+duration = stop_t-start_t;
 
 for cellIDX=1:numel(good_cells)
     % extract spike times for this cell
     spike_id=data.sp.clu==good_cells(cellIDX);
     spike_t = data.sp.st(spike_id);
+    firing_rate(cellIDX)=sum(spike_t<stop_t & spike_t>start_t)/duration;
     % convert to VR idx
     [~,~,spike_idx] = histcounts(spike_t,data.post);
     posx=mod(data.posx,max(ops.edges));
@@ -205,5 +211,6 @@ data_out.region = reg;
 data_out.sub_reg = sub_reg;
 data_out.depth = depth;
 data_out.CID = good_cells;
+data_out.firing_rate = firing_rate;
 end
 
