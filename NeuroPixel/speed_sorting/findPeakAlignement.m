@@ -86,14 +86,15 @@ end
 
 ops_tmp = ops.ops_shifts;
 ops_tmp.trials=ops.trials(1:end-4); %only use pre gain trials
-[data_shift,fighandles] = findBestShifts(data,ops_tmp); %align posx
-[~,mi]=max(data_shift.all_stability,[],2);
-factors = ops_tmp.factors(mi);
-factors_all = data_shift.all_stability;
+% [data_shift,fighandles] = findBestShifts(data,ops_tmp); %align posx
+% [~,mi]=max(data_shift.all_stability,[],2);
+% factors = ops_tmp.factors(mi);
+% factors_all = data_shift.all_stability;
+ops_tmp = ops;
+ops_tmp.trials = 1:max(trial_sorted);
+[spMapBL,FR]=shiftAllMapsByFactor(ops_tmp,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
 
-[spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,0);
-
-
+FR = nanmean(FR(1:(numel(ops.trials)-4),:));
 spMapGain = spMapBL(end-3:end,:,:);
 spMapBL = spMapBL(1:(numel(ops.trials)-4),:,:);
 
@@ -153,15 +154,16 @@ for iC = 1:size(spMapBL,3)
         allGain(iC,:)=ga(mi+include_idx );
         this_cell_st = data.sp.st(data.sp.clu==uClu(iC));
         this_cell_spikeIdx = discretize(this_cell_st,post_valid);
-        posx_hat = data.posx+factors(iC)*speed;
-        posx_hat_valid = posx_hat( ismember(data.trial,[ops.trials]));
+        %posx_hat = data.posx+factors(iC)*speed;
+        %posx_hat_valid = posx_hat( ismember(data.trial,[ops.trials]));
         
         
         nonzero_idx = ~isnan(this_cell_spikeIdx);
         spike_pos = posx_valid(this_cell_spikeIdx(nonzero_idx));
-        spike_pos_hat = posx_hat_valid(this_cell_spikeIdx(nonzero_idx));
+        %spike_pos_hat = posx_hat_valid(this_cell_spikeIdx(nonzero_idx));
         spike_trial = trial_valid(this_cell_spikeIdx(nonzero_idx));
-        tmp = [spike_pos, spike_trial,spike_pos_hat];
+        %tmp = [spike_pos, spike_trial,spike_pos_hat];
+        tmp = [spike_pos, spike_trial];
         allSpikes{iC}=tmp;
         %         subplot(2,1,1)
         %         plot(sl/ma)
@@ -190,11 +192,12 @@ data_out.region = reg;
 data_out.subregion = sub_reg;
 data_out.stability = stability;
 data_out.similarity = similarity;
+data_out.FR = FR;
 data_out.allSpikes = allSpikes;
 data_out.speed = [speed, data.posx,data.trial];
 data_out.max_ind = maxInd;
-data_out.factors = factors;
-data_out.factors_all = factors_all;
+%data_out.factors = factors;
+%data_out.factors_all = factors_all;
 data_out.CID = uClu;
 data_out.depth = depth;
 end

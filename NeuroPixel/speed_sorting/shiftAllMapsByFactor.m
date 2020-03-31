@@ -4,8 +4,9 @@ spMatHat = zeros(nTrials,ops.nBins,nClu);
 
 duration = nan(nTrials,1);
 FiringRate = nan(nTrials,nClu);
+tr = unique(trial_sorted);
 for iT=1:numel(ops.trials)
-    idx = trial_sorted ==ops.trials(iT);
+    idx = trial_sorted ==tr(iT);
     duration(iT)=max(post(idx))-min(post(idx));
 end
         

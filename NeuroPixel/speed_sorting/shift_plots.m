@@ -23,12 +23,12 @@ for iF=1:size(output,1)
             SLOW = cat(1,SLOW,output{iF}{iRep}.all_slow);
             GAIN = cat(1,GAIN,output{iF}{iRep}.all_gain);
             STAB = cat(1,STAB,output{iF}{iRep}.similarity);
-            FACT = cat(1,FACT,output{iF}{iRep}.factors');
+            %FACT = cat(1,FACT,output{iF}{iRep}.factors');
             reg = cat(2,reg,output{iF}{iRep}.region);
-            tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
-            DCORR = cat(1,DCORR,(tmp'));
-            BLCORR = cat(1,BLCORR,output{iF}{iRep}.correlation_noshift');
-            CORR=cat(1,CORR,output{iF}{iRep}.factors_all);
+            %tmp = output{iF}{iRep}.correlation_shifted - output{iF}{iRep}.correlation_noshift;
+            %DCORR = cat(1,DCORR,(tmp'));
+            %BLCORR = cat(1,BLCORR,output{iF}{iRep}.correlation_noshift');
+            %CORR=cat(1,CORR,output{iF}{iRep}.factors_all);
             tmp = output{iF}{iRep}.depth;
             if isrow(tmp)
                 tmp = tmp';
@@ -39,11 +39,13 @@ for iF=1:size(output,1)
     end
 end
 
-
-figure
-region = 'VISp';
-idx = STAB>.5 & startsWith(reg,region)';
-idx = DCORR>0 & startsWith(reg,region)';
+%%
+figure('Position',[680         775        1008         301],'Renderer','Painters')
+regions = {'MEC','VISp','RS'};
+for iR=1:numel(regions)
+idx = STAB>.2 & startsWith(reg,regions{iR})';
+subplot(1,3,iR)
+%idx = DCORR>0 & startsWith(reg,region)';
 boundedline(x_vec,nanmean(FAST(idx,:)),nanstd(FAST(idx,:))/sqrt(size(FAST(idx,:),1)),'alpha','cmap',[0 0 0])
 hold on
 %plot(x_vec,nanmean(FAST))
@@ -53,7 +55,8 @@ legend({'fast','slow','gain'})
 set(gcf,'Renderer','Painters')
 grid on
 box off
-title(region)
+title(regions{iR})
+end
 %%
 figure
 idx = DCORR>0 & startsWith(reg,region)' & STAB>.4 & FACT<=-.99;
