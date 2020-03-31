@@ -1,7 +1,13 @@
-function spMatHat = shiftAllMapsByFactor(ops,clus,st,nClu,posx,post,trial_sorted,speed_raw,factor)
+function [spMatHat,FiringRate] = shiftAllMapsByFactor(ops,clus,st,nClu,posx,post,trial_sorted,speed_raw,factor)
 nTrials = numel(ops.trials);
 spMatHat = zeros(nTrials,ops.nBins,nClu);
 
+duration = nan(nTrials,1);
+FiringRate = nan(nTrials,nClu);
+for iT=1:numel(ops.trials)
+    idx = trial_sorted ==ops.trials(iT);
+    duration(iT)=max(post(idx))-min(post(idx));
+end
         
         
         
@@ -27,7 +33,7 @@ if numel(factor)==1
             OCC(trial,pos)=OCC(trial,pos)+1;
         end
     end
-    
+    OCC = OCC*ops.TimeBin;
     
     for cellIDX=1:nClu
         % extract spike times for this cell
@@ -49,7 +55,8 @@ if numel(factor)==1
         end
         %spMatHat = medfilt1(spMatHat);
         %divide by occupancy
-        
+        tmpFR = sum(tmpMat,2)./duration;
+        FiringRate(:,cellIDX)=tmpFR;
         tmpMat = tmpMat./OCC;
         tmpMat = fillmissing(tmpMat,'pchip',2);
         %tmpMat(isnan(tmpMat))=0;
@@ -83,7 +90,8 @@ else
                 OCC(trial,pos)=OCC(trial,pos)+1;
             end
         end
-        
+            OCC = OCC*ops.TimeBin;
+
         
         
         % extract spike times for this cell
