@@ -11,7 +11,7 @@ ops.trials=5:20;
 ops.num_pcs_decoding = 10;
 regions = {'MEC','VISp','RS'}
 %%
-data_path = '/Volumes/Samsung_T5/attialex/NP_Data/';
+data_path = '/oak/stanford/groups/giocomo/attialex/NP_DATA/';
 savepath = '/oak/stanford/groups/giocomo/attialex/pca_classifier/';
 if ~isdir(savepath)
     mkdir(savepath)
@@ -38,7 +38,7 @@ if isempty(p)
 end
 
 %%
-parfor iF=1%:numel(valid_files)
+parfor iF=1:numel(valid_files)
     data = load(fullfile(data_path,valid_files{iF}));
     [~,sn]=fileparts(valid_files{iF});
     if ~isfield(data,'anatomy')
@@ -55,6 +55,9 @@ parfor iF=1%:numel(valid_files)
     
     good_cells_idx = data.sp.cgs == 2 & startsWith(reg,regions);
     if nnz(good_cells_idx)<2
+        continue
+    end
+    if ~all(ismember(ops.trials,data.trial))
         continue
     end
     
@@ -95,16 +98,19 @@ parfor iF=1%:numel(valid_files)
     if nnz(stab>.5)<5
         continue
     end
-    
+    good_cells = good_cells(stab>.5);
+    region = tmp_reg(stab>.5);
     %calculate temporal firing rates
     fr = calcFRVsTime(good_cells,data,ops,ops.trials);
     
     % threshold by running speed
     speed = calcSpeed(data.posx,ops);
-    X = fr(:,speed>ops.SpeedCutoff);
-    trial = data.trial(speed>ops.SpeedCutoff);
-    posx = data.posx(speed>ops.SpeedCutoff);
-    speed = speed(speed>ops.SpeedCutoff);
+    trial_idx = ismember(data.trial,ops.trials);
+    idx = speed>ops.SpeedCutoff & trial_idx;
+    X = fr(:,idx);
+    trial = data.trial(idx);
+    posx = data.posx(idx);
+    speed = speed(idx);
     
     % normalize each cell to have FR between 0 and 1
     X = (X-nanmin(X,[],2))./repmat(nanmax(X,[],2)-nanmin(X,[],2),1,size(X,2));
@@ -122,7 +128,6 @@ parfor iF=1%:numel(valid_files)
     [~,~,posbin] = histcounts(posx,ops.xbinedges);
     posbin(posbin==0) = 1;
     pred_pos=cell(1,numel(ops.trials));
-    true_pos = cell(1,numel(ops.trials));
     for iFold = 1:numel(ops.trials)
         take_idx = true(1,numel(ops.trials));
         take_idx(iFold)=false;
@@ -141,10 +146,12 @@ parfor iF=1%:numel(valid_files)
         dot_prod = tc' * Xtilde(:,test_trial_idx); % predict position
         [~,max_bin] = max(dot_prod);
         pred_pos{iFold} = ops.xbincent(max_bin);
-        true_pos{iFold} = ops.xbincent(posbin);
+        
     end
-    mf = matfile(fullfile(savepath,sn));
+    mf = matfile(fullfile(savepath,sn),'Writable',true);
     mf.cluID = good_cells;
+    mf.region = reg;
     mf.pred_pos = pred_pos;
-    mf.true_pos = true_pos;
+    mf.true_pos = posx;
+    mf.speed = speed;
 end
