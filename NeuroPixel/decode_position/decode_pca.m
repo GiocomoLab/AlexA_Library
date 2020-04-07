@@ -9,10 +9,10 @@ ops.edges = ops.xbinedges;
 ops.filter = gausswin(11);
 ops.trials=5:20;
 ops.num_pcs_decoding = 10;
-regions = {'MEC','VISp','RS'}
+regions = {'MEC','VISp','RS'};
 %%
 root = '/oak/stanford/groups/giocomo';
-root = '/Volumes/Samsung_T5';
+%root = '/Volumes/Samsung_T5';
 data_path = fullfile(root,'/attialex/NP_DATA/');
 savepath = fullfile(root,'/attialex/pca_classifier/');
 if ~isfolder(savepath)
@@ -34,13 +34,13 @@ for iF=1:numel(files)
     end
 end
 %%
-% p=gcp('nocreate');
-% if isempty(p)
-%     parpool(12);
-% end
+p=gcp('nocreate');
+if isempty(p)
+    parpool(12);
+end
 
 %%
-for iF=1%:numel(valid_files)
+parfor iF=1:numel(valid_files)
     data = load(fullfile(data_path,valid_files{iF}));
     [~,sn]=fileparts(valid_files{iF});
     if ~isfield(data,'anatomy')
@@ -152,8 +152,8 @@ for iF=1%:numel(valid_files)
         [~,max_bin] = max(dot_prod);
         pred_pos{iFold} = ops.xbincent(max_bin);
         train_trial_idx = train_trial_idx & sub_sample_idx;
-        Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
-        yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
+         Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
+         yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
     end
     mf = matfile(fullfile(savepath,sn),'Writable',true);
     mf.cluID = good_cells;
@@ -161,4 +161,5 @@ for iF=1%:numel(valid_files)
     mf.pred_pos = pred_pos;
     mf.true_pos = posx;
     mf.speed = speed;
+    mf.yhat=yhat;
 end
