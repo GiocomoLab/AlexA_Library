@@ -14,7 +14,7 @@ regions = {'MEC','VISp','RS'};
 root = '/oak/stanford/groups/giocomo';
 %root = '/Volumes/Samsung_T5';
 data_path = fullfile(root,'/attialex/NP_DATA/');
-savepath = fullfile(root,'/attialex/pca_classifier/');
+savepath = fullfile(root,'/attialex/pca_classifier_ordinal/');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -127,12 +127,14 @@ parfor iF=1:numel(valid_files)
     coeffs = pca(X');
     num_components = min(ops.num_pcs_decoding,size(coeffs,2)); % sometimes number of cells is < 10
     Xtilde = coeffs(:,1:num_components)' * X;
+    Xtilde = X;
+    num_components = size(X,1);
     [~,~,posbin] = histcounts(posx,ops.xbinedges);
     posbin(posbin==0) = 1;
     pred_pos=cell(1,numel(ops.trials));
     yhat = cell(1,numel(ops.trials));
     sub_sample_idx = false(size(trial));
-    sub_sample_idx(1:50:end)=true; %1s p s
+    sub_sample_idx(1:20:end)=true; %1s p s
     for iFold = 1:numel(ops.trials)
         take_idx = true(1,numel(ops.trials));
         take_idx(iFold)=false;
@@ -152,8 +154,10 @@ parfor iF=1:numel(valid_files)
         [~,max_bin] = max(dot_prod);
         pred_pos{iFold} = ops.xbincent(max_bin);
         train_trial_idx = train_trial_idx & sub_sample_idx;
-         Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
-         yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
+        Mdl = fitlm(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
+        yhat{iFold} = ops.xbincent(mod(round(predict(Mdl,Xtilde(:,test_trial_idx)')),ops.track_length/2)+1);
+         %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
+         %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
     end
     mf = matfile(fullfile(savepath,sn),'Writable',true);
     mf.cluID = good_cells;
