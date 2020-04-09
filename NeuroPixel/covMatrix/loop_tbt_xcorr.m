@@ -10,7 +10,7 @@ ops.plotfig = false;
 
 ops.smoothSigma = 4;
 ops.maxLag = 20; % in cm
-ops.matched_bl_range=[-16:-1];
+ops.matched_bl_range=[-10:-1];
 ops.trial_range = [-6:9];
 
 
@@ -31,8 +31,8 @@ for iR = 1:numel(regions)
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
-savepath = '/oak/stanford/groups/giocomo/attialex/tbtxcorr_with_baseline';
-shiftDir = fullfile(OAK,'attialex','speed_filtered_greedy3');
+savepath = '/oak/stanford/groups/giocomo/attialex/tbtxcorr_with_shortbaseline2';
+shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -41,7 +41,7 @@ shift_ops = shift_ops.ops;
 %%
 p = gcp('nocreate');
 if isempty(p)
-    p = parpool(6);
+    p = parpool(12);
 end
 %%
 parfor iF=1:numel(filenames)
@@ -62,6 +62,29 @@ parfor iF=1:numel(filenames)
         
         
         ops_here = ops;
+        
+        ops_here.trials=triggers{iF}(iRep)+ops.matched_bl_range;
+        
+        if ~all(data.trial_contrast(ops_here.trials)==contrast) || ~all(data.trial_gain(ops_here.trials)==1)
+            disp('bl trials violating bl condition, skipping this rep')
+            continue
+        end
+        
+        [corrMatBL,shiftMatBL,~,~]=calculateTrialByTrialXCorr(data,ops_here);
+        
+        
+        %calculate trial by trial correlation across all bins
+        ops_here.trials=triggers{iF}(iRep)+ops.trial_range;
+        
+        if ~all(data.trial_contrast(ops_here.trials)==contrast)
+            error('gain trials violating contrast condition')
+            
+        end
+        if ~all(data.trial_gain((0:3)+triggers{iF}(iRep))==gain)
+            error('gain trials wrong gain')
+            
+        end
+        
         %calculate spatial firing rate
         pp=findPeakFiringRate(data,ops_here);
         
@@ -73,26 +96,7 @@ parfor iF=1:numel(filenames)
         for ii=1:nC
             bins2correlate(ii,:)=pp.maxBin_index(ii)+window;
         end
-        ops_here.trials=triggers{iF}(iRep)+ops.matched_bl_range;
         
-        if ~all(data.trial_contrast(ops_here.trials)==contrast) || ~ all(data.trial_gain(ops_here.trials)==1)
-            disp('bl trials violating bl condition, skipping this rep')
-            continue
-        end
-        
-        [corrMatBL,shiftMatBL,~,~]=calculateTrialByTrialXCorr(data,ops_here);
-        
-        
-        %calculate trial by trial correlation across all bins
-        ops_here.trials=triggers{iF}(iRep)+ops.trial_range;
-        if ~all(data.trial_contrast(ops_here.trials)==contrast)
-            error('gain trials violating contrast condition')
-            
-        end
-        if ~all(data.trial_gain((0:3)+triggers{iF}(iRep))==gain)
-            error('gain trials wrong gain')
-            
-        end
         [corrMat,shiftMat,stability,spatialMap]=calculateTrialByTrialXCorr(data,ops_here);
         
         %calculate trial by trial correlation around max locations
