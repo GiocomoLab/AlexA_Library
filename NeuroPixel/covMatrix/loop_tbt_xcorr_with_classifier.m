@@ -1,6 +1,7 @@
 ops.BinWidth = 2;
-
+ops.xbin = ops.BinWidth;
 ops.edges = 0:ops.BinWidth:400;
+ops.track_length = 400;
 ops.nBins = numel(ops.edges)-1;
 ops.midpoints = ops.edges(1:end-1)*.5 + ops.edges(2:end)*.5;
 ops.search_range=[round(20/ops.BinWidth):round(380/ops.BinWidth)];
@@ -9,6 +10,8 @@ ops.TimeBin = 0.02;
 ops.plotfig = false;
 
 ops.smoothSigma = 4;
+ops.smoothSigma_time = 0.2;
+ops.SpeedCutoff = 2;
 ops.maxLag = 20; % in cm
 ops.matched_bl_range=[-10:-1];
 ops.trial_range = [-6:9];
@@ -23,7 +26,7 @@ smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.8;
 contrast = 100;
@@ -36,18 +39,18 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_with_decoder_robustLinear');
+savepath = fullfile(OAK,'attialex','tbtxcorr_with_decoder_svm2');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 
 %%
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(12);
+end
 %%
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -146,12 +149,12 @@ for iF=1:numel(filenames)
                 
                 %subsample for other classifiers
                 sub_sample_idx = false(size(trial));
-                sub_sample_idx(1:1:end)=true; %1s p s
+                sub_sample_idx(1:10:end)=true; %1s p s
                 
                 
                 train_trials = ops_here.trials(ops.trials_train);
                 train_trial_idx=ismember(trial,train_trials);
-                
+                train_trial_idx = train_trial_idx & sub_sample_idx;
                 
                 tc = nan(num_components,ops.nBins,1);
                 for i = 1:ops.nBins
@@ -162,13 +165,13 @@ for iF=1:numel(filenames)
                 dot_prod = tc' * Xtilde; % predict position
                 [~,max_bin] = max(dot_prod);
                 pred_pos = ops.xbincent(max_bin);
-                train_trial_idx = train_trial_idx & sub_sample_idx;
-                Mdl = fitlm(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'RobustOpts','welsch');
-                %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
+                
+                %Mdl = fitlm(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'RobustOpts','welsch');
+                Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
                 %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
                 yhat = ops.xbincent(mod(round(predict(Mdl,Xtilde')),ops.track_length/2)+1);
                 
-                
+                decoder = struct();
                 decoder.cluID = good_cells;
                 decoder.region = decode_region;
                 decoder.pred_pos = pred_pos;
