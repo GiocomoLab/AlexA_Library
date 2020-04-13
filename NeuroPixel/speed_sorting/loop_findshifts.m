@@ -6,7 +6,7 @@ ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
 ops.TimeBin = 0.02;
 ops.idx = [10:ops.BinWidth:390]/ops.BinWidth;% in bins
-fi = gausswin(11);
+fi = gausswin(22);
 fi=fi'/sum(fi);
 ops.filter = fi;
 spfi = gausswin(5);
@@ -17,7 +17,7 @@ ops.plotfig = false;
 ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_new_11binspace_5binspeed2');
+savedir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -77,8 +77,9 @@ parfor iF=1:numel(filenames)
     try
         data = load(filenames{iF});
         ops_temp = ops;
-        bl_trials = 1:numel(data.trial_contrast);
-        bl_trials = bl_trials(data.trial_contrast==100 & data.trial_gain==1);
+        nrectrials = max(data.trial);
+        bl_trials = 1:nrectrials;
+        bl_trials = bl_trials(data.trial_contrast(1:nrectrials)==100 & data.trial_gain(1:nrectrials)==1);
         not_done = true;
         start=1;
         good_starts = [];
@@ -108,7 +109,7 @@ parfor iF=1:numel(filenames)
             all_factors(iRep,:)=factors;
             stability = data_out.all_stability(:,zero_idx);
             all_stability(iRep,:)=stability;
-            all_firingRate(iRep,:)=data_out.firing_rate
+            all_firingRate(iRep,:)=data_out.firing_rate;
         end
         
         mf =matfile(fullfile(savedir,session_name),'Writable',true);
@@ -121,6 +122,9 @@ parfor iF=1:numel(filenames)
         mf.all_stability = all_stability;
         mf.FR = all_firingRate;
     catch ME
+        %rethrow(ME)
+        disp(iF)
         fprintf('%s \nFailed for %s: %d \n',ME.message,filenames{iF},iF)
+        rethrow(ME)
     end
 end
