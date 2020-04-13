@@ -32,7 +32,7 @@ filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
 savepath = '/oak/stanford/groups/giocomo/attialex/tbtxcorr_with_shortbaseline2';
-shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
+shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed3');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -103,8 +103,12 @@ parfor iF=1:numel(filenames)
         [corrMatPartial,shiftMatPartial,stabilityPartial]=calculateTrialByTrialXCorr(data,ops_here,bins2correlate);
         
         %load shift factors
-        shift_data = load(fullfile(shiftDir,[sn '.mat']));
-        factors = nanmean(shift_data.all_factors);
+        tmp = a.all_stability;
+            tmp = tmp>.5;
+            tmp_f = a.all_factors;
+            tmp_f(tmp)=nan;
+            factors = nanmean(tmp_f);
+        %factors = nanmean(shift_data.all_factors);
         
        
         
