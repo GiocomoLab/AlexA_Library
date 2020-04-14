@@ -79,8 +79,11 @@ else
     for cellIDX=1:nClu
         % occupancy matrix
         OCC=zeros(nTrials,ops.nBins); %occupancy matrix, calculates occupancy for each space bin for each shift
-        
+        if ~isnan(factor(cellIDX))
         posxhat = posx+factor(cellIDX)*speed_raw;
+        else
+            posxhat = posx;
+        end
         posxhat = mod(posxhat,max(ops.edges));
         spike_loc_hat = discretize(posxhat,ops.edges);
         
