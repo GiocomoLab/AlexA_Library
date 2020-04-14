@@ -71,6 +71,7 @@ end
 corrMat = nan(numel(stability),numel(trials),numel(trials));
 shiftMat = nan(numel(stability),numel(trials),numel(trials));
 shift_all = -ops.maxLag:ops.BinWidth:ops.maxLag;
+good_cells = data.sp.cids(data.sp.cgs==2);
 for cellIDX = 1:size(spatialMap,1)
     if any(isnan(bins2correlate(cellIDX,:)))
         continue
@@ -81,14 +82,17 @@ for cellIDX = 1:size(spatialMap,1)
     
     mS=mS-mean(mS);
     mS = mS(bins2correlate(cellIDX,:),:);
+    frMat = calcTrialFRMat(good_cells(cellIDX),ops.trials,data,ops);
+    fr_this = frMat'-nanmean(frMat');
+    mS = fr_this;
     %mS=zscore(mS);
     %%
-    [xcorr_this,~]=xcorr(mS,'coeff',ops.maxLag/ops.BinWidth);
+    [xcorr_this,~]=xcorr(mS,ops.maxLag/ops.BinWidth,'coeff');
     [xcorr_this,max_idx] = max(xcorr_this,[],1); % take max over lags
     shift_this = shift_all(max_idx);
     xcorr_this = reshape(xcorr_this,numel(trials),numel(trials));
     shiftMat(cellIDX,:,:) = reshape(shift_this,numel(trials),numel(trials));
-    corrMat(cellIDX,:,:) = xcorr_this-diag(diag(xcorr_this)); % subtract diags
+    corrMat(cellIDX,:,:) = xcorr_this+diag(nan(numel(trials),1)); % subtract diags
     
 end
 
