@@ -22,7 +22,7 @@ for iR = 1:numel(regions)
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_v2');
+savepath = fullfile(OAK,'attialex','tbtxcorr_v3');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -51,7 +51,7 @@ parfor iF=1:numel(filenames)
             reg = reg';
         end
         
-        
+        reg=reg(data.sp.cgs==2);
         
         
         
@@ -62,7 +62,7 @@ parfor iF=1:numel(filenames)
         ops_here.trials = trials;
         cellID = data.sp.cids(data.sp.cgs==2);
 
-        [corrMat,b,shiftMat]=trialCorrMat(cellID,15:30,data,ops);
+        [corrMat,b,shiftMat]=trialCorrMat(cellID,trials,data,ops);
         if ~all(data.trial_contrast(trials)==contrast)
             error('gain trials violating contrast condition')
             
@@ -139,13 +139,15 @@ parfor iF=1:numel(filenames)
             end
             IDX = data.sp.clu == uClu(iFact);
             this_fact = factors(iFact);
-            st_adjusted(IDX)=st_adjusted(IDX)-this_fact;
+            st_adjusted(IDX)=st_adjusted(IDX)+this_fact;
         end
         data.sp.st = st_adjusted;
-        [corrMatS2,b,shiftMatS2]=trialCorrMat(cellID,15:30,data,ops);
+        [corrMatS2,b,shiftMatS2]=trialCorrMat(cellID,trials,data,ops);
         data.sp.st = st_old;
         corrMatS2=corrMatS2(all_good,:,:);
         shiftMatS2=shiftMatS2(all_good,:,:);
+        
+        
         data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
         data_out.corrMat = corrMat;
         data_out.shiftMat = shiftMat;
