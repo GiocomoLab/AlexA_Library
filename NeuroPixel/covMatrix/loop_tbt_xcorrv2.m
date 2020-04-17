@@ -11,7 +11,7 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -22,7 +22,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_v3');
+savepath = fullfile(OAK,'attialex','tbtxcorr_05');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -78,6 +78,7 @@ parfor iF=1:numel(filenames)
             %load shift factors
             if ~isfile(fullfile(shiftDir,[sn '.mat']))
                 sprintf('no speed file for %s',sn)
+                continue
             end
             shift_data = load(fullfile(shiftDir,[sn '.mat']));
             %tmp = shift_data.all_stability;
@@ -147,7 +148,7 @@ parfor iF=1:numel(filenames)
             corrMatS2 = nan(numel(factors),numel(trials),numel(trials));
             shiftMatS2 = corrMatS2;
             posx_orig = data.posx;
-            %%
+            cellID = cellID(all_good);
             for iC = 1:numel(cellID)
                 if ~isnan(factors(iC))
                     data.posx=posx_orig;
@@ -170,8 +171,8 @@ parfor iF=1:numel(filenames)
                 
             end
             
-            corrMatS2=corrMatS2(all_good,:,:);
-            shiftMatS2=shiftMatS2(all_good,:,:);
+            %corrMatS2=corrMatS2(all_good,:,:);
+            %shiftMatS2=shiftMatS2(all_good,:,:);
             
             
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
@@ -190,9 +191,9 @@ parfor iF=1:numel(filenames)
             data_out.trials = trials;
         end
     catch ME
-        rethrow(ME)
         disp(ME.message)
         disp(sprintf('filenr: %d',iF))
+        rethrow(ME)
     end
 end
 
