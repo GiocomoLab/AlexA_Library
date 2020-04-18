@@ -11,7 +11,7 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.5;
+gain = 0.8;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -22,7 +22,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_05');
+savepath = fullfile(OAK,'attialex','tbtxcorr_reg_orig');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -52,7 +52,10 @@ parfor iF=1:numel(filenames)
             end
             
             reg=reg(data.sp.cgs==2);
-            
+            reg_orig = data.anatomy.cluster_parent((data.sp.cgs==2));
+            if iscolumn(reg_orig)
+                reg_orig = reg_orig';
+            end
             
             
             
@@ -92,6 +95,7 @@ parfor iF=1:numel(filenames)
             
             % prepare to shift spatial maps according to factors
             good_idx = ismember(data.sp.clu,data.sp.cids(data.sp.cgs==2));
+
             clu_tmp = data.sp.clu(good_idx);
             st_tmp = data.sp.st(good_idx);
             [uClu,~,clus]=unique(clu_tmp);
@@ -121,11 +125,14 @@ parfor iF=1:numel(filenames)
             good_cells = data.sp.cids(data.sp.cgs==2);
             
             all_good = ismember(good_cells,uClu);
+            if ~all(all_good)
+                disp(sprintf('reducing good cells by %d',nnz(~all_good)))
+            end
             factors = factors(all_good);
             corrMat = corrMat(all_good,:,:);
             shiftMat = shiftMat(all_good,:,:);
             reg = reg(all_good);
-            
+            reg_orig = reg_orig(all_good);
             
             spMapShifted=shiftAllMapsByFactor(ops_here,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed,factors);
             % calculate trial by trial correlation
@@ -185,7 +192,7 @@ parfor iF=1:numel(filenames)
             data_out.corrMatS2 = corrMatS2;
             
             data_out.region = reg;
-            
+            data_out.region_orig = reg_orig;
             
             data_out.factors = factors;
             data_out.trials = trials;
