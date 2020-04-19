@@ -39,9 +39,10 @@ parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
-        data = load(filenames{iF});
         
         for iRep=1:numel(triggers{iF})
+            data = load(filenames{iF});
+
             if isfield(data.anatomy,'parent_shifted')
                 reg = data.anatomy.parent_shifted;
             else
@@ -177,7 +178,8 @@ parfor iF=1:numel(filenames)
                 end
                 
             end
-            
+                            data.posx = posx_orig;
+
             %corrMatS2=corrMatS2(all_good,:,:);
             %shiftMatS2=shiftMatS2(all_good,:,:);
             
