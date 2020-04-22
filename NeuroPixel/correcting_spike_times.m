@@ -14,10 +14,11 @@ end
 malcolm_dir =  fullfile(OAK,'export','data','Projects','ContrastExperiment_neuropixels');
 malcolm_dir =  fullfile(OAK,'export','data','Projects','AlexA_NP');
 %%
-for iF=12%49:numel(matfiles)
+for iF=1:numel(matfiles)
     sn = matfiles(iF).name;
             dest_file = fullfile(dest_path,matfiles(iF).name);
     if isfile(dest_file)
+        sprintf('%s exisits \n',matfiles(iF).name)
         continue
     end
     data = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
@@ -39,13 +40,13 @@ for iF=12%49:numel(matfiles)
     
     
     fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
-    if isemtpy(fi)
+    if isempty(fi)
         %try alternate session name
-        sn_alt = [sn(1:2) sn(4:end)];
+        sn = [sn(1:2) sn(4:end)];
         
-        fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn_alt));
+        fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
     end
-    
+    [~,session_name]=fileparts(sn);
     if numel(fi)==1
         data_dir = fi.folder;
         [~,main_name]=fileparts(data_dir);
@@ -87,13 +88,28 @@ for iF=12%49:numel(matfiles)
         vr_session_name = '';
         if isfile(fullfile(data_dir,strcat(session_name,'_position.txt')))
             vr_session_name = session_name;
+            vr_data_dir = data_dir;
         elseif isfile(fullfile(data_dir,strcat(session_name(dash_idx:end),'_position.txt')))
             vr_session_name = session_name(dash_idx:end);
+            vr_data_dir = data_dir;
         end
-        fn_vr = fullfile(data_dir,strcat(vr_session_name,'_position.txt'));
-        fn_trial = fullfile(data_dir,strcat(vr_session_name,'_trial_times.txt'));
-        fn_lick = fullfile(data_dir,strcat(vr_session_name,'_licks.txt'));
+        tmp=[];
+        if isempty(vr_session_name)
+            %not in the usual locations
+            tmp = dir(fullfile(malcolm_dir,[animal_name '*'],'*',strcat(session_name(dash_idx:end),'_position.txt')));
+        end
+        if ~isempty(tmp)
+            vr_data_dir = tmp.folder;
+            vr_session_name = session_name(dash_idx:end);
+        end
         
+        fn_vr = fullfile(vr_data_dir,strcat(vr_session_name,'_position.txt'));
+        fn_trial = fullfile(vr_data_dir,strcat(vr_session_name,'_trial_times.txt'));
+        fn_lick = fullfile(vr_data_dir,strcat(vr_session_name,'_licks.txt'));
+        if ~isfile(fn_vr)
+            sprintf('no VR file')
+            keyboard
+        end
         %         else
         %             fn_vr = fullfile(data_dir,strcat(session_name,'_position.txt'));
         %             fn_trial = fullfile(data_dir,strcat(session_name,'_trial_times.txt'));
@@ -241,7 +257,7 @@ for iF=12%49:numel(matfiles)
         copyfile(src_file,dest_file);
         save(dest_file,'sp','-append');
     else
-        %sprintf('did not find %s \n',pos_file)
+        sprintf('did not find %s \n',fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn))
     end
 end
 %'0504_baseline_gain_1_position'
