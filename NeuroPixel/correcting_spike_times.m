@@ -1,4 +1,6 @@
 OAK = '/oak/stanford/groups/giocomo';
+%OAK = 'Z:\giocomo';
+
 %NP_DIR = 'F:/NP_DATA';
 NP_DIR = fullfile(OAK,'attialex','NP_DATA');
 matfiles = dir(fullfile(NP_DIR,'AA*.mat'));
@@ -12,12 +14,16 @@ end
 malcolm_dir =  fullfile(OAK,'export','data','Projects','ContrastExperiment_neuropixels');
 malcolm_dir =  fullfile(OAK,'export','data','Projects','AlexA_NP');
 %%
-for iF=49:numel(matfiles)
+for iF=12%49:numel(matfiles)
     sn = matfiles(iF).name;
             dest_file = fullfile(dest_path,matfiles(iF).name);
     if isfile(dest_file)
         continue
     end
+    data = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
+    dat_path = data.sp.dat_path;
+    loc = strfind(dat_path,'_');
+    animal_name = dat_path(1:loc(2)+1);
     [~,session_name]=fileparts(matfiles(iF).name);
     parts = strsplit(session_name,'_');
     
@@ -32,7 +38,13 @@ for iF=49:numel(matfiles)
     pos_file = [pos_file 'position.txt'];
     
     
-    fi = dir(fullfile(malcolm_dir,'*','neuropixels_data','*',sn));
+    fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
+    if isemtpy(fi)
+        %try alternate session name
+        sn_alt = [sn(1:2) sn(4:end)];
+        
+        fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn_alt));
+    end
     
     if numel(fi)==1
         data_dir = fi.folder;
