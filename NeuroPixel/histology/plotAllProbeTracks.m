@@ -41,7 +41,8 @@ black_brain = true;
 fwireframe = plotBrainGrid([], [], [], black_brain); hold on; 
 fwireframe.InvertHardcopy = 'off';
 brainfig = gcf;
-
+AllProbePoints = {};
 for iA = 1:numel(animals)
-    plotProbeTrackAnimal(animals{iA},brainfig,av,st)
+   [~,pp]= plotProbeTrackAnimal(animals{iA},brainfig,av,st);
+   AllProbePoints{end+1}=pp;
 end
