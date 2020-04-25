@@ -1,14 +1,30 @@
-NP_DIR = 'F:/NP_DATA';
-matfiles = dir(fullfile(NP_DIR,'npJ3*.mat'))
-dest_path = 'F:/NP_DATA2';
+OAK = '/oak/stanford/groups/giocomo';
+%OAK = 'Z:\giocomo';
+
+%NP_DIR = 'F:/NP_DATA';
+NP_DIR = fullfile(OAK,'attialex','NP_DATA');
+matfiles = dir(fullfile(NP_DIR,'AA*.mat'));
+
+%dest_path = 'F:/NP_DATA2';
+dest_path = fullfile(OAK,'attialex','NP_DATA2');
 if ~isfolder(dest_path)
     mkdir(dest_path)
 end
-malcolm_dir = 'Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels'
-test_name = 'npJ5_0504_baseline_gain_3.mat'
+%malcolm_dir = 'Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels'
+malcolm_dir =  fullfile(OAK,'export','data','Projects','ContrastExperiment_neuropixels');
+malcolm_dir =  fullfile(OAK,'export','data','Projects','AlexA_NP');
 %%
 for iF=1:numel(matfiles)
     sn = matfiles(iF).name;
+            dest_file = fullfile(dest_path,matfiles(iF).name);
+    if isfile(dest_file)
+        sprintf('%s exisits \n',matfiles(iF).name)
+        continue
+    end
+    data = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
+    dat_path = data.sp.dat_path;
+    loc = strfind(dat_path,'_');
+    animal_name = dat_path(1:loc(2)+1);
     [~,session_name]=fileparts(matfiles(iF).name);
     parts = strsplit(session_name,'_');
     
@@ -23,8 +39,14 @@ for iF=1:numel(matfiles)
     pos_file = [pos_file 'position.txt'];
     
     
-    fi = dir(fullfile(malcolm_dir,animal,'neuropixels_data','*',sn));
-    
+    fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
+    if isempty(fi)
+        %try alternate session name
+        sn = [sn(1:2) sn(4:end)];
+        
+        fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
+    end
+    [~,session_name]=fileparts(sn);
     if numel(fi)==1
         data_dir = fi.folder;
         [~,main_name]=fileparts(data_dir);
@@ -61,15 +83,33 @@ for iF=1:numel(matfiles)
         % read vr position data
         formatSpec = '%f%f%f%f%f%[^\n\r]';
         delimiter = '\t';
+        dash_idx = strfind(session_name,'_');
+        dash_idx = dash_idx(1)+1;
+        vr_session_name = '';
         if isfile(fullfile(data_dir,strcat(session_name,'_position.txt')))
             vr_session_name = session_name;
-        elseif isfile(fullfile(data_dir,strcat(session_name(6:end),'_position.txt')))
-            vr_session_name = session_name(6:end);
+            vr_data_dir = data_dir;
+        elseif isfile(fullfile(data_dir,strcat(session_name(dash_idx:end),'_position.txt')))
+            vr_session_name = session_name(dash_idx:end);
+            vr_data_dir = data_dir;
         end
-        fn_vr = fullfile(data_dir,strcat(vr_session_name,'_position.txt'));
-        fn_trial = fullfile(data_dir,strcat(vr_session_name,'_trial_times.txt'));
-        fn_lick = fullfile(data_dir,strcat(vr_session_name,'_licks.txt'));
+        tmp=[];
+        if isempty(vr_session_name)
+            %not in the usual locations
+            tmp = dir(fullfile(malcolm_dir,[animal_name '*'],'*',strcat(session_name(dash_idx:end),'_position.txt')));
+        end
+        if ~isempty(tmp)
+            vr_data_dir = tmp.folder;
+            vr_session_name = session_name(dash_idx:end);
+        end
         
+        fn_vr = fullfile(vr_data_dir,strcat(vr_session_name,'_position.txt'));
+        fn_trial = fullfile(vr_data_dir,strcat(vr_session_name,'_trial_times.txt'));
+        fn_lick = fullfile(vr_data_dir,strcat(vr_session_name,'_licks.txt'));
+        if ~isfile(fn_vr)
+            sprintf('no VR file')
+            keyboard
+        end
         %         else
         %             fn_vr = fullfile(data_dir,strcat(session_name,'_position.txt'));
         %             fn_trial = fullfile(data_dir,strcat(session_name,'_trial_times.txt'));
@@ -90,25 +130,25 @@ for iF=1:numel(matfiles)
         frame_times_vr=vr_position_data(:,nu_entries-1);
         
         % read vr trial data
-        fid = fopen(fn_trial,'r');
-        vr_trial_data = fscanf(fid, '%f', [4,inf])';
-        fclose(fid);
-        trial_contrast = [100; vr_trial_data(:,2)];
-        trial_gain = [1; vr_trial_data(:,3)];
-        num_trials = numel(trial_gain);
+        %fid = fopen(fn_trial,'r');
+        %vr_trial_data = fscanf(fid, '%f', [4,inf])';
+        %fclose(fid);
+        %trial_contrast = [100; vr_trial_data(:,2)];
+        %trial_gain = [1; vr_trial_data(:,3)];
+        %num_trials = numel(trial_gain);
         
-        % read vr licking data
-        try
-            fid = fopen(fn_lick,'r');
-            vr_lick_data = fscanf(fid, '%f', [2,inf])';
-            fclose(fid);
-            lickx = vr_lick_data(:,1);
-            lickt = vr_lick_data(:,2);
-        catch ME
-            fprintf('no lick file found \n')
-            lickx=NaN;
-            lickt=NaN;
-        end
+%         % read vr licking data
+%         try
+%             fid = fopen(fn_lick,'r');
+%             vr_lick_data = fscanf(fid, '%f', [2,inf])';
+%             fclose(fid);
+%             lickx = vr_lick_data(:,1);
+%             lickt = vr_lick_data(:,2);
+%         catch ME
+%             fprintf('no lick file found \n')
+%             lickx=NaN;
+%             lickt=NaN;
+%         end
         
         
         % set vr frame times to be the time of neuropixels pulses
@@ -143,13 +183,13 @@ for iF=1:numel(matfiles)
             posx = vr_position_data(:,1);
             
             % transform lick times into neuropixels reference frame
-            beta = [ones(size(post)) frame_times_vr(idx)]\post;
-            lickt = beta(1) + lickt*beta(2);
+            %beta = [ones(size(post)) frame_times_vr(idx)]\post;
+            %lickt = beta(1) + lickt*beta(2);
         else
             disp('ERROR: number of sync pulses does not match number of frames.')
             continue
         end
-        figure
+        figure('Visible','off')
         scatter(diff(post),diff(frame_times_vr(idx)),2,1:length(idx)-1)
         r=corrcoef(diff(post),diff(frame_times_vr(idx)));
         title(sprintf('corr coeff = %0.3f',r(1,2)));
@@ -169,7 +209,11 @@ for iF=1:numel(matfiles)
         % ts_NIDAQ: these are the sync pulse times relative to the NIDAQ board
         % Now, we do the same, but from the perspective of the Imec board.
         LFP_config = dir(fullfile(spike_dir,'*.lf.meta'));
+        if isempty(LFP_config)
+            continue
+        end
         LFP_config = fullfile(LFP_config.folder,LFP_config.name);
+
         LFP_file = dir(fullfile(spike_dir,'*.lf.bin'));
         LFP_file = fullfile(LFP_file.folder,LFP_file.name);
         dat=textscan(fopen(LFP_config),'%s %s','Delimiter','=');
@@ -210,11 +254,10 @@ for iF=1:numel(matfiles)
         sp.clu=sp.clu(valid_idx);
         sp.spikeTemplate = sp.spikeTemplates(valid_idx);
         sp.tempScalingAmps = sp.tempScalingAmps(valid_idx);
-        dest_file = fullfile(dest_path,matfiles(iF).name);
         copyfile(src_file,dest_file);
         save(dest_file,'sp','-append');
     else
-        %sprintf('did not find %s \n',pos_file)
+        sprintf('did not find %s \n',fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn))
     end
 end
 %'0504_baseline_gain_1_position'
