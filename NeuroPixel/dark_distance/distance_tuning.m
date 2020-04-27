@@ -1,11 +1,11 @@
 ops = load_default_opt;
-ops.max_lag_autocorr = 600; %in cm
-ops.f_vec=[0 1./(800:-.5:10)]; %firing rates to evaluate fft
+ops.max_lag_autocorr = 800; %in cm
+ops.f_vec=[0 1./(800:-1:10)]; %firing rates to evaluate fft
 ops.num_shuffles = 300;
 %OAK = '/Volumes/Samsung_T5/attialex';
 OAK = '/oak/stanford/groups/giocomo/attialex';
-matfiles = dir(fullfile(OAK,'NP_DATA_corrected','*dark*'));
-outpath = fullfile(OAK,'distance_tuning_fft');
+matfiles = dir(fullfile(OAK,'NP_DATA_corrected','np*dark*'));
+outpath = fullfile(OAK,'distance_tuning_xcorr_only');
 if ~isfolder(outpath)
     mkdir(outpath)
 end
@@ -26,7 +26,13 @@ if isempty(p)
 end
 
 %%
-parfor iF=3:numel(matfiles)
+parfor iF=1:numel(matfiles)
+        [~,sn]=fileparts(matfiles(iF).name);
+
+    if isfile(fullfile(outpath,matfiles(iF).name))
+        sprintf('%s existsts, skipping \n',matfiles(iF).name)
+        continue
+    end
     data = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
     if ~isfield(data,'anatomy')
         continue
@@ -43,7 +49,7 @@ parfor iF=3:numel(matfiles)
     good_cells = data.sp.cids(good_idx);
     reg = reg(good_idx);
     depth = data.anatomy.tip_distance(good_idx);
-    
+    mec_entry = data.anatomy.z2;
     
     
     FRDist = calcFRVsDist(good_cells,[1:max(data.trial)-1],data,ops);
@@ -66,45 +72,51 @@ parfor iF=3:numel(matfiles)
         ACG(ii,:)=tmp((max_lag+1):end);
     end
     
-    Fs = 1/ops.SpatialBin; % Sampling frequency
-    L = floor(size(FRDistN,2)/2)*2; % Length of signal (making sure it's even)
-    f = Fs*(0:(L/2))/L; % Define the frequency domain f
-    X = FRDistN(:,1:L)';
-    Y=fft(X);
-    P2 = abs(Y/L);
-    P1 = P2(1:L/2+1,:);
-    P1(2:end-1,:) = 2*P1(2:end-1,:);
-    PXX=interp1(f,P1,ops.f_vec);
-    
-    PXX_shuffled = zeros(numel(ops.f_vec),numel(good_cells),ops.num_shuffles);
-    ACG_shuffled = zeros(nUnits,max_lag+1,ops.num_shuffles);
+%     Fs = 1/ops.SpatialBin; % Sampling frequency
+% %     L = floor(size(FRDistN,2)/2)*2; % Length of signal (making sure it's even)
+% %     f = Fs*(0:(L/2))/L; % Define the frequency domain f
+% %     X = FRDistN(:,1:L)';
+% %     Y=fft(X);
+% %     P2 = abs(Y/L);
+% %     P1 = P2(1:L/2+1,:);
+% %     P1(2:end-1,:) = 2*P1(2:end-1,:);
+%     [P1,f]=pwelch(FRDistN',[],[],[],Fs);
+%     PXX=interp1(f,P1,ops.f_vec);
+%     
+%     PXX_shuffled = zeros(numel(ops.f_vec),numel(good_cells),ops.num_shuffles);
+     ACG_shuffled = zeros(nUnits,max_lag+1,ops.num_shuffles);
     for iS=1:ops.num_shuffles
         FRDistShuffle = calcFRVsDist_shuf(good_cells,[1:max(data.trial)-1],data,ops);
         FRDistShuffleN = FRDistShuffle - nanmean(FRDistShuffle,2);
-        Fs = 1/ops.SpatialBin; % Sampling frequency
-        L = floor(size(FRDistShuffleN,2)/2)*2; % Length of signal (making sure it's even)
-        f = Fs*(0:(L/2))/L; % Define the frequency domain f
-        X = FRDistShuffleN(:,1:L)';
-        Y=fft(X);
-        P2 = abs(Y/L);
-        P1 = P2(1:L/2+1,:);
-        P1(2:end-1,:) = 2*P1(2:end-1,:);
-        PXX_shuffled(:,:,iS)=interp1(f,P1,ops.f_vec);
+%         Fs = 1/ops.SpatialBin; % Sampling frequency
+%         L = floor(size(FRDistShuffleN,2)/2)*2; % Length of signal (making sure it's even)
+%         f = Fs*(0:(L/2))/L; % Define the frequency domain f
+%         X = FRDistShuffleN(:,1:L)';
+%         Y=fft(X);
+%         P2 = abs(Y/L);
+%         P1 = P2(1:L/2+1,:);
+%         P1(2:end-1,:) = 2*P1(2:end-1,:);
+%          [P1,f]=pwelch(FRDistShuffleN',[],[],[],Fs);
+%     PXX=interp1(f,P1,ops.f_vec);    
+%         PXX_shuffled(:,:,iS)=interp1(f,P1,ops.f_vec);
         
         for ii=1:nUnits
             tmp=xcorr(FRDistShuffleN(ii,:),max_lag,'coeff');
             ACG_shuffled(ii,:,iS)=tmp((max_lag+1):end);
         end
     end
-    [~,sn]=fileparts(matfiles(iF).name);
+    
+    acg_upper_limits = prctile(ACG_shuffled,[91:2:99],3)
     mf = matfile(fullfile(outpath,sn),'Writable',true);
     mf.firing_rate = firing_rate_units;
     mf.depth = depth;
     mf.region = reg;
     mf.ACG = ACG;
-    mf.PXX=PXX;
-    mf.PXX_shuffled = PXX_shuffled;
-    mf.ACG_shuffled = ACG_shuffled
+    %mf.PXX=PXX;
+    %mf.PXX_shuffled = PXX_shuffled;
+    %mf.ACG_shuffled = ACG_shuffled
+    mf.acg_upper_limits = acg_upper_limits;
+    mf.mec_entry = mec_entry;
     
 end
 
