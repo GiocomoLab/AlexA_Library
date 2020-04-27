@@ -1,6 +1,10 @@
-outpath = fullfile(OAK,'distance_tuning_fft');
-outpath = '/Users/attialex/distance_tuning_fft';
-savepath ='/Volumes/Samsung_T5/attialex/images/dark_distance';
+outpath = fullfile(OAK,'distance_tuning_pwelch');
+%outpath = '/Users/attialex/distance_tuning_fft';
+%savepath ='/Volumes/Samsung_T5/attialex/images/dark_distance';
+savepath =fullfile(OAK,'images_dark_distance_welch');
+if ~isfolder(savepath)
+    mkdir(savepath)
+end
 matfiles = dir(fullfile(outpath,'np*.mat'));
 hmfig=figure()
 DEPTH = [];
@@ -8,7 +12,7 @@ TUNED = [];
 MOD_DEPTH = [];
 PEAK_LOC_XCORR = [];
 PEAK_LOC_PXX = [];
-for iF = 4%:numel(matfiles)
+for iF = 1:numel(matfiles)
     [~,sn]=fileparts(matfiles(iF).name);
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
     
@@ -95,16 +99,25 @@ end
 xbin = 0:ops.SpatialBin:ops.max_lag_autocorr;
 bins = 0:6:600;
 figure
-subplot(3,1,1)
-PEAK_LOC_XCORR(isnan(PEAK_LOC_XCORR))=1;
+subplot(4,1,1)
+PEAK_LOC_XCORR((PEAK_LOC_XCORR)==0)=1;
 histogram(xbin(PEAK_LOC_XCORR),bins)
 xlabel('peak xcorr location')
 title('all units')
-subplot(3,1,2)
+subplot(4,1,2)
 histogram(xbin(PEAK_LOC_XCORR(TUNED==1)),bins)
 xlabel('peak xcorr location')
 title('tuned units')
-subplot(3,1,3)
-histogram(xbin(PEAK_LOC_XCORR( MOD_DEPTH>.2)),bins)
+subplot(4,1,3)
+histogram(xbin(PEAK_LOC_XCORR( MOD_DEPTH>.1 & TUNED == 1)),bins)
 xlabel('peak xcorr location')
 title('modulated')
+
+hold on; for ii=1:7; xline(75*sqrt(2)^(ii-2));end;
+v_idx = PEAK_LOC_PXX>0;
+subplot(4,1,4)
+histogram(1./ops.f_vec(PEAK_LOC_PXX(v_idx)),bins)
+%%
+v_idx = PEAK_LOC_PXX>0;
+figure
+scatter(xbin(PEAK_LOC_XCORR(v_idx)),1./ops.f_vec(PEAK_LOC_PXX(v_idx)))
