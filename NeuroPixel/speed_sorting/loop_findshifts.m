@@ -17,7 +17,7 @@ ops.plotfig = false;
 ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -33,15 +33,7 @@ mf.ops = ops;
 
 %% find files
 
-% data_dir=fullfile(OAK,'attialex','NP_DATA');
-% %session_name = {'AA5_190809_gain_1'};
-% filenames = {};
-% sn = dir(fullfile(data_dir,'*.mat'));
-% for iS = 1:numel(sn)
-%     if ~(contains(sn(iS).name,'mismatch') || contains(sn(iS).name,'playback') || contains(sn(iS).name,'dark'))
-%         filenames{end+1}=sn(iS).name(1:end-4);
-%     end
-% end
+
 
 gain = 0.8;
 contrast = 100;
@@ -51,7 +43,7 @@ filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
     
-[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA'));
+[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA_corrected'));
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
@@ -71,13 +63,14 @@ parfor iF=1:numel(filenames)
     [~,session_name]=fileparts(filenames{iF});
 
     if isfile(fullfile(savedir,[session_name '.mat']))
-        disp('\t \t exisits')
+        disp('exisits')
         continue
     end
     try
         data = load(filenames{iF});
         ops_temp = ops;
         nrectrials = max(data.trial);
+        %find blocks of n_trials of baseline
         bl_trials = 1:nrectrials;
         bl_trials = bl_trials(data.trial_contrast(1:nrectrials)==100 & data.trial_gain(1:nrectrials)==1);
         not_done = true;
@@ -101,9 +94,10 @@ parfor iF=1:numel(filenames)
         all_stability = all_factors;
         all_firingRate=all_factors;
         %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
+        %run shift finding for each block
         for iRep=1:numel(good_starts)
             ops_temp.trials = good_starts(iRep)+[0:ops_temp.n_trials-1];
-            [data_out,fighandles] = findBestShifts(data,ops_temp);
+            [data_out,~] = findBestShifts(data,ops_temp);
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             all_factors(iRep,:)=factors;
