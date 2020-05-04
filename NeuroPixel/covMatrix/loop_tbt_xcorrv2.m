@@ -9,7 +9,7 @@ ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.8;
 contrast = 100;
@@ -22,7 +22,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_reg_orig');
+savepath = fullfile(OAK,'tbtxcorr_reg_orig');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -30,12 +30,12 @@ end
 shift_ops = load(fullfile(shiftDir,'parameters.mat'));
 shift_ops = shift_ops.ops;
 %%
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
 %%
-parfor iF=1:numel(filenames)
+for iF=1%:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
