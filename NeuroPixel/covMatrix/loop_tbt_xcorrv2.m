@@ -7,6 +7,7 @@ ops.smoothSigma=ops.smoothSigma_dist;
 smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
+ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
@@ -18,17 +19,18 @@ filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
     
-    [tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA'));
+    [tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA_corrected'));
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_reg_orig');
-shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
+savepath = fullfile(OAK,'attialex','tbtxcorr_contigFR_30cm_data_corrected2');
+shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 shift_ops = load(fullfile(shiftDir,'parameters.mat'));
 shift_ops = shift_ops.ops;
+save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %%
 p = gcp('nocreate');
 if isempty(p)
@@ -88,10 +90,12 @@ parfor iF=1:numel(filenames)
             %tmp = shift_data.all_stability;
             %factors = nanmean(shift_data.all_factors);
             tmp = shift_data.all_stability;
-            tmp = tmp>.5;
+            stab_idx = tmp>.5;
             tmp_f = shift_data.all_factors;
-            tmp_f(tmp)=nan;
+            tmp_f(~stab_idx)=nan;
+            enough_idx = sum(~isnan(tmp_f))>2;
             factors = nanmean(tmp_f);
+            factors(~enough_idx)=nan;
             
             
             % prepare to shift spatial maps according to factors
@@ -161,7 +165,9 @@ parfor iF=1:numel(filenames)
                 if ~isnan(factors(iC))
                     data.posx=posx_orig;
                     tmp = posx_orig+factors(iC)*speed;
-                    tmp = mod(tmp,400);
+                    %tmp = mod(tmp,400);
+                    tmp(tmp<0)=0;
+                    tmp(tmp>ops.TrackEnd)=ops.TrackEnd;
                     data.posx = tmp;
                     %         for iT = 1:numel(trials)
                     %             t_idx = data.trial == trials(iT);
