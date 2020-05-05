@@ -8,11 +8,11 @@ smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.maxLag = ops.max_lag;
-ops.chunksize=100; %in bins,so thats 200 cm
+ops.chunksize=50; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
-ops.stride = 10;
-OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+ops.stride = 5;
+OAK='/oak/stanford/groups/giocomo/attialex';
+%OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.8;
 contrast = 100;
@@ -21,23 +21,23 @@ filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
     
-    [tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA_corrected'));
+    [tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'NP_DATA_corrected'));
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'tbtxcorr_reg_orig');
+savepath = fullfile(OAK,'tbtxcorr_reg_100   cmChunk');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 
 %%
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(12);
+end
 %%
-for iF=1%:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -68,7 +68,7 @@ for iF=1%:numel(filenames)
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
             
-            [PEAKS,SHIFTS,corrMat]=calculatePeakShiftSession_new(data,trials,ops);
+            [PEAKS,SHIFTS,corrMat,shiftMat]=calculatePeakShiftSession_new(data,trials,ops);
             if ~all(data.trial_contrast(trials)==contrast)
                 error('gain trials violating contrast condition')
                 
@@ -84,6 +84,7 @@ for iF=1%:numel(filenames)
             
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
+            data_out.shiftMat = shiftMat;
             data_out.PEAKS = PEAKS;
             
             data_out.SHIFTS = SHIFTS;

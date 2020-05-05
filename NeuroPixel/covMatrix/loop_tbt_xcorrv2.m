@@ -10,9 +10,9 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.8;
+gain = 0.6;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -23,7 +23,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_contigFR_30cm_data_corrected2');
+savepath = fullfile(OAK,'attialex','tbtxcorr_06');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
