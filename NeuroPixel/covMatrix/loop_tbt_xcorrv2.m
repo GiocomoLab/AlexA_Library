@@ -10,7 +10,7 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.8;
 contrast = 100;
@@ -32,12 +32,12 @@ shift_ops = load(fullfile(shiftDir,'parameters.mat'));
 shift_ops = shift_ops.ops;
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %%
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
 %%
-parfor iF=1:numel(filenames)
+for iF=1%:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
