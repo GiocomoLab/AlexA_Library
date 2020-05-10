@@ -26,7 +26,7 @@ for iR = 1:numel(regions)
 end
 savepath = fullfile(OAK,'attialex','tbtxcorr_range');
 fig_save_path = fullfile(savepath,'images');
-shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
+ shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -44,7 +44,7 @@ cmap = cbrewer('seq','BuPu',20);
 
 colormap(cmap)
 %%
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -114,6 +114,7 @@ for iF=1:numel(filenames)
             if good>3
                 cluID = cellID(iC);
                 saveas(fig,fullfile(fig_save_path,sn,sprintf('%d.png',cluID)))
+                saveas(fig,fullfile(fig_save_path,sn,sprintf('%d.pdf',cluID)))
             end
             clf
             
