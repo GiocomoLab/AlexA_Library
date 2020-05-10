@@ -9,8 +9,8 @@ ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
-%OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+OAK='/oak/stanford/groups/giocomo/';
+%OAK = '/Volumes/Samsung_T5';
 gains = [0.5, 0.6, 0.7, 0.8];
 %%
 gain = 0.6;
@@ -81,7 +81,10 @@ colormap(cmap)
         cellID = data.sp.cids(data.sp.cgs==2);
         
         [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
-        
+        ons05=strfind(data.trial_gain'==0.5,[0 1])
+        if numel(ons05)<2
+            continue
+        end
         for iC=1:size(frMat,1)
             good=0;
             for iG=1%1:numel(gains)
@@ -143,10 +146,11 @@ colormap(cmap)
                 saveas(fig,fullfile(fig_save_path,sn,sprintf('%d.png',cluID)))
                 saveas(fig,fullfile(fig_save_path,sn,sprintf('%d.pdf',cluID)))
             end
-            close(fig)
+            clf
             
         end
         
+        close(fig)
         
         
         
@@ -166,7 +170,7 @@ colormap(cmap)
     catch ME
         disp(ME.message)
         disp(sprintf('filenr: %d',iF))
-        %rethrow(ME)
+        rethrow(ME)
     end
 end
 
