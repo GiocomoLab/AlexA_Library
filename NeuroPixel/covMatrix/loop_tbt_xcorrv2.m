@@ -12,7 +12,7 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.6;
+gain = 1.0;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -23,7 +23,13 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_06');
+triggers_new = triggers;
+for iT=1:numel(triggers)
+    nT=numel(triggers{iT});
+    triggers_new{iT}=[triggers{iT}(1) triggers{iT}(round(nT/2))];
+end
+triggers=triggers_new;
+savepath = fullfile(OAK,'attialex','tbtxcorr_baseline');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -37,7 +43,7 @@ save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %     p = parpool(12);
 % end
 %%
-for iF=1%:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
