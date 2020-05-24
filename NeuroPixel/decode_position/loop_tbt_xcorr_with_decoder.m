@@ -15,7 +15,7 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 1.0;
+gain = 0.8;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
