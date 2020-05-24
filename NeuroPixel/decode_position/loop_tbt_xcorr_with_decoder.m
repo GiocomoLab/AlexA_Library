@@ -26,12 +26,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-triggers_new = triggers;
-for iT=1:numel(triggers)
-    nT=numel(triggers{iT});
-    triggers_new{iT}=[triggers{iT}(1) triggers{iT}(round(nT/2))];
-end
-triggers=triggers_new;
+
 savepath = fullfile(OAK,'attialex','tbtxcorr_decoder');
 if ~isfolder(savepath)
     mkdir(savepath)
