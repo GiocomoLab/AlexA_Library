@@ -101,8 +101,9 @@ parfor iF=1:numel(filenames)
                 tc_n = tuning_curve./vn;
                 Xt=squeeze(frMat(:,iFold,:));
                 Xt=Xt./vecnorm(Xt,2,2);
+                Xt(isnan(Xt))=0;
                 %find closest poin on trajectory
-                dot_prod = tuning_curve' * Xt;
+                dot_prod = tc_n' * Xt;
                 
                 [dist,max_bin] = max(dot_prod);
                 tmp_e = ops.xbincent - ops.xbincent(max_bin);
