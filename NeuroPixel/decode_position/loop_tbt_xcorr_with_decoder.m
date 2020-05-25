@@ -13,7 +13,7 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.8;
 contrast = 100;
@@ -33,12 +33,12 @@ if ~isfolder(savepath)
 end
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
 %%
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -93,10 +93,10 @@ parfor iF=1:numel(filenames)
                 take_idx(7:end)=false;
                 
                 tuning_curve = squeeze(mean(frMat(:,take_idx,:),2));
-                vn=vecnorm(tuning_curve,2,2);
+                vn=vecnorm(tuning_curve,2,1);
                 tc_n = tuning_curve./vn;
                 Xt=squeeze(frMat(:,iFold,:));
-                Xt=Xt./vecnorm(Xt,2,2);
+                Xt=Xt./vecnorm(Xt,2,1);
                 Xt(isnan(Xt))=0;
                 %find closest poin on trajectory
                 dot_prod = tc_n' * Xt;
@@ -108,17 +108,37 @@ parfor iF=1:numel(filenames)
                 score_mat(:,iFold,:)=[tmp_e;dist];
             end
             
- 
+            fr = calcFRVsTime(cellID,data,ops);
+            speed = calcSpeed(data.posx,ops);
+            speed = speed./data.trial_gain(data.trial);
+            fr = fr(:,speed>ops.SpeedCutoff);
+            trial = data.trial(speed>ops.SpeedCutoff);
+            posx = data.posx(speed>ops.SpeedCutoff);
+            speed = speed(speed>ops.SpeedCutoff);
            
+            % extract firing rate map and position data for trials from this rep
+            X = fr(:,ismember(trial,trials));
+            trial_this = trial(ismember(trial,trials));
+            posx_this = posx(ismember(trial,trials));
+            speed_this = speed(ismember(trial,trials));
             
-            
-            
+            % define encoding and decoding trials
+            encode_trials = ismember(trial_this,trials(1:ops.num_tr_bl));
+            decode_trials = ismember(trial_this,trials(ops.num_tr_bl+1:end));
+            Xn = X ./vecnorm(X,2,1);
+            dot_prod = tc_n'*Xn;
+            [dist,max_bin] = max(dot_prod);
+            tmp_e = posx_this' - ops.xbincent(max_bin);
+            correction_idx = abs(tmp_e)>ops.TrackEnd/2;
+            tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
             
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
             data_out.shiftMat = shiftMat;
             data_out.scoreMat = score_mat;
-            
+            data_out.time_error = tmp_e;
+            data_out.time_distance = dist;
+            data_out.posx = posx_this';
             
             data_out.region = reg;
             data_out.region_orig = reg_orig;
