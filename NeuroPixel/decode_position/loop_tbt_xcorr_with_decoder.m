@@ -13,7 +13,7 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.8;
 contrast = 100;
@@ -27,18 +27,18 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_time');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(12);
+end
 %%
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
