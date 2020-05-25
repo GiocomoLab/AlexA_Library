@@ -80,7 +80,8 @@ parfor iF=1:numel(filenames)
             cellID = cellID(stab>ops.stab_thresh);
             region = reg(stab>ops.stab_thresh);
             frMat = frMat(stab>ops.stab_thresh,:,:);
-            
+            corrMat = corrMat(stab>ops.stab_thresh,:,:);
+            shiftMat = shiftMat(stab>ops.stab_thresh,:,:);
             score_mat = zeros(2,size(frMat,2),size(frMat,3));
             for iFold = 1:numel(trials)
                 take_idx = true(1,numel(trials));
