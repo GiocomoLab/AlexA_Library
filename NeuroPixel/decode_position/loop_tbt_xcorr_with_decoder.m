@@ -144,7 +144,7 @@ parfor iF=1:numel(filenames)
             data_out.region_orig = reg_orig;
             
            
-            data_out.trials = trials;
+            data_out.trials = trial_this;
         end
     catch ME
         disp(ME.message)
