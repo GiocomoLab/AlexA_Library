@@ -116,7 +116,7 @@ parfor iF=1:numel(filenames)
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
             data_out.shiftMat = shiftMat;
-            
+            data_out.scoreMat = score_mat;
             
             
             data_out.region = reg;
