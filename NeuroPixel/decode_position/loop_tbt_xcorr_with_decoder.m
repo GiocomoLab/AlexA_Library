@@ -93,7 +93,6 @@ end
             end
             frMat = frN;
             X=X./mm;
-            X=X(stab>ops.stab_thresh,:);
             stab = nanmean(nanmean(corrMat(:,1:6,1:6),2),3);
             if nnz(stab>ops.stab_thresh)<5
                 continue
@@ -103,6 +102,8 @@ end
             region = reg(stab>ops.stab_thresh);
             frMat = frMat(stab>ops.stab_thresh,:,:);
             
+            X=X(stab>ops.stab_thresh,:);
+
             corrMat = corrMat(stab>ops.stab_thresh,:,:);
             shiftMat = shiftMat(stab>ops.stab_thresh,:,:);
             score_mat = zeros(2,size(frMat,2),size(frMat,3));
