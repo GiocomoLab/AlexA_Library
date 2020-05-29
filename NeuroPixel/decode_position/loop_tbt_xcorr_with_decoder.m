@@ -27,7 +27,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_time');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_time_norm');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -74,7 +74,24 @@ parfor iF=1:numel(filenames)
 continue;
 end           
  [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
-            
+ fr = calcFRVsTime(cellID,data,ops);
+            speed = calcSpeed(data.posx,ops);
+            speed = speed./data.trial_gain(data.trial);
+            fr = fr(:,speed>ops.SpeedCutoff);
+            trial = data.trial(speed>ops.SpeedCutoff);
+            posx = data.posx(speed>ops.SpeedCutoff);
+            speed = speed(speed>ops.SpeedCutoff);
+           
+            % extract firing rate map and position data for trials from this rep
+            X = fr(:,ismember(trial,trials));
+            mm=max(X,[],2);
+            frN=frMat;
+            for iT=1:16
+                for iP=1:200
+                    frN(:,iT,iP)=frMat(:,iT,iP)./mm;
+                end
+            end
+            frMat = frN;
 
             stab = nanmean(nanmean(corrMat(:,1:6,1:6),2),3);
             if nnz(stab>ops.stab_thresh)<5
@@ -112,16 +129,7 @@ end
                 score_mat(:,iFold,:)=[tmp_e;dist];
             end
             
-            fr = calcFRVsTime(cellID,data,ops);
-            speed = calcSpeed(data.posx,ops);
-            speed = speed./data.trial_gain(data.trial);
-            fr = fr(:,speed>ops.SpeedCutoff);
-            trial = data.trial(speed>ops.SpeedCutoff);
-            posx = data.posx(speed>ops.SpeedCutoff);
-            speed = speed(speed>ops.SpeedCutoff);
-           
-            % extract firing rate map and position data for trials from this rep
-            X = fr(:,ismember(trial,trials));
+            
             trial_this = trial(ismember(trial,trials));
             posx_this = posx(ismember(trial,trials));
             speed_this = speed(ismember(trial,trials));
