@@ -70,7 +70,10 @@ parfor iF=1:numel(filenames)
             cellID = data.sp.cids(data.sp.cgs==2);
             cellID = cellID(startsWith(reg,'MEC'));
             reg = reg(startsWith(reg,'MEC'));
-            [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
+	if numel(cellID)<5
+continue;
+end           
+ [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
             
 
             stab = nanmean(nanmean(corrMat(:,1:6,1:6),2),3);
