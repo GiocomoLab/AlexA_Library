@@ -68,7 +68,8 @@ parfor iF=1:numel(filenames)
             ops_here = ops;
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
-            
+            cellID = cellID(startsWith(reg,'MEC'));
+            reg = reg(startsWith(reg,'MEC'));
             [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
             
 
@@ -140,8 +141,7 @@ parfor iF=1:numel(filenames)
             data_out.time_distance = dist;
             data_out.posx = posx_this';
             
-            data_out.region = reg;
-            data_out.region_orig = reg_orig;
+            data_out.region = region;
             
            
             data_out.trials = trial_this;
