@@ -24,23 +24,24 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 if gain ==1.0 %reduce number of triggers in baseline
-triggers_new = triggers;
-for iT=1:numel(triggers)
-    nT=numel(triggers{iT});
-    if nT>1
-        new_trigs = [triggers{iT}(1) triggers{iT}(round(nT/2))];
-        if diff(new_trigs)<20
-            new_trigs = [triggers{iT}(1) triggers{iT}(nT)];
+    triggers_new = triggers;
+    for iT=1:numel(triggers)
+        nT=numel(triggers{iT});
+        if nT>1
+            new_trigs = [triggers{iT}(1) triggers{iT}(round(nT/2))];
+            if diff(new_trigs)<20
+                new_trigs = [triggers{iT}(1) triggers{iT}(nT)];
+            end
+            if diff(new_trigs)<20
+                new_trigs = new_trigs(1);
+            end
+            triggers_new{iT}=new_trigs;
         end
-        if diff(new_trigs)<20
-            new_trigs = new_trigs(1);
-        end
-    triggers_new{iT}=new_trigs;
     end
+    
+    
+    triggers=triggers_new;
 end
-end
-%%
-triggers=triggers_new;
 savepath = fullfile(OAK,'attialex','tbtxcorr_08');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
@@ -62,7 +63,7 @@ parfor iF=1:numel(filenames)
         
         for iRep=1:numel(triggers{iF})
             data = load(filenames{iF});
-
+            
             if isfield(data.anatomy,'parent_shifted')
                 reg = data.anatomy.parent_shifted;
             else
@@ -118,7 +119,7 @@ parfor iF=1:numel(filenames)
             
             % prepare to shift spatial maps according to factors
             good_idx = ismember(data.sp.clu,data.sp.cids(data.sp.cgs==2));
-
+            
             clu_tmp = data.sp.clu(good_idx);
             st_tmp = data.sp.st(good_idx);
             [uClu,~,clus]=unique(clu_tmp);
@@ -202,8 +203,8 @@ parfor iF=1:numel(filenames)
                 end
                 
             end
-                            data.posx = posx_orig;
-
+            data.posx = posx_orig;
+            
             %corrMatS2=corrMatS2(all_good,:,:);
             %shiftMatS2=shiftMatS2(all_good,:,:);
             
