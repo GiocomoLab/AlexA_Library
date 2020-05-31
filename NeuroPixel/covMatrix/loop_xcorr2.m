@@ -13,7 +13,7 @@ ops.stability_threshold=0.2;
 ops.smoothSigma = 4;
 ops.startVec = startVec;
 %%
-[filenames,triggers] = getFilesCriteria(ops.region,ops.contrast,ops.gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA');
+[filenames,triggers] = getFilesCriteria(ops.region,ops.contrast,ops.gain_to_look_at,'/oak/stanford/groups/giocomo/attialex/NP_DATA_corrected');
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'/users/attialex/Desktop/data');
 %%
 %[filenames,triggers] = getFilesCriteria(region,contrast,gain_to_look_at,'F:\NP_DATA');
