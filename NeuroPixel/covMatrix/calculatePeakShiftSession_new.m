@@ -1,7 +1,7 @@
-function [PEAKS,SHIFTS,corrMat,shiftMat]=calculatePeakShiftSession_new(data,trials,ops)
+function [PEAKS,SHIFTS,corrMat,shiftMat_all]=calculatePeakShiftSession_new(data,trials,ops)
 
 good_cells = data.sp.cids(data.sp.cgs==2);
-[corrMat,frMat,shiftMat]=trialCorrMat(good_cells,trials,data,ops);
+[corrMat,frMat,shiftMat_all]=trialCorrMat(good_cells,trials,data,ops);
 
 
 
