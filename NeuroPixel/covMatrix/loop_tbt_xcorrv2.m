@@ -12,7 +12,7 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 1.0;
+gain = 0.8;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -41,7 +41,7 @@ end
 end
 %%
 triggers=triggers_new;
-savepath = fullfile(OAK,'attialex','tbtxcorr_baseline');
+savepath = fullfile(OAK,'attialex','tbtxcorr_08');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
