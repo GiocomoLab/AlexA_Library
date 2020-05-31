@@ -8,11 +8,11 @@ smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.maxLag = ops.max_lag;
-ops.chunksize=50; %in bins,so thats 200 cm
+ops.chunksize=199; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
 ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
-%OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/Samsung_T5/attialex';
 %%
 gain = 0.8;
 contrast = 100;
@@ -25,7 +25,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'tbtxcorr_reg_100   cmChunk');
+savepath = fullfile(OAK,'tbtxcorr_reg_400cmChunk');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
