@@ -23,11 +23,23 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
+if gain ==1.0 %reduce number of triggers in baseline
 triggers_new = triggers;
 for iT=1:numel(triggers)
     nT=numel(triggers{iT});
-    triggers_new{iT}=[triggers{iT}(1) triggers{iT}(round(nT/2))];
+    if nT>1
+        new_trigs = [triggers{iT}(1) triggers{iT}(round(nT/2))];
+        if diff(new_trigs)<20
+            new_trigs = [triggers{iT}(1) triggers{iT}(nT)];
+        end
+        if diff(new_trigs)<20
+            new_trigs = new_trigs(1);
+        end
+    triggers_new{iT}=new_trigs;
+    end
 end
+end
+%%
 triggers=triggers_new;
 savepath = fullfile(OAK,'attialex','tbtxcorr_baseline');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
@@ -38,10 +50,10 @@ shift_ops = load(fullfile(shiftDir,'parameters.mat'));
 shift_ops = shift_ops.ops;
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %%
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(12);
+end
 %%
 parfor iF=1:numel(filenames)
     
@@ -74,7 +86,7 @@ parfor iF=1:numel(filenames)
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
             
-            [corrMat,b,shiftMat]=trialCorrMat(cellID,trials,data,ops);
+            [corrMat,fr_map,shiftMat]=trialCorrMat(cellID,trials,data,ops);
             if ~all(data.trial_contrast(trials)==contrast)
                 error('gain trials violating contrast condition')
                 
@@ -199,7 +211,7 @@ parfor iF=1:numel(filenames)
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
             data_out.shiftMat = shiftMat;
-            
+            data_out.baseline_map = squeeze(nanmean(fr_map(:,1:6,:),2));
             data_out.corrMatShifted = corrMatShifted;
             data_out.shiftMatShifted = shiftMatShifted;
             data_out.shiftMatS2 = shiftMatS2;
