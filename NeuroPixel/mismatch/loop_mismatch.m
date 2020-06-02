@@ -1,3 +1,6 @@
+
+%matfiles = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
+
 matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_2/*mismatch*.mat');
 
 matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
@@ -146,27 +149,35 @@ end
 
 %%
 [~,sidx]=sort(diff(THETA_POWER,[],2));
-%IDX = sidx(end-100:end);
-IDX = sidx(end-200:end);
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+
+chunksize=203;
+nChunks = floor(size(MM,1)/chunksize);
+cmap = cbrewer('div','RdBu',20);
+cmap=flipud(cmap);
+for iC=[1 10]%nChunks
+figure
+sub_idx=(iC-1)*chunksize+(1:chunksize);
+IDX = sidx(sub_idx);
 %IDX=RANK<.1
 params=struct();
 params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
 params.xLim=[-2 3];
-figure
+subplot(2,1,1)
 plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
 plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
 
 
-figure
-subplot(1,2,1)
-MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+
+subplot(2,1,2)
 imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-1 1])
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
+
 colormap(cmap);
-subplot(1,2,2)
-MM_ms = MM_R-mean(MM_R(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-imagesc(MM_ms(IDX,:),[-1 1])
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-colormap(cmap);
+
+end
+% subplot(1,2,2)
+% MM_ms = MM_R-mean(MM_R(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+% imagesc(MM_ms(IDX,:),[-1 1])
+% cmap = cbrewer('div','RdBu',20);
+% cmap=flipud(cmap);
+% colormap(cmap);
