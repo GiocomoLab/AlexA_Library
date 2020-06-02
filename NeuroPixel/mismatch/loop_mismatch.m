@@ -4,11 +4,15 @@ matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 opt = load_mismatch_opt;
 opt.time_bins =-2:0.02:3;
 opt.extract_win = [-2 3];
+opt.TimeBin = 0.05;
+opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
+
 MM=[];
 avgMM = [];
 avgMMR = [];
 SID = [];
 MM_R=[];
+THETA_POWER = [];
 for iF=1:numel(matfiles)
     disp(iF)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
@@ -66,13 +70,33 @@ for iF=1:numel(matfiles)
         
     end
     n_trigs_included = numel(unique(trial_vec(:,3)));
-        n_trigs_included_random = numel(unique(trial_vec_random(:,3)));
+    n_trigs_included_random = numel(unique(trial_vec_random(:,3)));
 
     count_vec = count_vec/n_trigs_included;
     count_vec_random = count_vec_random/n_trigs_included_random;
+    %theta
+    frMat = calcFRVsTime(data_out.sp.cids(data_out.sp.cgs==2),data_out,opt);
+
+
+    [PxxSpikes,FSpikes]=pwelch(frMat',size(frMat,2),[],[],1/opt.TimeBin);
+
+
+    theta_range=[4 12]; 
+    theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
+    rest_idx = ~theta_idx & FSpikes>1;
+    thetaPower = mean(PxxSpikes(theta_idx,:));
+    restPower = mean(PxxSpikes(rest_idx,:));
     
+    %[~,theta_sort] = sort(thetaPower./(thetaPower+restPower),'descend');
+    [~,theta_sort] = sort(thetaPower,'descend');
+
+    r = 1:length(thetaPower);
+    r(theta_sort) = r;
+    r=r/length(thetaPower);
+    %collect data
     MM=cat(1,MM,count_vec);
     MM_R = cat(1,MM_R,count_vec_random);
+    THETA_POWER = cat(1,THETA_POWER,[thetaPower',restPower']);
     SID = cat(1,SID,ones(numel(good_cells),1)*iF);
     avgMM = cat(1,avgMM,mean(count_vec));
     avgMMR = cat(1,avgMMR,mean(count_vec_random));
@@ -94,3 +118,11 @@ plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_
 plotAVGSEM(MM_R',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
 
 %%
+
+params=struct();
+params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
+params.xLim=[-2 3];
+figure
+plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
+plotAVGSEM(MM_R',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
+
