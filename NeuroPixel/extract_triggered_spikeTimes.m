@@ -21,23 +21,19 @@ time_idx(time_idx+win(1)<=0)=[];
 time_idx(time_idx+win(2)>max(spike_times))=[];
 n_times = length(time_idx);
 cluster_ID=sp_struct.clu;
-n_units = max(cluster_ID)+1;
-tmp = max(sp_struct.cids)+1;
-n_units=max(n_units,tmp);
+
 
 n_aux = size(aux,1)-1;
 
-time_vec=win(1):0.001:win(2);
-spike_mat=zeros(n_units,n_times,length(time_vec));
-spike_times_struct = {};
+spike_times_struct = cell(n_times,1);
 
 for iT=1:n_times
     start = time_idx(iT)+win(1);
     stop = time_idx(iT)+win(2);
     spike_idx = (spike_times>start & spike_times<stop);
     cluIDs = cluster_ID(spike_idx);
-    times = (spike_times(spike_idx)-start);
-    spike_times_struct{iT}=cat(2,times,double(cluIDs));
+    times = (spike_times(spike_idx)-start+win(1));
+    spike_times_struct{iT}=cat(2,times,double(cluIDs),ones(size(times))*iT);
 end
 
 if ~isempty(aux)
