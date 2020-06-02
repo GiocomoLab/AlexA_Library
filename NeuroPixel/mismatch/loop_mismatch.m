@@ -107,9 +107,9 @@ end
     thetaPower_low = xcorrs(:,54);
     [~,theta_sort] = sort(thetaPower,'descend');
 
-    r = 1:length(thetaPower);
-    r(theta_sort) = r;
-    r=r/length(thetaPowerN);
+%     r = 1:length(thetaPower);
+%     r(theta_sort) = r;
+%     r=r/length(thetaPowerN);
     %collect data
     MM=cat(1,MM,count_vec);
     MM_R = cat(1,MM_R,count_vec_random);
