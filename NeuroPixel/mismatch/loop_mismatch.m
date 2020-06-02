@@ -4,7 +4,7 @@ matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 opt = load_mismatch_opt;
 opt.time_bins =-2:0.02:3;
 opt.extract_win = [-2 3];
-opt.TimeBin = 0.05;
+opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
 
 MM=[];
@@ -75,28 +75,42 @@ for iF=1:numel(matfiles)
     count_vec = count_vec/n_trigs_included;
     count_vec_random = count_vec_random/n_trigs_included_random;
     %theta
-    frMat = calcFRVsTime(data_out.sp.cids(data_out.sp.cgs==2),data_out,opt);
+    tB=0:opt.TimeBin:max(data_out.sp.st);
+
+frMat= zeros(numel(good_cells),numel(tB)-1);
+
+for iC=1:numel(good_cells)
+    idx = data_out.sp.clu==good_cells(iC);
+    frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
+end
+
+    %[PxxSpikes,FSpikes]=pwelch(frMat',size(frMat,2),[],[],1/opt.TimeBin);
 
 
-    [PxxSpikes,FSpikes]=pwelch(frMat',size(frMat,2),[],[],1/opt.TimeBin);
-
-
-    theta_range=[4 12]; 
-    theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
-    rest_idx = ~theta_idx & FSpikes>1;
-    thetaPower = mean(PxxSpikes(theta_idx,:));
-    restPower = mean(PxxSpikes(rest_idx,:));
+%     theta_range=[4 12]; 
+%     theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
+%     rest_idx = ~theta_idx & FSpikes>1;
+%     thetaPower = mean(PxxSpikes(theta_idx,:));
+%     restPower = mean(PxxSpikes(rest_idx,:));
     
     %[~,theta_sort] = sort(thetaPower./(thetaPower+restPower),'descend');
+    nC=size(frMat,1);
+maxLag=50;
+xcorrs=zeros(nC,2*maxLag+1);
+for iC=1:nC
+    xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag);
+end
+    thetaPower = xcorrs(:,58);
+    thetaPower_low = xcorrs(:,54);
     [~,theta_sort] = sort(thetaPower,'descend');
 
     r = 1:length(thetaPower);
     r(theta_sort) = r;
-    r=r/length(thetaPower);
+    r=r/length(thetaPowerN);
     %collect data
     MM=cat(1,MM,count_vec);
     MM_R = cat(1,MM_R,count_vec_random);
-    THETA_POWER = cat(1,THETA_POWER,[thetaPower',restPower']);
+    THETA_POWER = cat(1,THETA_POWER,[thetaPower,thetaPower_low]);
     SID = cat(1,SID,ones(numel(good_cells),1)*iF);
     avgMM = cat(1,avgMM,mean(count_vec));
     avgMMR = cat(1,avgMMR,mean(count_vec_random));
@@ -118,11 +132,41 @@ plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_
 plotAVGSEM(MM_R',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
 
 %%
+RANK=[];
+[uS]=unique(SID);
+for iS=1:numel(uS)
+    idx = SID==uS(iS);
+    resp = diff(THETA_POWER(idx,:),[],2);
+    ranking=1:numel(resp);
+    [~,sid]=sort(resp);
+    ranking(sid)=ranking/numel(resp);
+    RANK = cat(1,RANK,ranking');
 
+end
+
+%%
+[~,sidx]=sort(diff(THETA_POWER,[],2));
+%IDX = sidx(end-100:end);
+IDX = sidx(end-200:end);
+%IDX=RANK<.1
 params=struct();
 params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
 params.xLim=[-2 3];
 figure
-plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-plotAVGSEM(MM_R',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
+plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
+plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
 
+
+figure
+subplot(1,2,1)
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-1 1])
+cmap = cbrewer('div','RdBu',20);
+cmap=flipud(cmap);
+colormap(cmap);
+subplot(1,2,2)
+MM_ms = MM_R-mean(MM_R(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+imagesc(MM_ms(IDX,:),[-1 1])
+cmap = cbrewer('div','RdBu',20);
+cmap=flipud(cmap);
+colormap(cmap);
