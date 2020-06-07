@@ -1,11 +1,19 @@
 
 %matfiles = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
 
-matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_2/*mismatch*.mat');
-
-matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
+%matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_2/*mismatch*.mat');
+matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
+plotfig= true;
+if plotfig
+    imsavedir  = '/Users/attialex/images';
+    if ~isfolder(imsavedir)
+        mkdir(imsavedir)
+    end
+end
+matfiles = matfiles(cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 opt = load_mismatch_opt;
 opt.time_bins =-2:0.02:3;
+opt.time_vecs = opt.time_bins(1:end-1)*0.5+opt.time_bins(2:end)*0.5;
 opt.extract_win = [-2 3];
 opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
@@ -16,6 +24,7 @@ avgMMR = [];
 SID = [];
 MM_R=[];
 THETA_POWER = [];
+cmap_fr = cbrewer('seq','BuPu',20);
 for iF=1:numel(matfiles)
     disp(iF)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
@@ -67,49 +76,49 @@ for iF=1:numel(matfiles)
         idx = trial_vec(:,2)==good_cells(iC);
         [spike_count]=histcounts(trial_vec(idx,1),opt.time_bins);
         count_vec(iC,:)=spike_count;
-         idx = trial_vec_random(:,2)==good_cells(iC);
+        idx = trial_vec_random(:,2)==good_cells(iC);
         [spike_count]=histcounts(trial_vec_random(idx,1),opt.time_bins);
-        count_vec_random(iC,:)=spike_count;      
+        count_vec_random(iC,:)=spike_count;
         
     end
     n_trigs_included = numel(unique(trial_vec(:,3)));
     n_trigs_included_random = numel(unique(trial_vec_random(:,3)));
-
-    count_vec = count_vec/n_trigs_included;
-    count_vec_random = count_vec_random/n_trigs_included_random;
+    
+    count_vec = count_vec/n_trigs_included/opt.TimeBin;
+    count_vec_random = count_vec_random/n_trigs_included_random/opt.TimeBin;
     %theta
     tB=0:opt.TimeBin:max(data_out.sp.st);
-
-frMat= zeros(numel(good_cells),numel(tB)-1);
-
-for iC=1:numel(good_cells)
-    idx = data_out.sp.clu==good_cells(iC);
-    frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
-end
-
+    
+    frMat= zeros(numel(good_cells),numel(tB)-1);
+    
+    for iC=1:numel(good_cells)
+        idx = data_out.sp.clu==good_cells(iC);
+        frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
+    end
+    
     %[PxxSpikes,FSpikes]=pwelch(frMat',size(frMat,2),[],[],1/opt.TimeBin);
-
-
-%     theta_range=[4 12]; 
-%     theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
-%     rest_idx = ~theta_idx & FSpikes>1;
-%     thetaPower = mean(PxxSpikes(theta_idx,:));
-%     restPower = mean(PxxSpikes(rest_idx,:));
+    
+    
+    %     theta_range=[4 12];
+    %     theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
+    %     rest_idx = ~theta_idx & FSpikes>1;
+    %     thetaPower = mean(PxxSpikes(theta_idx,:));
+    %     restPower = mean(PxxSpikes(rest_idx,:));
     
     %[~,theta_sort] = sort(thetaPower./(thetaPower+restPower),'descend');
     nC=size(frMat,1);
-maxLag=50;
-xcorrs=zeros(nC,2*maxLag+1);
-for iC=1:nC
-    xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag);
-end
+    maxLag=50;
+    xcorrs=zeros(nC,2*maxLag+1);
+    for iC=1:nC
+        xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag);
+    end
     thetaPower = xcorrs(:,58);
     thetaPower_low = xcorrs(:,54);
     [~,theta_sort] = sort(thetaPower,'descend');
-
-%     r = 1:length(thetaPower);
-%     r(theta_sort) = r;
-%     r=r/length(thetaPowerN);
+    theta = thetaPower-thetaPower_low;
+    %     r = 1:length(thetaPower);
+    %     r(theta_sort) = r;
+    %     r=r/length(thetaPowerN);
     %collect data
     MM=cat(1,MM,count_vec);
     MM_R = cat(1,MM_R,count_vec_random);
@@ -118,11 +127,49 @@ end
     avgMM = cat(1,avgMM,mean(count_vec));
     avgMMR = cat(1,avgMMR,mean(count_vec_random));
     %MMR=cat(1,MMR,count_vec_random);
+    [~,sn] = fileparts(matfiles(iF).name);
+    mm_resp = mean(count_vec(:,105:125),2)-mean(count_vec(:,75:100),2);
+    %save(['/Users/attialex/temp/' sn '.mat'],'count_vec','trial_vec','trial_vec_random','good_cells','theta','mm_resp');
+    if plotfig
+        imsavedir_this = fullfile(imsavedir,sn);
+        if ~isfolder(imsavedir_this)
+            mkdir(imsavedir_this)
+        end
+        
+        idx_pre = opt.time_vecs<0 & opt.time_vecs>-.5;
+        idx_post = opt.time_vecs>0.1 & opt.time_vecs<0.6;
+        mm_response = mean(count_vec(:,idx_post),2)-mean(count_vec(:,idx_pre),2);
+        %frMat = calcTrialFRMat(good_cells,1:max(data_out.trial)-1,data_out,load_default_opt);
+        [cm,frMat,~]=trialCorrMat(good_cells,1:max(data_out.trial)-1,data_out,load_default_opt);
+        figure
+        imagesc(squeeze(nanmean(cm)),[0 .7])
+        axis image
+        saveas(gcf,fullfile(imsavedir_this,'sim_map.png'));
+        close(gcf)
+        [~,sidx]=sort(mm_response,'descend');
+        figure
+        for ii=1:10
+            subplot(2,2,[1 3])
+            imagesc(1:2:400,1:max(data_out.trial)-1,squeeze(frMat(sidx(ii),:,:)))
+            hold on
+            plot(data_out.posx(mm_trigs),data_out.trial(mm_trigs),'ro')
+            colormap(cmap_fr)
+            hold on
+            subplot(2,2,2)
+            idx = trial_vec(:,2)==good_cells(sidx(ii));
+            scatter(trial_vec(idx,1),trial_vec(idx,3),15,'.')
+            subplot(2,2,4)
+            plot(opt.time_vecs,count_vec(sidx(ii),:));
+            saveas(gcf,fullfile(imsavedir_this,sprintf('%d.png',good_cells(sidx(ii)))));
+            clf
+        end
+        close(gcf)
+    end
 end
 %%
 figure
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-imagesc((MM_ms),[-1 1])
+imagesc((MM_ms),[-50 50])
 cmap = cbrewer('div','RdBu',20);
 cmap=flipud(cmap);
 colormap(cmap);
@@ -144,7 +191,7 @@ for iS=1:numel(uS)
     [~,sid]=sort(resp);
     ranking(sid)=ranking/numel(resp);
     RANK = cat(1,RANK,ranking');
-
+    
 end
 
 %%
@@ -155,25 +202,25 @@ chunksize=203;
 nChunks = floor(size(MM,1)/chunksize);
 cmap = cbrewer('div','RdBu',20);
 cmap=flipud(cmap);
-for iC=[1 10]%nChunks
-figure
-sub_idx=(iC-1)*chunksize+(1:chunksize);
-IDX = sidx(sub_idx);
-%IDX=RANK<.1
-params=struct();
-params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-params.xLim=[-2 3];
-subplot(2,1,1)
-plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-
-
-
-subplot(2,1,2)
-imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-1 1])
-
-colormap(cmap);
-
+for iC=[1 nChunks]%nChunks
+    figure
+    sub_idx=(iC-1)*chunksize+(1:chunksize);
+    IDX = sidx(sub_idx);
+    %IDX=RANK<.1
+    params=struct();
+    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
+    params.xLim=[-2 3];
+    subplot(2,1,1)
+    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
+    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
+    
+    
+    
+    subplot(2,1,2)
+    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-50 50])
+    
+    colormap(cmap);
+    
 end
 % subplot(1,2,2)
 % MM_ms = MM_R-mean(MM_R(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
@@ -181,3 +228,31 @@ end
 % cmap = cbrewer('div','RdBu',20);
 % cmap=flipud(cmap);
 % colormap(cmap);
+%%
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+
+chunksize=203;
+nChunks = floor(size(MM,1)/chunksize);
+cmap = cbrewer('div','RdBu',20);
+cmap=flipud(cmap);
+
+for iC=[0 .9;.1 1]%nChunks
+    figure
+    
+    IDX = RANK>= iC(1) & RANK<=iC(2);
+    %IDX=RANK<.1
+    params=struct();
+    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
+    params.xLim=[-2 3];
+    subplot(2,1,1)
+    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
+    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
+    
+    
+    
+    subplot(2,1,2)
+    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-50 50])
+    
+    colormap(cmap);
+    
+end
