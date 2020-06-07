@@ -41,6 +41,7 @@ for iT=1:n_times
     
     
 end
+spike_mat = spike_mat(sp_struct.cids+1,:,:);
 
 if ~isempty(aux)
     idx_win=aux_win(1):aux_win(2);
