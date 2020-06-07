@@ -100,7 +100,7 @@ spMapBL = spMapBL(1:(numel(ops.trials)-4),:,:);
 
 %figure
 include_idx = -20/ops.BinWidth:1:20/ops.BinWidth;
-
+TRIALSPEED = nan(size(spMapBL,3),size(spMapBL,1));
 allSlow = nan(size(spMapBL,3),numel(include_idx));
 allFast = allSlow;
 allGain = allSlow;
@@ -145,10 +145,10 @@ for iC = 1:size(spMapBL,3)
             error('nan speed')
         end
         [~,sidx]=sort(trial_speed);
-        
-        sl=mean(spMapBL(sidx(1:2),:,iC))/ma;
-        fa = mean(spMapBL(sidx(end-1:end),:,iC))/ma;
-        ga = mean(spMapGain(:,:,iC))/ma';
+        TRIALSPEED(iC,:)=trial_speed;
+        sl=mean(spMapBL(sidx(1:ops.nTrialsSort),:,iC),1)/ma;
+        fa = mean(spMapBL(sidx(end-(ops.nTrialsSort+1):end),:,iC),1)/ma;
+        ga = mean(spMapGain(:,:,iC),1)/ma';
         allSlow(iC,:)=sl(mi+include_idx );
         allFast(iC,:)=fa(mi+include_idx );
         allGain(iC,:)=ga(mi+include_idx );
@@ -193,6 +193,7 @@ data_out.subregion = sub_reg;
 data_out.stability = stability;
 data_out.similarity = similarity;
 data_out.FR = FR;
+data_out.TrialSpeed = TRIALSPEED;
 data_out.allSpikes = allSpikes;
 data_out.speed = [speed, data.posx,data.trial];
 data_out.max_ind = maxInd;
