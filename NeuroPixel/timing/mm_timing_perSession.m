@@ -10,16 +10,23 @@ if nnz(mismatch_trigger==1)>nnz(mismatch_trigger==0)
     %i.e. move ==0 is mismatch
     mismatch_trigger = mismatch_trigger<0.1;
 end
-speed=true_speed';
+
 
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
-run_periods=smooth(speed,25)>speed_t;
-run_window=-30:30;
-possibles=strfind(run_periods',ones(1,length(run_window)))+floor(.5*length(run_window));
+if iscolumn(true_speed)
+    speed=true_speed';
+else
+    speed=true_speed;
+end
+filt = gausswin(15);
+filt = filt/sum(filt);
+smooth_speed = conv(speed,filt,'same');
+run_periods=smooth_speed>speed_t;run_window=-30:30;
+possibles=strfind(run_periods,ones(1,length(run_window)))+floor(.5*length(run_window));
 
 
 mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
-tmp = run_periods' & mismatch_trigger<0.9;
+tmp = run_periods & mismatch_trigger<0.9;
 possibles_random = strfind(tmp,ones(1,length(run_window)))+floor(.5*length(run_window));
 possibles_random = randsample(possibles_random,200);
 if all(size(post)==size(speed))
@@ -29,8 +36,6 @@ end
 [spike_mat,win,adata]=extract_triggered_spikes(sp,post(mm_trigs),'win',[-4 4],'aux',[post'; [speed]],'aux_win',[-200 200]);
 [spike_mat_random,~,adata_random]=extract_triggered_spikes(sp,post(possibles_random),'win',[-4 4],'aux',[post'; [speed]],'aux_win',[-200 200]);
 
-spike_mat=spike_mat(sp.cids+1,:,:);
-spike_mat_random=spike_mat_random(sp.cids+1,:,:);
 %% get downsampled ratemaps
 
 stepsize = 20;
@@ -74,10 +79,24 @@ for iC= 1:size(rate_mat,1)
         crossings(iC)=a(1);
     end
 end
-frac = .05;
+frac = .8;
+n=round(frac*size(rate_mat,1));
+figure
+tvecfrac = .8;
 n=round(frac*size(rate_mat,1));
 figure
 tvec = linspace(-4,4,size(rate_mat,3));
+tmp = mean(squeeze(mean(rate_mat(sidx(1:n),:,:),2)));
+plot(tvec,tmp)
+hold on
+ff=nanmedian(crossings(sidx(1:n)));
+ff=round(ff)+win(1)-1;
+plot(tvec(ff),tmp(ff),'r*')
+
+tmp_c = crossings(sidx(1:n));
+tmp_c(isnan(tmp_c))=[];
+tmp_c=tmp_c+win(1)-1;
+plot(tvec(tmp_c),tmp(ff)*ones(1,numel(tmp_c)),'g.') = linspace(-4,4,size(rate_mat,3));
 tmp = mean(squeeze(mean(rate_mat(sidx(1:n),:,:),2)));
 plot(tvec,tmp)
 hold on
