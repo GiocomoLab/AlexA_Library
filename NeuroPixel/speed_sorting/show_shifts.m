@@ -1,10 +1,12 @@
 %% struct_names
 dataset = 'filtered_new_11binfilt';
 path = ['Z:\giocomo\attialex\speed_' dataset];
+path = '/Volumes/Samsung_T5/speed_filtered_greedy3';
+
 filenames = dir(fullfile(path,'*.mat'));
 
 %% 
-
+STABILITY = struct();
 FACTOR = struct();
 DEPTH = struct();
 for iF=1:numel(filenames)
@@ -23,8 +25,8 @@ for iF=1:numel(filenames)
         if startsWith(r,'RS')
             r='RSC';
         end
-        if startsWith(r,'VISp')
-            r='VISp';
+        if startsWith(r,'VISpm')
+            r='VISm';
         end
         try
         if ismember(r,fieldnames(STABILITY))
@@ -37,7 +39,9 @@ for iF=1:numel(filenames)
         end
     
     catch ME
+        
         disp(ME.message)
+        keyboard
         end
     end
         
@@ -47,7 +51,7 @@ end
 ops = load(fullfile(path,'parameters'));
 ops = ops.ops;
 fn = fieldnames(STABILITY);
-fn = {'RSC'};
+fn = {'MEC','VISp','RSC'};
 histfig=figure;
 for iF=1:numel(fn)
     dat = STABILITY.(fn{iF});
