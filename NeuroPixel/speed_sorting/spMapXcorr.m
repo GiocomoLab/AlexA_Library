@@ -23,7 +23,7 @@ for cellIDX = 1:size(spatialMap,3)
     
     xcorr_this = reshape(xcorr_this,nT,nT);
     shiftMat(cellIDX,:,:) = reshape(shift_this,nT,nT);
-    corrMat(cellIDX,:,:) = xcorr_this-diag(diag(xcorr_this)); % subtract diags
-    
+    %corrMat(cellIDX,:,:) = xcorr_this-diag(diag(xcorr_this)); % subtract diags
+    corrMat(cellIDX,:,:) = xcorr_this+diag(nan(nT,1));
 end
 end
