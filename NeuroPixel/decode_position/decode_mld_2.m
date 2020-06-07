@@ -5,9 +5,12 @@ ops.xbin = 2;
 ops.xbinedges = 0:ops.xbin:400;
 ops.xbincent = ops.xbinedges(1:end-1)+ops.xbin/2;
 ops.nBins = numel(ops.xbincent);
+    lw=ceil(3*ops.smoothSigma_dist);
+    wx=-lw:lw;
+    gw=exp(-wx.^2/(2*ops.smoothSigma_dist^2)); gw=gw/sum(gw);
 ops.edges = ops.xbinedges;
-ops.filter = gausswin(11);
-ops.filter = ops.filter/sum(ops.filter);
+% ops.filter = gausswin(11);
+ops.filter = gw';
 ops.trials=5:20;
 ops.num_pcs_decoding = 10;
 regions = {'MEC','VISp','RS'};
@@ -15,7 +18,7 @@ regions = {'MEC','VISp','RS'};
 %root = '/oak/stanford/groups/giocomo';
 root = '/Volumes/Samsung_T5';
 data_path = fullfile(root,'/attialex/NP_DATA/');
-savepath = fullfile(root,'/attialex/mld_classifier/');
+savepath = fullfile(root,'/attialex/mld_classifier2/');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -103,66 +106,46 @@ for iF=1:numel(valid_files)
     end
     good_cells = good_cells(stab>.5);
     region = tmp_reg(stab>.5);
-    %calculate temporal firing rates
-    fr = calcFRVsTime(good_cells,data,ops,ops.trials);
-    
-    % threshold by running speed
+    spMap = spMap(ops.trials,:,stab>.5);
+    % the next part is a bit cumbersome, first turning it into long matrix
+    % to zscore, then back again
+    spMapFlat = zeros(size(spMap,1)*size(spMap,2),size(spMap,3));
+    for iT=1:size(spMap,1)
+        idx = (1:200)+(iT-1)*200;
+        spMapFlat(idx,:)=squeeze(spMap(iT,:,:));
+    end
+    spMapFlatZ = zscore(spMapFlat,0,1);
+    spMapNew = zeros(size(spMap));
+    for iT=1:size(spMap,1)
+        idx = (1:200)+(iT-1)*200;
+        spMapNew(iT,:,:)=spMapFlatZ(idx,:);
+    end
+   
     speed = calcSpeed(data.posx,ops);
     trial_idx = ismember(data.trial,ops.trials);
     idx = speed>ops.SpeedCutoff & trial_idx;
-    X = fr(:,idx);
-    trial = data.trial(idx);
-    posx = data.posx(idx);
-    speed = speed(idx);
-    X=fillmissing(X,'pchip',2);
-    X=zscore(X,0,2);
-    % normalize each cell to have FR between 0 and 1
-%     X = (X-nanmin(X,[],2))./repmat(nanmax(X,[],2)-nanmin(X,[],2),1,size(X,2));
-%     
-%     % set nans to 0
-%     X(isnan(X)) = 0;
-%     %X=X(:,ismember(data.trial,ops.trials));
-%     % mean subtract
-%     X = X - nanmean(X,2);
+   
     
-    % perform PCA
-    %coeffs = pca(X');
-    %num_components = min(ops.num_pcs_decoding,size(coeffs,2)); % sometimes number of cells is < 10
-    %Xtilde = coeffs(:,1:num_components)' * X;
-    
-    num_components = size(X,1);
+   
+   
     [~,~,posbin] = histcounts(posx,ops.xbinedges);
     posbin(posbin==0) = 1;
-    pred_pos = nan(size(posbin));
+    pred_pos = [];
     for iFold = 1:numel(ops.trials)
         take_idx = true(1,numel(ops.trials));
         take_idx(iFold)=false;
-        %train classifier
-        train_trials = ops.trials(take_idx);
-         train_trial_idx=ismember(trial,train_trials);
-
-        test_trial_idx = trial==ops.trials(iFold);
+     
+        tc = squeeze(mean(spMapNew(take_idx,:,:),1)); % all trials except the one to be tested
         
-        tc = nan(num_components,ops.nBins,1);
-        for i = 1:ops.nBins
-            tc(:,i) = mean(X(:,posbin==i & train_trial_idx),2);
-        end
-        
-        % decode position in gain change trials based on baseline1 trials
-        dot_prod = tc' * X(:,test_trial_idx); % predict position
+        dot_prod = tc * squeeze(spMapNew(iFold,:,:))';
         [~,max_bin] = max(dot_prod);
-        pred_pos(test_trial_idx) = ops.xbincent(max_bin);
-        %train_trial_idx = train_trial_idx & sub_sample_idx;
-        %Mdl = fitlm(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
-        %yhat{iFold} = ops.xbincent(mod(round(predict(Mdl,Xtilde(:,test_trial_idx)')),ops.track_length/2)+1);
-         %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx));
-         %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
+        pred_pos = cat(2,pred_pos,ops.xbincent(max_bin));
+        
     end
+
     mf = matfile(fullfile(savepath,sn),'Writable',true);
     mf.cluID = good_cells;
     mf.region = region;
     mf.pred_pos = pred_pos;
-    mf.true_pos = posx;
-    mf.speed = speed;
-    %mf.yhat=yhat;
+    mf.spMap = spMapNew;
 end
