@@ -20,8 +20,16 @@ for iF = 1:numel(files)
         elseif any(gain_to_look_at == 0)
             %special case: find where gain ==1 and for a given contrast
             %change
-            gaincontrastcombo = any(data.trial_gain == 1 & data.trial_contrast == contrast);
+            %gaincontrastcombo = any(data.trial_gain == 1 & data.trial_contrast == contrast);
+            
             trigger_tmp = strfind((data.trial_gain == 1 & data.trial_contrast == contrast)',[0 1])+1;
+%             if any(trigger_tmp)
+%                 keyboard
+%             end
+%                 
+            bl_preceeds = data.trial_contrast(trigger_tmp-1)==100;
+            trigger_tmp(~bl_preceeds)=[];
+            gaincontrastcombo = nnz(trigger_tmp)>0;
         elseif isempty(gain_to_look_at)
             %find contrast steps (100 to contrast)
             pot = strfind(data.trial_contrast'  == contrast,[0 1])+1;
