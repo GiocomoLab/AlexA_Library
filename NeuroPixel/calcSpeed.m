@@ -5,6 +5,8 @@ function [speed,raw_speed] = calcSpeed(posx,p)
 % modified 6/6/18 MGC
 % all time bins are now equal length
 % has not been fully tested yet
+% modified by AA
+% add raw_speed as additional output
 %
 % inputs:
 %     posx: positions
@@ -12,6 +14,7 @@ function [speed,raw_speed] = calcSpeed(posx,p)
 %     smoothingSigma: sigma for smoothing of running speed trace
 % outputs:
 %     speed: smoothed running speed
+%     raw_speed: unsmoothed running speed
 
 % smoothing parameter for running speed trace (in time bins)
 smoothSigma = 10;
