@@ -10,7 +10,7 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+OAK = '/Volumes/Samsung_T5';
 gains = [0.5, 0.6, 0.7, 0.8];
 %%
 gain = 0.6;
@@ -38,14 +38,14 @@ shift_ops = load(fullfile(shiftDir,'parameters.mat'));
 shift_ops = shift_ops.ops;
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %%
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
 %%
 
 %%
-parfor iF=1:numel(filenames)
+for iF=8%1:numel(filenames)
    fig=figure('Renderer','Painters','Position',[440   611   877   187],'Visible','off');
 cmap = cbrewer('seq','BuPu',20);
 
@@ -81,7 +81,7 @@ colormap(cmap)
         cellID = data.sp.cids(data.sp.cgs==2);
         
         [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
-        ons05=strfind(data.trial_gain'==0.5,[0 1])
+        ons05=strfind(data.trial_gain'==0.5,[0 1]);
         if numel(ons05)<2
             continue
         end
