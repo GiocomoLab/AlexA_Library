@@ -72,7 +72,8 @@ for iF=1:numel(MERGED)
 end
 
 %% scatter of max locations
-figure
+set(0,'DefaultFigureRenderer','Painters')
+figure('Position',[440   230   356   568])
 subplot(4,1,[1:3])
 hold on
 col = lines(numel(MERGED));
@@ -94,10 +95,12 @@ av_delay = polyval(median(params),[-2000 2000]);
 plot(av_delay,[-2000 2000],'k','LineWidth',2)
 xlabel('Delay [ms]')
 ylabel('Distance from peak channel')
-subplot(4,1,4)
-speed = [-2000 1]*params'*1000/2;
-boxplot(speed)
-title(sprintf('Delay: %.2f (%.2f,%.2f)ms/mm',quantile(speed,[.5 .1 .9])))
+grid on
+%subplot(4,1,4)
+%speed = [-2000 1]*params'*1000/2;
+%boxplot(speed)
+%title(sprintf('Delay: %.2f (%.2f,%.2f)ms/mm',quantile(speed,[.5 .1 .9])))
+saveas(gcf,'/users/attialex/Desktop/traveling_wave.pdf')
 %% find delay between max chan and rest
 figure
 hold on
@@ -412,3 +415,34 @@ end
 
 numel(unique(names))
 
+%%
+set(0,'DefaultFigureRenderer','Painters')
+figure('Position',[440   229   375   569])
+for iN=18%:numel(MERGED)
+    tmp = MERGED(iN).average_triggered;
+    tmp = flipud(tmp);
+    imagesc(tmp*500)
+    set(gca,'XTick',linspace(1,numel(tvec_spikes),5),'XTickLabel',linspace(min(tvec_spikes),max(tvec_spikes),5))
+    ytick=20:40:3860;
+    ytick=3860:-40:20;
+    set(gca,'YTick',1:8:97,'YTickLabel',ytick(1:8:end))
+    xlabel('Time [s]')
+    ylabel('Distance from probe tip [um]')
+    yline(97-MERGED(iN).max_depth+.5,'r--','LineWidth',2);
+    yline(97-MERGED(iN).max_depth+1.5,'r--','LineWidth',2);
+    hold on
+    [~,max_loc]=max(tmp,[],2);
+    tmp_d = 1:97;
+    plot(max_loc,tmp_d,'k.')
+    valid_idx = true(97,1);
+    p=polyfit(tmp_d(valid_idx),max_loc(valid_idx)',1);
+    params=cat(1,params,p);
+    delay=polyval(p,tmp_d);
+    plot(delay,tmp_d,'g','LineWidth',2)
+    
+    colormap parula
+    colorbar
+    %pause
+    %cla
+end
+saveas(gcf,'/users/attialex/Desktop/single_example.pdf')
