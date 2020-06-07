@@ -3,3 +3,4 @@
 *.pyc
 *.mexw64
 *.m~
+.DS_Store
