@@ -8,6 +8,7 @@ defaultAuxWin = [-25 150];
 addParameter(p,'win',defaultwin);
 addParameter(p,'aux',defaultaux); % assumes that first row is time vec
 addParameter(p,'aux_win',defaultAuxWin)
+addParameter(p,'cluIDs',[])
 
 parse(p,varargin{:});
 
@@ -15,12 +16,21 @@ win=p.Results.win;
 aux=p.Results.aux;
 aux_win=p.Results.aux_win;
 
-spike_times=sp_struct.st;
+if isempty(p.Results.cluIDs)
+    %only extract good cells
+    good_cells = sp_struct.cids(sp_struct.cgs==2);
+    take_idx = ismember(sp_struct.clu,good_cells);
+else
+    take_idx = ismember(sp_struct.clu,p.Results.cluIDs);
+end
+
+
+spike_times=sp_struct.st(take_idx);
 
 time_idx(time_idx+win(1)<=0)=[];
 time_idx(time_idx+win(2)>max(spike_times))=[];
 n_times = length(time_idx);
-cluster_ID=sp_struct.clu;
+cluster_ID=sp_struct.clu(take_idx);
 
 
 n_aux = size(aux,1)-1;
