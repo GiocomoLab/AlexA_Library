@@ -3,31 +3,39 @@
 
 %matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_2/*mismatch*.mat');
 matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
-plotfig= true;
+matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
+plotfig= false;
 if plotfig
     imsavedir  = '/Users/attialex/images';
     if ~isfolder(imsavedir)
         mkdir(imsavedir)
     end
 end
-matfiles = matfiles(cellfun(@(x) contains(x,'tower'), {matfiles.name}));
+matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 opt = load_mismatch_opt;
 opt.time_bins =-2:0.02:3;
 opt.time_vecs = opt.time_bins(1:end-1)*0.5+opt.time_bins(2:end)*0.5;
 opt.extract_win = [-2 3];
+opt.aux_win = [-50 50];
 opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
 
 MM=[];
-avgMM = [];
-avgMMR = [];
+
 SID = [];
 MM_R=[];
 THETA_POWER = [];
 cmap_fr = cbrewer('seq','BuPu',20);
+SPIKE_TIMES=cell(numel(matfiles),1);
+RUN_TRACES = cell(numel(matfiles),1);
+CLUIDS = RUN_TRACES;
 for iF=1:numel(matfiles)
     disp(iF)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
+    if ~isfield(data_out,'anatomy')
+        disp('no anatomy')
+        continue
+    end
     mismatch_trigger = data_out.mismatch_trigger;
     if size(mismatch_trigger,1) ~=1
         mismatch_trigger=mismatch_trigger';
@@ -38,6 +46,20 @@ for iF=1:numel(matfiles)
         mismatch_trigger = mismatch_trigger<0.1;
     end
     
+    if isfield(data_out.anatomy,'parent_shifted')
+        reg = data_out.anatomy.parent_shifted;
+    else
+        reg = data_out.anatomy.cluster_parent;
+    end
+    if iscolumn(reg)
+        reg = reg';
+    end
+    valid_region = startsWith(reg,'MEC');
+    if nnz(valid_region)==0
+        continue
+    end
+    good_cells = data_out.sp.cids(data_out.sp.cgs==2 & valid_region);
+
     
     all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
     true_speed = data_out.true_speed;
@@ -64,12 +86,16 @@ for iF=1:numel(matfiles)
     %% MM
     %[spike_mat,win,adata]=extract_triggered_spikes(data_out.sp,data_out.post(mm_trigs),'win',[-4 4],'aux',[data_out.post'; [speed];sp'],'aux_win',[-200 200]);
     %[spike_mat_random,~,adata_random]=extract_triggered_spikes(data_out.sp,data_out.post(possibles_random),'win',[-4 4],'aux',[data_out.post'; [speed]],'aux_win',[-200 200]);
-    [spikeTimes]=extract_triggered_spikeTimes(data_out.sp,data_out.post(mm_trigs),'win',opt.extract_win);
-    [spikeTimesRandom]=extract_triggered_spikeTimes(data_out.sp,data_out.post(possibles_random),'win',opt.extract_win);
+    [spikeTimes,~,aux]=extract_triggered_spikeTimes(data_out.sp,data_out.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data_out.post' ;smooth_speed],'aux_win',opt.aux_win);
+    [spikeTimesAll,~,auxAll]=extract_triggered_spikeTimes(data_out.sp,data_out.post(all_mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data_out.post' ;smooth_speed],'aux_win',opt.aux_win);
+
+    SPIKE_TIMES{iF}=spikeTimesAll;
+    RUN_TRACES{iF}=squeeze(auxAll);
+    [spikeTimesRandom]=extract_triggered_spikeTimes(data_out.sp,data_out.post(possibles_random),'cluIDs',good_cells,'win',opt.extract_win);
     
     trial_vec =cat(1,spikeTimes{:});
     trial_vec_random = cat(1,spikeTimesRandom{:});
-    good_cells = data_out.sp.cids(data_out.sp.cgs==2);
+    CLUIDS{iF}=good_cells;
     count_vec = zeros(numel(good_cells),numel(opt.time_bins)-1);
     count_vec_random = count_vec;
     for iC=1:numel(good_cells)
@@ -124,8 +150,6 @@ for iF=1:numel(matfiles)
     MM_R = cat(1,MM_R,count_vec_random);
     THETA_POWER = cat(1,THETA_POWER,[thetaPower,thetaPower_low]);
     SID = cat(1,SID,ones(numel(good_cells),1)*iF);
-    avgMM = cat(1,avgMM,mean(count_vec));
-    avgMMR = cat(1,avgMMR,mean(count_vec_random));
     %MMR=cat(1,MMR,count_vec_random);
     [~,sn] = fileparts(matfiles(iF).name);
     mm_resp = mean(count_vec(:,105:125),2)-mean(count_vec(:,75:100),2);
@@ -169,7 +193,7 @@ end
 %%
 figure
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-imagesc((MM_ms),[-50 50])
+imagesc((MM_ms),[-20 20])
 cmap = cbrewer('div','RdBu',20);
 cmap=flipud(cmap);
 colormap(cmap);
@@ -217,7 +241,7 @@ for iC=[1 nChunks]%nChunks
     
     
     subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-50 50])
+    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),opt.aux_win)
     
     colormap(cmap);
     
@@ -256,3 +280,52 @@ for iC=[0 .9;.1 1]%nChunks
     colormap(cmap);
     
 end
+%% speed tuning
+nSlices = 5;
+avg_all = zeros(numel(RUN_TRACES),nSlices,numel(opt.time_vecs));
+RUN_TRACES = RUN_TRACES(~cellfun('isempty',RUN_TRACES));
+CLUIDS = CLUIDS(~cellfun('isempty',CLUIDS));
+SPIKE_TIMES = SPIKE_TIMES(~cellfun('isempty',SPIKE_TIMES));
+
+usites = unique(SID);
+for iSite = 1:numel(RUN_TRACES)
+
+avgMM=mean(MM(SID==usites(iSite),102:127),2)-mean(MM(SID==usites(iSite),75:100),2);
+[a,b]=sort(avgMM,'descend');
+mm_increase = CLUIDS{iSite}(b(1:round(numel(b)/5)));
+
+run_speed = mean(RUN_TRACES{iSite}(:,25:50),2);
+[~,run_si]=sort(run_speed);
+trial_vec =cat(1,SPIKE_TIMES{iSite}{:});
+nTrials = size(RUN_TRACES{iSite},1);
+count_vec = zeros(nTrials,numel(opt.time_bins)-1);
+
+for iT=1:nTrials
+    idx = trial_vec(:,3)==iT & ismember(trial_vec(:,2),mm_increase);
+    [spike_count]=histcounts(trial_vec(idx,1),opt.time_bins);
+    count_vec(iT,:)=spike_count;
+end
+
+chunkSize = round(nTrials/nSlices);
+figure
+hold on
+for iS=1:nSlices
+    subplot(1,2,1)
+    hold on
+    idx = (iS-1)*chunkSize +1 : (min(iS*chunkSize,nTrials));
+    avg = mean(count_vec(run_si(idx),:)-mean(count_vec(run_si(idx),75:100),2));
+    avg_all(iSite,iS,:)=avg;
+    plot(avg)
+    subplot(1,2,2)
+    hold on
+    plot(mean(RUN_TRACES{iSite}(run_si(idx),:)))
+end
+end
+%%
+cmap = cbrewer('seq','Reds',5);
+figure
+hold on
+for ii=1:nSlices
+plot(opt.time_vecs,squeeze(mean(avg_all(:,ii,:)))','Color',cmap(ii,:))
+end
+%% todo, for old data/v1 data
