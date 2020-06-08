@@ -143,8 +143,92 @@ set(gca,'XTick',[1 2],'XTickLabel',{'BL','GC'})
 box off
 xlim([.8 2.2])
 xlabel(sprintf('%e',signrank(stab_all_gc,stab_all_bl)))
-saveas(gcf,fullfile('/Users/attialex/Dropbox/temporary_images','fig6_map_similarity_onsets.pdf'))
+saveas(gcf,fullfile('/Users/attialex/Dropbox/temporary_images','fig6_map_similarity_acrossStable.pdf'))
 %plotSpread({stab_all_gc-stab_all_bl,stab_all_bl,stab_all_gc})
+%%
+%%  baseline stability - gc stability, all cells in baseline
+stab_all_bl=[];
+stab_all_gc = [];
+t_bl = squeeze(nanmean(nanmean(ACROSS_MAT(:,6:10,6:10 ),2),3));
+t_gc = squeeze(nanmean(nanmean(ACROSS_MAT(:,11:14,11:14),2),3));
+uID = unique(SID);
+for iS=1:numel(uID)
+    idx = SID==uID(iS);
+    if nnz(idx)>=5
+    t1=nanmean(t_bl(idx));
+    t2=nanmean(t_gc(idx));
+    stab_all_bl = cat(1,stab_all_bl,t1);
+    stab_all_gc = cat(1,stab_all_gc,t2);
+    end
+end
+AV={};
+figure('Position',[680   592   303   506])
+% 
+%     subplot(1,2,1)
+%     scatter(stab_all_bl,stab_all_gc)
+%     
+%     xlim([.2 .65])
+%     ylim([.2 .65])
+
+plot([1,2],[stab_all_bl,stab_all_gc],'k.')
+hold on
+plot([1,2],[stab_all_bl,stab_all_gc],'-','Color',[.5 .5 .5])
+set(gca,'XTick',[1 2],'XTickLabel',{'BL','GC'})
+box off
+xlim([.8 2.2])
+xlabel(sprintf('%e',signrank(stab_all_gc,stab_all_bl)))
+saveas(gcf,fullfile('/Users/attialex/Dropbox/temporary_images','fig6_map_similarity_acrossAll.pdf'))
+%plotSpread({stab_all_gc-stab_all_bl,stab_all_bl,stab_all_gc})
+%%
+for iG=1
+stab_site_bl=[];
+stab_site_gc = [];
+frac_stable = [];
+t_bl = squeeze(nanmean(nanmean(CORR_MAT(:,7:10,7:10,iG,:),2),3));
+t_gc = squeeze(nanmean(nanmean(CORR_MAT(:,11:14,11:14,iG,:),2),3));
+uID = unique(SID);
+
+for iS=1:numel(uID)
+    for iO=1:2
+    idx = SID==uID(iS);
+    if nnz(idx)>=5
+    t1=nanmean(t_bl(idx,iO));
+    t2=nanmean(t_gc(idx,iO));
+    stab_site_bl = cat(1,stab_site_bl,t1);
+    stab_site_gc = cat(1,stab_site_gc,t2);
+    n_bl = nnz(t_bl(idx,iO)>=0.5);
+    n_gc = nnz(t_gc(idx,iO)>=0.5);
+    frac_stable = cat(1,frac_stable,[n_bl, n_gc]./nnz(idx));
+    end
+    end
+end
+AV={}
+figure
+subplot(1,2,1)
+scatter(stab_site_bl,stab_site_gc)
+axis image
+lims = [.1 .7];
+xlim(lims)
+ylim(lims)
+xlabel('stability baseline')
+ylabel('stability gain change')
+text(0.3,0.3,sprintf('%e',signrank(stab_site_bl,stab_site_gc)))
+title('map stability for all neurons')
+
+subplot(1,2,2)
+scatter(frac_stable(:,1),frac_stable(:,2))
+axis image
+lims = [0 .7];
+xlim(lims)
+ylim(lims)
+xlabel('baseline')
+ylabel('gain change')
+title('frac stable cells')
+text(0.3,0.3,sprintf('%e',signrank(frac_stable(:,1),frac_stable(:,2))))
+
+end
+saveas(gcf,fullfile('/Users/attialex/Dropbox/temporary_images','fig6_map_similarity_allCells.pdf'))
+
 
 %% average similarity maps for blocks that have enough stable cells in both
 figure('Renderer','Painters')
