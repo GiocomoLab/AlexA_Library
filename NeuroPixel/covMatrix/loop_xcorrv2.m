@@ -53,6 +53,8 @@ parfor iF=1:numel(filenames)
             if iscolumn(reg)
                 reg = reg';
             end
+            depth = data.anatomy.tip_distance(good_idx);
+            mec_entry = data.anatomy.z2;
             
             reg=reg(data.sp.cgs==2);
             reg_orig = data.anatomy.cluster_parent((data.sp.cgs==2));
@@ -90,6 +92,9 @@ parfor iF=1:numel(filenames)
             data_out.SHIFTS = SHIFTS;
             
             data_out.region = reg;
+            data_out.depth = depth;
+            data_out.mec_entry = mec_entry;
+            data_out.good_Cells = cellID;
             data_out.region_orig = reg_orig;
             
             data_out.trials = trials;
