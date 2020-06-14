@@ -53,7 +53,7 @@ parfor iF=1:numel(filenames)
             if iscolumn(reg)
                 reg = reg';
             end
-            depth = data.anatomy.tip_distance(good_idx);
+            depth = data.anatomy.tip_distance(data.sp.cgs==2);
             mec_entry = data.anatomy.z2;
             
             reg=reg(data.sp.cgs==2);
