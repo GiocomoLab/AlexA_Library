@@ -14,7 +14,7 @@ ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
 %OAK = '/Volumes/Samsung_T5/attialex';
 %%
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
@@ -25,7 +25,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'tbtxcorr_reg_200cmChunk');
+savepath = fullfile(OAK,'tbtxcorr_05_reg_200cmChunk');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
 if ~isfolder(savepath)
     mkdir(savepath)
