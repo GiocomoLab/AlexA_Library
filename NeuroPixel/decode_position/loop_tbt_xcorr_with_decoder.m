@@ -15,7 +15,7 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.5;
+gain = 0.6;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
@@ -27,7 +27,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_06');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
