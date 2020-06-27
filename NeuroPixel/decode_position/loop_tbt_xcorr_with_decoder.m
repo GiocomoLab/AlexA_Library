@@ -16,7 +16,7 @@ ops.stab_thresh = 0.1;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.6;
+gain = 0.5;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
@@ -28,7 +28,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_06_all');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05_all');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
