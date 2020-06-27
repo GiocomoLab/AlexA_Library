@@ -12,6 +12,7 @@ ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
+ops.stab_thresh = 0.1;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
@@ -27,7 +28,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_06');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_06_all');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -45,7 +46,7 @@ parfor iF=1:numel(filenames)
         
         for iRep=1:numel(triggers{iF})
             data = load(filenames{iF});
-
+            
             if isfield(data.anatomy,'parent_shifted')
                 reg = data.anatomy.parent_shifted;
             else
@@ -70,18 +71,18 @@ parfor iF=1:numel(filenames)
             cellID = data.sp.cids(data.sp.cgs==2);
             cellID = cellID(startsWith(reg,'MEC'));
             reg = reg(startsWith(reg,'MEC'));
-	if numel(cellID)<5
-continue;
-end           
- [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
- fr = calcFRVsTime(cellID,data,ops);
+            if numel(cellID)<5
+                continue;
+            end
+            [corrMat,frMat,shiftMat]=trialCorrMat(cellID,trials,data,ops);
+            fr = calcFRVsTime(cellID,data,ops);
             speed = calcSpeed(data.posx,ops);
             speed = speed./data.trial_gain(data.trial);
             fr = fr(:,speed>ops.SpeedCutoff);
             trial = data.trial(speed>ops.SpeedCutoff);
             posx = data.posx(speed>ops.SpeedCutoff);
             speed = speed(speed>ops.SpeedCutoff);
-           
+            
             % extract firing rate map and position data for trials from this rep
             X = fr(:,ismember(trial,trials));
             mm=max(X,[],2);
@@ -103,7 +104,7 @@ end
             frMat = frMat(stab>ops.stab_thresh,:,:);
             
             X=X(stab>ops.stab_thresh,:);
-
+            
             corrMat = corrMat(stab>ops.stab_thresh,:,:);
             shiftMat = shiftMat(stab>ops.stab_thresh,:,:);
             score_mat = zeros(2,size(frMat,2),size(frMat,3));
@@ -157,7 +158,7 @@ end
             
             data_out.region = region;
             
-           
+            
             data_out.trials = trial_this;
         end
     catch ME
