@@ -12,7 +12,7 @@ ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
-ops.stab_thresh = 0.1;
+ops.stab_thresh = 0.5;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
@@ -28,7 +28,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_08_all');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -111,7 +111,7 @@ parfor iF=1:numel(filenames)
             for iFold = 1:numel(trials)
                 take_idx = true(1,numel(trials));
                 
-                if iFold<6
+                if iFold<=6
                     take_idx(iFold)=false;
                     %calculate tuning curve based on 'training trials'
                 end
