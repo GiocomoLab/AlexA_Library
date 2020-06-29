@@ -167,7 +167,7 @@ parfor iF=1:numel(filenames)
             [label] = predict(Mdl,Xtilde');
             %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
             yhat = ops.xbincent(mod(round(label),ops.track_length/2)+1);
-            yhat_error = yhat-posbin;
+            %yhat_error = yhat-posbin;
             
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
@@ -175,7 +175,7 @@ parfor iF=1:numel(filenames)
             data_out.scoreMat = score_mat;
             data_out.time_error = tmp_e;
             data_out.yhat = yhat;
-            data_out.yhat_error = yhat_error;
+            %data_out.yhat_error = yhat_error;
             data_out.time_distance = dist;
             data_out.posx = posx_this';
             
