@@ -13,10 +13,12 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 ops.stab_thresh = 0.5;
+ops.trials_train = 1:6;
+
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
@@ -28,7 +30,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05_fitcoec');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -105,6 +107,11 @@ parfor iF=1:numel(filenames)
             
             X=X(stab>ops.stab_thresh,:);
             
+            Xtilde = X;
+            
+            
+
+            
             corrMat = corrMat(stab>ops.stab_thresh,:,:);
             shiftMat = shiftMat(stab>ops.stab_thresh,:,:);
             score_mat = zeros(2,size(frMat,2),size(frMat,3));
@@ -137,7 +144,8 @@ parfor iF=1:numel(filenames)
             trial_this = trial(ismember(trial,trials));
             posx_this = posx(ismember(trial,trials));
             speed_this = speed(ismember(trial,trials));
-            
+            [~,~,posbin] = histcounts(posx_this,ops.xbinedges);
+
             % define encoding and decoding trials
             encode_trials = ismember(trial_this,trials(1:ops.num_tr_bl));
             decode_trials = ismember(trial_this,trials(ops.num_tr_bl+1:end));
@@ -148,11 +156,26 @@ parfor iF=1:numel(filenames)
             correction_idx = abs(tmp_e)>ops.TrackEnd/2;
             tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
             
+            % extra decoder
+            
+            train_trials = ops_here.trials(ops.trials_train);
+            train_trial_idx=ismember(trial_this,train_trials);
+            
+            t = templateLinear('Learner','logistic');
+            Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal','FitPosterior',true,'Learners',t);
+            %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learners',t);
+            [label] = predict(Mdl,Xtilde');
+            %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
+            yhat = ops.xbincent(mod(round(label),ops.track_length/2)+1);
+            yhat_error = yhat-posbin;
+            
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
             data_out.shiftMat = shiftMat;
             data_out.scoreMat = score_mat;
             data_out.time_error = tmp_e;
+            data_out.yhat = yhat;
+            data_out.yhat_error = yhat_error;
             data_out.time_distance = dist;
             data_out.posx = posx_this';
             
