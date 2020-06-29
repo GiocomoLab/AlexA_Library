@@ -16,7 +16,7 @@ ops.stab_thresh = 0.5;
 ops.trials_train = 1:6;
 
 OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.5;
 contrast = 100;
@@ -36,12 +36,12 @@ if ~isfolder(savepath)
 end
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(12);
+end
 %%
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
