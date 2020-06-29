@@ -16,7 +16,7 @@ ops.stab_thresh = 0.5;
 ops.trials_train = 1:6;
 
 OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.5;
 contrast = 100;
@@ -36,12 +36,12 @@ if ~isfolder(savepath)
 end
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
 %%
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -144,7 +144,9 @@ parfor iF=1:numel(filenames)
             trial_this = trial(ismember(trial,trials));
             posx_this = posx(ismember(trial,trials));
             speed_this = speed(ismember(trial,trials));
-            [~,~,posbin] = histcounts(posx_this,ops.xbinedges);
+            posx_shifted = mod(posx_this+200,400);
+            %[~,~,posbin] = histcounts(posx_this,ops.xbinedges);
+            [~,~,posbin] = histcounts(posx_shifted,ops.xbinedges);
 
             % define encoding and decoding trials
             encode_trials = ismember(trial_this,trials(1:ops.num_tr_bl));
@@ -166,7 +168,9 @@ parfor iF=1:numel(filenames)
             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learners',t);
             [label] = predict(Mdl,Xtilde');
             %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
-            yhat = ops.xbincent(mod(round(label),ops.track_length/2)+1);
+            %yhat = ops.xbincent(mod(round(label),ops.track_length/2)+1);
+            yhat = label;
+            yhat_error = label-posbin;
             %yhat_error = yhat-posbin;
             
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
@@ -175,7 +179,7 @@ parfor iF=1:numel(filenames)
             data_out.scoreMat = score_mat;
             data_out.time_error = tmp_e;
             data_out.yhat = yhat;
-            %data_out.yhat_error = yhat_error;
+            data_out.yhat_error = yhat_error;
             data_out.time_distance = dist;
             data_out.posx = posx_this';
             
