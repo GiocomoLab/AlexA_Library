@@ -165,7 +165,7 @@ parfor iF=1:numel(filenames)
             
             t = templateLinear('Learner','logistic');
             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal','FitPosterior',true,'Learners',t);
-            Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learner',t)
+            Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal')
             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learners',t);
             [label] = predict(Mdl,Xtilde');
             %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
