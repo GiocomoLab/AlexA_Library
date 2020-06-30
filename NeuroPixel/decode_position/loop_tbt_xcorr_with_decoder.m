@@ -18,7 +18,7 @@ ops.trials_train = 1:6;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.5;
+gain = 0.8;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
@@ -30,7 +30,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05_fitcoec2');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_08_fitcoec2');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
