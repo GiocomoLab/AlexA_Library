@@ -18,7 +18,7 @@ ops.trials_train = 1:6;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.8;
+gain = 0.7;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
