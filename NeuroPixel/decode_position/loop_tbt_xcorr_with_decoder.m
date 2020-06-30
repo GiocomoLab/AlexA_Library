@@ -30,7 +30,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_08_fitcoec2');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05_fitcoec_svm');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
