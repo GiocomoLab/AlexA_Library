@@ -30,7 +30,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05_fitcoec');
+savepath = fullfile(OAK,'attialex','tbtxcorr_decoder_05_fitcoec2');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -164,7 +164,8 @@ parfor iF=1:numel(filenames)
             train_trial_idx=ismember(trial_this,train_trials);
             
             t = templateLinear('Learner','logistic');
-            Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal','FitPosterior',true,'Learners',t);
+            %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal','FitPosterior',true,'Learners',t);
+            Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learner',t)
             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learners',t);
             [label] = predict(Mdl,Xtilde');
             %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
