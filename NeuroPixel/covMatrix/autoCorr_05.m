@@ -35,7 +35,7 @@ end
 
 
 
-parfor iF=1:numel(filenames)
+for iF=46%1:numel(filenames)
     try
     [~,sn]=fileparts(filenames{iF});
     
@@ -138,5 +138,7 @@ parfor iF=1:numel(filenames)
     end
     catch ME
         disp(filenames{iF})
+        disp(ME.message)
+        rethrow(ME)
     end
 end
