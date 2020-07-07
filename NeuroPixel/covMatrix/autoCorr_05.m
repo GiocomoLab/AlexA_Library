@@ -36,6 +36,7 @@ end
 
 
 parfor iF=1:numel(filenames)
+    try
     [~,sn]=fileparts(filenames{iF});
     
     parts = strsplit(filenames{iF},'_');
@@ -133,5 +134,8 @@ parfor iF=1:numel(filenames)
         data_out.xc_gain_corrected = xc_gain_corrected;
         data_out.is_tuned = is_tuned;
         data_out.region = reg;
+    end
+    catch ME
+        disp(filenames{iF})
     end
 end
