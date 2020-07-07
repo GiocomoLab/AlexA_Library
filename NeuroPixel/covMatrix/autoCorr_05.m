@@ -39,7 +39,7 @@ parfor iF=1:numel(filenames)
     try
     [~,sn]=fileparts(filenames{iF});
     
-    parts = strsplit(filenames{iF},'_');
+    parts = strsplit(sn,'_');
     session_part = strcat(parts{1},'_',parts{2});
     
     poss=dir(fullfile(dark_folder,strcat(session_part,'*')));
@@ -48,6 +48,7 @@ parfor iF=1:numel(filenames)
     if isempty(poss)
         disp('no dark data')
         is_tuned = nan(nC,1);
+        continue
     else
         dark_data = load(fullfile(dark_folder,poss(1).name));
         
