@@ -4,17 +4,17 @@ ops.dark = true; %fore it to use max pos bin
 ops.max_lag_auto = 100;
 ops.trial_range = [-6:9];
 
-OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+%OAK='/oak/stanford/groups/giocomo/';
+OAK = '/Volumes/Samsung_T5';
 
-savepath = fullfile(OAK,'attialex','autocorr');
+savepath = fullfile(OAK,'attialex','autocorr_08');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 dark_folder = fullfile(OAK,'attialex','distance_tuning_xcorr_only');
 
 %% 0.5 files mec
-gain = 0.5;
+gain = 0.8;
 contrast = 100;
 regions = {'MEC'};
 filenames = {};
@@ -27,15 +27,15 @@ for iR = 1:numel(regions)
 end
 
 %%
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
 %% main loop
 
 
 
-for iF=46%1:numel(filenames)
+for iF=1:numel(filenames)
     try
     [~,sn]=fileparts(filenames{iF});
     
@@ -45,10 +45,15 @@ for iF=46%1:numel(filenames)
     poss=dir(fullfile(dark_folder,strcat(session_part,'*')));
     data = load(filenames{iF});
     nC=nnz(data.sp.cgs==2);
+    p=fullfile(savepath,sprintf('%s_%d.mat',sn,1));
+    if isfile(p)
+        disp('exists')
+        continue
+    end
     if isempty(poss)
         disp('no dark data')
         is_tuned = nan(nC,1);
-        continue
+        %continue
     else
         dark_data = load(fullfile(dark_folder,poss(1).name));
         
@@ -98,7 +103,8 @@ for iF=46%1:numel(filenames)
     if iscolumn(reg_orig)
         reg_orig = reg_orig';
     end
-    
+    depth = data.anatomy.tip_distance((data.sp.cgs==2));
+    mec_entry = data.anatomy.z2;
     
     
     %calculate trial by trial correlation across all bins
@@ -108,33 +114,35 @@ for iF=46%1:numel(filenames)
     for iRep=1:numel(triggers{iF})
         trials=triggers{iF}(iRep)+ops.trial_range;
         bl_trials = trials(3:6);
-        gain_trials = trials(7:10);
+        gain_trials = trials(9:10);
         %         ops_here = ops;
         %         ops_here.trials = trials;
         
-        [corrMat,fr_map,shiftMat]=trialCorrMat(cellID,trials,data,ops);
+        %[corrMat,fr_map,shiftMat]=trialCorrMat(cellID,trials,data,ops);
         baseline_fr = calcFRVsDist(cellID,bl_trials,data,ops);
         gain_fr = calcFRVsDist(cellID,gain_trials,data,ops);
         gain_fr_corrected = calcFRVsDist(cellID,gain_trials,data,ops,gain); %use actual distance run on track
         baseline_fr = baseline_fr - mean(baseline_fr,2);
         gain_fr = gain_fr - mean(gain_fr,2);
-        gain_fr_corrected = gain_fr_corrected - mean(gain_fr_corrected,2);
+        %gain_fr_corrected = gain_fr_corrected - mean(gain_fr_corrected,2);
         xc_bl = zeros(nC,2*ops.max_lag_auto+1);
         xc_gain = xc_bl;
-        xc_gain_corrected = xc_bl;
+        %xc_gain_corrected = xc_bl;
         for iC=1:nC
             xc_bl(iC,:)=xcorr(baseline_fr(iC,:),'coeff',ops.max_lag_auto);
             xc_gain(iC,:)=xcorr(gain_fr(iC,:),'coeff',ops.max_lag_auto);
-            xc_gain_corrected(iC,:)=xcorr(gain_fr_corrected(iC,:),'coeff',ops.max_lag_auto);
+            %xc_gain_corrected(iC,:)=xcorr(gain_fr_corrected(iC,:),'coeff',ops.max_lag_auto);
         end
         
         data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
-        data_out.corrMat = corrMat;
+        %data_out.corrMat = corrMat;
         data_out.xc_bl = xc_bl;
         data_out.xc_gain = xc_gain;
-        data_out.xc_gain_corrected = xc_gain_corrected;
+        %data_out.xc_gain_corrected = xc_gain_corrected;
         data_out.is_tuned = is_tuned;
         data_out.region = reg;
+        data_out.depth =depth;
+        data_out.mec_entry = mec_entry;
     end
     catch ME
         disp(filenames{iF})

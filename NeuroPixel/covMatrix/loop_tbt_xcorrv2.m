@@ -12,9 +12,9 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
-regions = {'VISp','RS','MEC'};
+regions = {'MEC'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -42,7 +42,7 @@ if gain ==1.0 %reduce number of triggers in baseline
     
     triggers=triggers_new;
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_08');
+savepath = fullfile(OAK,'attialex','tbtxcorr_05');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -89,13 +89,14 @@ parfor iF=1:numel(filenames)
             
             [corrMat,fr_map,shiftMat]=trialCorrMat(cellID,trials,data,ops);
             if ~all(data.trial_contrast(trials)==contrast)
-                error('gain trials violating contrast condition')
-                
+                %error('gain trials violating contrast condition')
+                disp('gain trials violating contrast condition')
+                continue
             end
-            if ~all(data.trial_gain((0:3)+triggers{iF}(iRep))==gain)
-                error('gain trials wrong gain')
-                
-            end
+%             if ~all(data.trial_gain((0:3)+triggers{iF}(iRep))==gain)
+%                 error('gain trials wrong gain')
+%                 
+%             end
             
             
             
