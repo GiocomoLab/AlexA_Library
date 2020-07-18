@@ -1,10 +1,10 @@
 
-%matfiles = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
-
+matfiles = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
+wave_path = 'Z:\giocomo\attialex\mean_waveforms';
 %matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_corrected/*mismatch*.mat');
-matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
+%matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
-matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
+%matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 %%
 plotfig= false;
 if plotfig
@@ -22,23 +22,24 @@ opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
 
 MM=[];
-
+WAVEFORM = [];
 SID = [];
 MM_R=[];
 THETA_POWER = [];
-cmap_fr = cbrewer('seq','BuPu',20);
+%cmap_fr = cbrewer('seq','BuPu',20);
+cmap_fr = summer(20);  
 SPIKE_TIMES=cell(numel(matfiles),1);
 RUN_TRACES = cell(numel(matfiles),1);
 CLUIDS = RUN_TRACES;
 DEPTH = [];
 REGION = {};
-for iF=9%1:numel(matfiles)
+for iF=1:numel(matfiles)
     disp(iF)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
     if ~isfield(data_out,'anatomy')
         disp('no anatomy')
         
-        %continue
+        continue
         valid_region = data_out.sp.cgs==2;
         depth = nan(size(data_out.sp.cgs));
         reg = zeros(size(data_out.sp.cgs));
@@ -165,6 +166,18 @@ for iF=9%1:numel(matfiles)
     %     r(theta_sort) = r;
     %     r=r/length(thetaPowerN);
     %collect data
+    if isfile(fullfile(wave_path,matfiles(iF).name))
+        wave_data = load(fullfile(wave_path,matfiles(iF).name));
+        %p = ismember(wave_data.clusters_good,good_cells);
+        %temp = data_out.sp.cgs==2;
+        tmp_reg = reg(data_out.sp.cgs==2);
+        tmp_idx = startsWith(tmp_reg,'VISp');
+        waveform = wave_data.mean_waveforms(tmp_idx,:);
+
+    else
+        waveform = nan(numel(good_cells),82);
+    end
+    WAVEFORM = cat(1,WAVEFORM,waveform);
     MM=cat(1,MM,count_vec);
     REGION = cat(2,REGION,region_this);
     MM_R = cat(1,MM_R,count_vec_random);
@@ -215,9 +228,9 @@ end
 figure
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
 imagesc((MM_ms),[-20 20])
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-colormap(cmap);
+%cmap = cbrewer('div','RdBu',20);
+%cmap=flipud(cmap);
+%colormap(cmap);
 %%
 params=struct();
 params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
@@ -310,8 +323,9 @@ for ii=1:nSlices
     plot(opt.time_vecs,squeeze(mean(avg_all(:,ii,:)))','Color',cmap(ii,:))
 end
 %% double peak V1
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
+%cmap = cbrewer('div','RdBu',20);
+%cmap=flipud(cmap);
+cmap = summer(20);
 t2 = opt.time_vecs>.5 & opt.time_vecs<1;
 bl = opt.time_vecs>-.25 & opt.time_vecs<0;
 t1 = opt.time_vecs>.1 & opt.time_vecs<.5;
@@ -325,8 +339,7 @@ MM_ms = MM-mean(MM(:,bl),2);
 
 chunksize=50;
 nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
+
 for iC=[1 nChunks]%nChunks
     figure
     sub_idx=(iC-1)*chunksize+(1:chunksize);
@@ -335,18 +348,27 @@ for iC=[1 nChunks]%nChunks
     params=struct();
     params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
     params.xLim=[-2 3];
-    subplot(2,1,1)
+    subplot(3,1,1)
     plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
     plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
     
     
     
-    subplot(2,1,2)
+    subplot(3,1,2)
     imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),opt.aux_win)
     
     colormap(cmap);
-    
+    subplot(3,1,3)
+    plot(nanmean(WAVEFORM(IDX,:)))
 end
 %%
-
+chunksize=100;
+nChunks = floor(size(MM,1)/chunksize);
+figure
+hold on
+for iC=1:nChunks
+    sub_idx=(iC-1)*chunksize+(1:chunksize);
+    IDX = sidx(sub_idx);
+    plot(nanmean(WAVEFORM(IDX,:)))
+end
 %% todo even/odd, waveforms, depth vs sorting second peak
