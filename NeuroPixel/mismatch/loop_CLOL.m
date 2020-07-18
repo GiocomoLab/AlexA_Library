@@ -5,6 +5,7 @@ opt.extract_win = [-2 3];
 opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
 pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
+%pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
 MM=[];
 PB=[];
 PB_slow=[];
@@ -155,16 +156,18 @@ end
 params=struct();
 params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
 params.xLim=[-2 3];
-figure
+figure('Color','white')
 plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
 plotAVGSEM(PB',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[1 0 0])
+plotAVGSEM(PB_slow',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
 
-
+xlim([-.5 2])
+legend({'MM','Fast PBH','Slow PBH'})
 %%
 
 mm_resp = mean(MM(:,105:130),2)-mean(MM(:,75:100),2);
 figure('Color','White')
-scatter(CORR(:,2),CORR(:,1),25,mm_resp,'.')
+scatter(CORR(:,2),CORR(:,1),25,mm_resp,'o','filled')
 set(gca,'CLim',[-5 5])
 cmap = flipud(cbrewer('div','RdBu',20));
 colormap(cmap)
@@ -178,3 +181,5 @@ figure
 IDX = CORR(:,2)<0 & CORR(:,1)>0;
 plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
 
+IDX = CORR(:,2)>0 & CORR(:,1)>0;
+plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[1 0 0])

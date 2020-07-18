@@ -1,10 +1,14 @@
+matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA/mismatch/*mismatch*');
+
+dark_folder = '/Volumes/Samsung_T5/attialex/distance_tuning_xcorr_only';
 
 %matfiles = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
 
 %matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_corrected/*mismatch*.mat');
-matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
+%matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
-matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
+matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA/mismatch/*mismatch*');
+%matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 %%
 plotfig= false;
 if plotfig
@@ -31,10 +35,25 @@ SPIKE_TIMES=cell(numel(matfiles),1);
 RUN_TRACES = cell(numel(matfiles),1);
 CLUIDS = RUN_TRACES;
 DEPTH = [];
+DARK_TUNED = [];
 REGION = {};
-for iF=9%1:numel(matfiles)
-    disp(iF)
+for iF=1:numel(matfiles)
+
+    parts = strsplit(matfiles(iF).name,'_');
+    session_part = strcat(parts{1},'_',parts{2});
+    
+    poss=dir(fullfile(dark_folder,strcat(session_part,'*')));
+    
+    if isempty(poss)
+        disp('no dark data')
+        continue
+    end
+    dark_data = load(fullfile(dark_folder,poss(1).name));
+    
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
+    
+    
+    
     if ~isfield(data_out,'anatomy')
         disp('no anatomy')
         
@@ -60,7 +79,7 @@ for iF=9%1:numel(matfiles)
         if iscolumn(reg)
             reg = reg';
         end
-        valid_region = startsWith(reg,{'VISp'});
+        valid_region = startsWith(reg,{'MEC'});
     end
     if nnz(valid_region)==0
         continue
@@ -79,6 +98,9 @@ for iF=9%1:numel(matfiles)
     
     good_cells = data_out.sp.cids(data_out.sp.cgs==2 & valid_region);
     depth_this = depth(data_out.sp.cgs==2 & valid_region);
+    if isrow(depth_this)
+        depth_this = depth_this';
+    end
     region_this = reg(data_out.sp.cgs==2 & valid_region);
     all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
     true_speed = data_out.true_speed;
@@ -175,6 +197,37 @@ for iF=9%1:numel(matfiles)
     [~,sn] = fileparts(matfiles(iF).name);
     mm_resp = mean(count_vec(:,105:125),2)-mean(count_vec(:,75:100),2);
     %save(['/Users/attialex/temp/' sn '.mat'],'count_vec','trial_vec','trial_vec_random','good_cells','theta','mm_resp');
+    is_tuned = false(nC,1);
+    peak_loc_pf = zeros(nC,1);
+    MAX_RANGE_BIN = 300;
+    upper_limits = squeeze(dark_data.acg_upper_limits(:,:,end));
+    for iN = 1:nC
+        
+        
+        a=strfind(diff(dark_data.ACG(iN,:))>0,[0 1]); %find elbow point/location of first minimum
+        if numel(a)<1 %no elbow point detected, skip
+            continue
+        end
+        
+        if a(1)>MAX_RANGE_BIN % elbow point beyond 500cm, probably noise, skip
+            continue
+        end
+        [pks,loc]=findpeaks(dark_data.ACG(iN,1:MAX_RANGE_BIN),'SortStr','descend','NPeaks',1,'MinPeakProminence',.2);
+        if upper_limits(iN,loc)<pks
+            peak_loc_pf(iN)=loc;
+        end
+        
+        sub = dark_data.ACG(iN,a(1):MAX_RANGE_BIN); %only search within between elbow point and MAX_RANGE_BIN
+        [ma,mi]=max(sub);
+        mi = mi+a(1)-1;
+        is_tuned(iN) = upper_limits(iN,mi)<ma;
+%         mod_depth(iN)=ma-ACG(iN,a(1));
+%         peak_loc(iN)=mi;
+        
+        
+    end
+    DARK_TUNED = cat(1,DARK_TUNED,is_tuned);
+    
     if plotfig
         imsavedir_this = fullfile(imsavedir,sn);
         if ~isfolder(imsavedir_this)
@@ -222,131 +275,23 @@ colormap(cmap);
 params=struct();
 params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
 params.xLim=[-2 3];
+
 figure
-plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-plotAVGSEM(MM_R',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
+plotAVGSEM(MM(logical(DARK_TUNED),:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[0 0 1])
+plotAVGSEM(MM(~logical(DARK_TUNED),:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[1 0 0])
+
+legend({'Tuned','no tuned'})
 
 %%
-RANK=[];
-[uS]=unique(SID);
+params=struct();
+params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
+params.xLim=[-2 3];
+uS= unique(SID);
 for iS=1:numel(uS)
-    idx = SID==uS(iS);
-    resp = diff(THETA_POWER(idx,:),[],2);
-    ranking=1:numel(resp);
-    [~,sid]=sort(resp);
-    ranking(sid)=ranking/numel(resp);
-    RANK = cat(1,RANK,ranking');
-    
-end
-
-%%
-[~,sidx]=sort(diff(THETA_POWER,[],2));
-MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-
-chunksize=203;
-nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-for iC=[1 nChunks]%nChunks
-    figure
-    sub_idx=(iC-1)*chunksize+(1:chunksize);
-    IDX = sidx(sub_idx);
-    %IDX=RANK<.1
-    params=struct();
-    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-    params.xLim=[-2 3];
-    subplot(2,1,1)
-    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-    
-    
-    
-    subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),opt.aux_win)
-    
-    colormap(cmap);
-    
-end
-% subplot(1,2,2)
-% MM_ms = MM_R-mean(MM_R(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-% imagesc(MM_ms(IDX,:),[-1 1])
-% cmap = cbrewer('div','RdBu',20);
-% cmap=flipud(cmap);
-% colormap(cmap);
-%%
-MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-
-chunksize=203;
-nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-
-for iC=[0 .9;.1 1]%nChunks
-    figure
-    
-    IDX = RANK>= iC(1) & RANK<=iC(2);
-    %IDX=RANK<.1
-    params=struct();
-    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-    params.xLim=[-2 3];
-    subplot(2,1,1)
-    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-    
-    
-    
-    subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-50 50])
-    
-    colormap(cmap);
-    
-end
-
-%%
-cmap = cbrewer('seq','Reds',5);
 figure
-hold on
-for ii=1:nSlices
-    plot(opt.time_vecs,squeeze(mean(avg_all(:,ii,:)))','Color',cmap(ii,:))
+plotAVGSEM(MM(logical(DARK_TUNED) & SID == uS(iS),:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[0 0 1])
+plotAVGSEM(MM(~logical(DARK_TUNED) & SID == uS(iS),:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[1 0 0])
+
+legend({'Tuned','no tuned'})
 end
-%% double peak V1
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-t2 = opt.time_vecs>.5 & opt.time_vecs<1;
-bl = opt.time_vecs>-.25 & opt.time_vecs<0;
-t1 = opt.time_vecs>.1 & opt.time_vecs<.5;
-resp = mean(MM(:,t2),2)-mean(MM(:,t1),2);
-[~,sidx]=sort(resp);
-figure
-imagesc(opt.time_vecs,1:numel(sidx),MM(sidx,:)-mean(MM(sidx,bl),2),[-10 10])
-colormap(cmap)
 
-MM_ms = MM-mean(MM(:,bl),2);
-
-chunksize=50;
-nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-for iC=[1 nChunks]%nChunks
-    figure
-    sub_idx=(iC-1)*chunksize+(1:chunksize);
-    IDX = sidx(sub_idx);
-    %IDX=RANK<.1
-    params=struct();
-    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-    params.xLim=[-2 3];
-    subplot(2,1,1)
-    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-    
-    
-    
-    subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),opt.aux_win)
-    
-    colormap(cmap);
-    
-end
-%%
-
-%% todo even/odd, waveforms, depth vs sorting second peak

@@ -2,10 +2,11 @@
 %matfiles = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
 
 %matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_corrected/*mismatch*.mat');
-matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
+matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA/*mismatch*.mat');
+%matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
-matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
-%%
+%matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
+
 plotfig= false;
 if plotfig
     imsavedir  = '/Users/attialex/images';
@@ -14,11 +15,12 @@ if plotfig
     end
 end
 opt = load_mismatch_opt;
-opt.time_bins =-2:0.02:3;
+opt.TimeBin = 0.02;
+
+opt.time_bins =-1:opt.TimeBin:1;
 opt.time_vecs = opt.time_bins(1:end-1)*0.5+opt.time_bins(2:end)*0.5;
 opt.extract_win = [-2 3];
 opt.aux_win = [-50 50];
-opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
 
 MM=[];
@@ -32,41 +34,13 @@ RUN_TRACES = cell(numel(matfiles),1);
 CLUIDS = RUN_TRACES;
 DEPTH = [];
 REGION = {};
-for iF=9%1:numel(matfiles)
+for iF=1:numel(matfiles)
     disp(iF)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
     if ~isfield(data_out,'anatomy')
         disp('no anatomy')
-        
-        %continue
-        valid_region = data_out.sp.cgs==2;
-        depth = nan(size(data_out.sp.cgs));
-        reg = zeros(size(data_out.sp.cgs));
-        %depth_this = depth(data_out.sp.cgs==2 & valid_region);
-        %region_this = reg(data_out.sp.cgs==2 & valid_region);
-    else
-        
-        if ~isfield(data_out.anatomy,'depth')
-            dd =data_out.anatomy.z2-data_out.anatomy.tip_distance;
-            data_out.anatomy.depth = dd';
-        end
-        if isfield(data_out.anatomy,'parent_shifted')
-            reg = data_out.anatomy.parent_shifted;
-            depth = data_out.anatomy.depth_shifted';
-        else
-            reg = data_out.anatomy.cluster_parent;
-            depth = data_out.anatomy.depth';
-        end
-        if iscolumn(reg)
-            reg = reg';
-        end
-        valid_region = startsWith(reg,{'VISp'});
-    end
-    if nnz(valid_region)==0
         continue
     end
-    
-    
     mismatch_trigger = data_out.mismatch_trigger;
     if size(mismatch_trigger,1) ~=1
         mismatch_trigger=mismatch_trigger';
@@ -76,7 +50,24 @@ for iF=9%1:numel(matfiles)
         %i.e. move ==0 is mismatch
         mismatch_trigger = mismatch_trigger<0.1;
     end
-    
+    if ~isfield(data_out.anatomy,'depth')
+        dd =data_out.anatomy.z2-data_out.anatomy.tip_distance;
+        data_out.anatomy.depth = dd';
+    end
+    if isfield(data_out.anatomy,'parent_shifted')
+        reg = data_out.anatomy.parent_shifted;
+        depth = data_out.anatomy.depth_shifted';
+    else
+        reg = data_out.anatomy.cluster_parent;
+        depth = data_out.anatomy.depth';
+    end
+    if iscolumn(reg)
+        reg = reg';
+    end
+    valid_region = startsWith(reg,{'VISp','MEC','RS'});
+    if nnz(valid_region)==0
+        continue
+    end
     good_cells = data_out.sp.cids(data_out.sp.cgs==2 & valid_region);
     depth_this = depth(data_out.sp.cgs==2 & valid_region);
     region_this = reg(data_out.sp.cgs==2 & valid_region);
@@ -173,9 +164,10 @@ for iF=9%1:numel(matfiles)
     DEPTH = cat(1,DEPTH,depth_this);
     %MMR=cat(1,MMR,count_vec_random);
     [~,sn] = fileparts(matfiles(iF).name);
-    mm_resp = mean(count_vec(:,105:125),2)-mean(count_vec(:,75:100),2);
     %save(['/Users/attialex/temp/' sn '.mat'],'count_vec','trial_vec','trial_vec_random','good_cells','theta','mm_resp');
     if plotfig
+            mm_resp = mean(count_vec(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(count_vec(:,opt.time_vecs>-0.5 & opt.time_vecs<-0.1),2);
+
         imsavedir_this = fullfile(imsavedir,sn);
         if ~isfolder(imsavedir_this)
             mkdir(imsavedir_this)
@@ -212,141 +204,92 @@ for iF=9%1:numel(matfiles)
     end
 end
 %%
-figure
-MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-imagesc((MM_ms),[-20 20])
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-colormap(cmap);
-%%
-params=struct();
-params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-params.xLim=[-2 3];
-figure
-plotAVGSEM(MM',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-plotAVGSEM(MM_R',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-
-%%
-RANK=[];
 [uS]=unique(SID);
-for iS=1:numel(uS)
-    idx = SID==uS(iS);
-    resp = diff(THETA_POWER(idx,:),[],2);
-    ranking=1:numel(resp);
-    [~,sid]=sort(resp);
-    ranking(sid)=ranking/numel(resp);
-    RANK = cat(1,RANK,ranking');
-    
-end
-
-%%
-[~,sidx]=sort(diff(THETA_POWER,[],2));
+frac = .2;
+mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+MM_All=[];
+Reg_All=[];
 
-chunksize=203;
-nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-for iC=[1 nChunks]%nChunks
-    figure
-    sub_idx=(iC-1)*chunksize+(1:chunksize);
-    IDX = sidx(sub_idx);
-    %IDX=RANK<.1
-    params=struct();
-    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-    params.xLim=[-2 3];
-    subplot(2,1,1)
-    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-    
-    
-    
-    subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),opt.aux_win)
-    
-    colormap(cmap);
-    
-end
-% subplot(1,2,2)
-% MM_ms = MM_R-mean(MM_R(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-% imagesc(MM_ms(IDX,:),[-1 1])
-% cmap = cbrewer('div','RdBu',20);
-% cmap=flipud(cmap);
-% colormap(cmap);
-%%
-MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-
-chunksize=203;
-nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-
-for iC=[0 .9;.1 1]%nChunks
-    figure
-    
-    IDX = RANK>= iC(1) & RANK<=iC(2);
-    %IDX=RANK<.1
-    params=struct();
-    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-    params.xLim=[-2 3];
-    subplot(2,1,1)
-    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-    
-    
-    
-    subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),[-50 50])
-    
-    colormap(cmap);
-    
-end
-
-%%
-cmap = cbrewer('seq','Reds',5);
-figure
+figure('Color','white')
+subplot(1,2,1)
 hold on
-for ii=1:nSlices
-    plot(opt.time_vecs,squeeze(mean(avg_all(:,ii,:)))','Color',cmap(ii,:))
+regions = {'VISp','MEC','RS'};
+for iS=1:numel(uS)
+    idx_this = SID==uS(iS);
+    resp_this = mm_resp(idx_this);
+    mm_this = MM_ms(idx_this,:);
+    [~,sid]=sort(resp_this,'descend');
+    N=round(frac*nnz(idx_this));
+    if startsWith(REGION{find(idx_this,1)},'MEC')
+        col = [0 0 1];
+        r = 2;
+    elseif strcmp(REGION{find(idx_this,1)},'VISp')
+        col = [1 0 0];
+        r =1;
+    elseif startsWith(REGION{find(idx_this,1)},'RS')
+        col = [0 1 0];
+        r =3;
+    else
+        continue
+    end
+    Reg_All = cat(1,Reg_All,r);
+    tmp = median(mm_this(sid(1:N),:));
+    MM_All = cat(1,MM_All,tmp);
+    plot(opt.time_vecs,tmp,'Color',col)
 end
-%% double peak V1
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-t2 = opt.time_vecs>.5 & opt.time_vecs<1;
-bl = opt.time_vecs>-.25 & opt.time_vecs<0;
-t1 = opt.time_vecs>.1 & opt.time_vecs<.5;
-resp = mean(MM(:,t2),2)-mean(MM(:,t1),2);
-[~,sidx]=sort(resp);
+subplot(1,2,2)
+plot(opt.time_vecs,nanmedian(MM_All(Reg_All==2,:)),'b')
+hold on
+plot(opt.time_vecs,median(MM_All(Reg_All==1,:)),'r')
+plot(opt.time_vecs,nanmedian(MM_All(Reg_All==3,:)),'k')
+
+legend({'MEC','VISp','RS'})
+%% RESp time V1
 figure
-imagesc(opt.time_vecs,1:numel(sidx),MM(sidx,:)-mean(MM(sidx,bl),2),[-10 10])
-colormap(cmap)
+frac = .5;
+idx_v1= startsWith(REGION,'VISp');
+mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
 
-MM_ms = MM-mean(MM(:,bl),2);
+mm_this = MM_ms(idx_v1,opt.time_vecs>0);
 
-chunksize=50;
-nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
-cmap=flipud(cmap);
-for iC=[1 nChunks]%nChunks
-    figure
-    sub_idx=(iC-1)*chunksize+(1:chunksize);
-    IDX = sidx(sub_idx);
-    %IDX=RANK<.1
-    params=struct();
-    params.masterTime=opt.time_bins(1:end-1)*.5+opt.time_bins(2:end);
-    params.xLim=[-2 3];
+depth_this = DEPTH(idx_v1);
+
+idx_up = depth_this<median(depth_this);
+idx_down = ~idx_up;
+    [a,b]=max(mm_this,[],2);
+    %histogram(b,'Normalization','probability')
+
+    scatter(opt.time_vecs(b(idx_up))-opt.time_vecs(1),a(idx_up))
+    hold on
+        scatter(opt.time_vecs(b(~idx_up))-opt.time_vecs(1),a(~idx_up))
+
+    %%
+regions = {'VISp','MEC'};
+mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+
+figure('Color','white')
+hold on
+for iR = 1:numel(regions)
+    idx_this = startsWith(REGION,regions{iR});
+    resp_this = mm_resp(idx_this);
+    [~,sid]=sort(resp_this,'descend');
+    N=round(numel(sid)*.2);
+    mm_this = MM_ms(idx_this,opt.time_vecs>0);
+    [a,b]=max(mm_this(sid(1:N),:),[],2);
+    %histogram(b,'Normalization','probability')
     subplot(2,1,1)
-    plotAVGSEM(MM(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0)
-    plotAVGSEM(MM_R(IDX,:)',gca,'parameters',params,'ms',false,'baseline',opt.time_bins>=-.5 & opt.time_bins<0,'col',[.5 .5 .5])
-    
-    
-    
+    hold on
+    scatter(opt.time_vecs(b)-opt.time_vecs(1),a)
     subplot(2,1,2)
-    imagesc(opt.time_bins,1:nnz(IDX),MM_ms(IDX,:),opt.aux_win)
-    
-    colormap(cmap);
-    
+    hold on
+    histogram(opt.time_vecs(b)-opt.time_vecs(1),'Normalization','probability','BinEdges',[0:0.05:1])
 end
-%%
-
-%% todo even/odd, waveforms, depth vs sorting second peak
+subplot(2,1,1)
+xlabel('time to max response')
+ylabel('max response')
+    legend(regions)
+subplot(2,1,2)
+xlabel('time to max response')
+legend(regions)

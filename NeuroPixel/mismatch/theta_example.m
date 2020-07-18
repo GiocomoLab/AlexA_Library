@@ -1,6 +1,6 @@
 %% works well with  AA_200123_5_200206_mismatch_1.mat
 mm_resp = mean(count_vec(:, 110:130),2)-mean(count_vec(:,80:99),2);
-[~,sid]=sort(mm_resp);
+[~,sid]=sort(mm_resp,'descend');
 
 figure
 plot(count_vec(sid(1:3),:)')
