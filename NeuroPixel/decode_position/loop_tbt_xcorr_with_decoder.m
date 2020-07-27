@@ -21,7 +21,7 @@ OAK='/oak/stanford/groups/giocomo/';
 %%
 gain = 0.5;
 contrast = 100;
-regions = {'MEC'};
+regions = {'VISp','RS'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -31,7 +31,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_noSpeedCutoff']);
+savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_noSpeedCutoffV1RSC']);
 if ~isfolder(savepath)
     mkdir(savepath)
 end
