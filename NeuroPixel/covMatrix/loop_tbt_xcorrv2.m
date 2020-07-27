@@ -14,7 +14,7 @@ OAK='/oak/stanford/groups/giocomo/';
 %%
 gain = 0.5;
 contrast = 100;
-regions = {'MEC'};
+regions = {'VISp','RS'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
