@@ -12,7 +12,7 @@ ops.chunksize=100; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
 ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
-OAK = '/Volumes/Samsung_T5/attialex';
+%OAK = '/Volumes/Samsung_T5/attialex';
 %%
 gain = 0.5;
 contrast = 100;
