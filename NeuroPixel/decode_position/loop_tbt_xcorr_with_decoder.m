@@ -72,8 +72,8 @@ parfor iF=1:numel(filenames)
             ops_here = ops;
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
-            cellID = cellID(startsWith(reg,'MEC'));
-            reg = reg(startsWith(reg,'MEC'));
+            cellID = cellID(startsWith(reg,regions));
+            reg = reg(startsWith(reg,regions));
             if numel(cellID)<5
                 continue;
             end
