@@ -12,7 +12,7 @@ ops.chunksize=100; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
 ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
-%OAK = '/Volumes/Samsung_T5/attialex';
+OAK = '/Volumes/Samsung_T5/attialex';
 %%
 gain = 0.5;
 contrast = 100;
@@ -53,8 +53,13 @@ parfor iF=1:numel(filenames)
             if iscolumn(reg)
                 reg = reg';
             end
-            depth = data.anatomy.tip_distance(data.sp.cgs==2);
-            mec_entry = data.anatomy.z2;
+            if ~isfield(data.anatomy,'depth')
+                depth = data.anatomy.tip_distance(data.sp.cgs==2);
+                mec_entry = data.anatomy.z2;
+            else
+                depth = data.anatomy.depth;
+                mec_entry = nan;
+            end
             
             reg=reg(data.sp.cgs==2);
             reg_orig = data.anatomy.cluster_parent((data.sp.cgs==2));
