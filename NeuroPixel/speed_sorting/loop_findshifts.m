@@ -1,6 +1,7 @@
 
-
+cm_ops = load_default_opt;
 ops.factors = -.3:0.01:.3;
+ops.cm_ops = cm_ops;
 ops.BinWidth =1;
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
@@ -35,15 +36,16 @@ mf.ops = ops;
 
 
 
-gain = 0.8;
+gain = 1;
 contrast = 100;
 region = 'VISp';
-regions = {'VISp','RS','MEC'};
+%regions = {'VISp','RS','MEC'};
+regions={'CA'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
     
-[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA_corrected'));
+[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA'));
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
@@ -101,8 +103,9 @@ parfor iF=1:numel(filenames)
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             all_factors(iRep,:)=factors;
-            stability = data_out.all_stability(:,zero_idx);
-            all_stability(iRep,:)=stability;
+            
+
+            all_stability(iRep,:)=data_out.stability;
             all_firingRate(iRep,:)=data_out.firing_rate;
         end
         
@@ -119,6 +122,6 @@ parfor iF=1:numel(filenames)
         %rethrow(ME)
         disp(iF)
         fprintf('%s \nFailed for %s: %d \n',ME.message,filenames{iF},iF)
-        rethrow(ME)
+        %rethrow(ME)
     end
 end
