@@ -16,6 +16,7 @@ ops.n_trials = 10;
 ops.plotfig = false;
 ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
+OAK = '/Volumes/Samsung_T5/'
 %% savedir =
 savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast');
 %savedir = fullfile('F:/temp/','speed_filtered');
@@ -59,15 +60,15 @@ end
 
 
 %%
-p=gcp('nocreate');
-if isempty(p)
-    parpool(6);
-end
+% p=gcp('nocreate');
+% if isempty(p)
+%     parpool(6);
+% end
 
 %%
 zero_idx = find(ops.factors==0);
 
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     [~,session_name]=fileparts(filenames{iF});
 
     if isfile(fullfile(savedir,[session_name '.mat']))
@@ -152,5 +153,6 @@ parfor iF=1:numel(filenames)
         mf.all_stability = all_stability;
     catch ME
         fprintf('%s \nFailed for %s: %d \n',ME.message,filenames{iF},iF)
+        rethrow(ME)
     end
 end
