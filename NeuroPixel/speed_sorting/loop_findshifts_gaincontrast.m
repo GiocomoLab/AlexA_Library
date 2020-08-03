@@ -1,12 +1,12 @@
 
 
-ops.factors = -.55:0.01:.55;
+ops.factors = -.3:0.01:.3;
 ops.BinWidth =1;
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
 ops.TimeBin = 0.02;
 ops.idx = [10:ops.BinWidth:390]/ops.BinWidth;% in bins
-fi = gausswin(11);
+fi = gausswin(22);
 fi=fi'/sum(fi);
 ops.filter = fi;
 spfi = gausswin(5);
@@ -17,7 +17,7 @@ ops.plotfig = false;
 ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast_space11_speed5');
+savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -51,7 +51,7 @@ filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
     
-[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA'));
+[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA_corrected'));
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
