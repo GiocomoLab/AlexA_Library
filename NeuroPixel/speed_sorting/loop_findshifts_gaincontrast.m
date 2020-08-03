@@ -1,6 +1,8 @@
 
 
+cm_ops = load_default_opt;
 ops.factors = -.3:0.01:.3;
+ops.cm_ops = cm_ops;
 ops.BinWidth =1;
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
@@ -16,7 +18,7 @@ ops.n_trials = 10;
 ops.plotfig = false;
 ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5/'
+%OAK = '/Volumes/Samsung_T5/'
 %% savedir =
 savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast');
 %savedir = fullfile('F:/temp/','speed_filtered');
@@ -60,15 +62,15 @@ end
 
 
 %%
-% p=gcp('nocreate');
-% if isempty(p)
-%     parpool(6);
-% end
+p=gcp('nocreate');
+if isempty(p)
+    parpool(6);
+end
 
 %%
 zero_idx = find(ops.factors==0);
 
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     [~,session_name]=fileparts(filenames{iF});
 
     if isfile(fullfile(savedir,[session_name '.mat']))
@@ -129,28 +131,33 @@ for iF=1:numel(filenames)
             
     
         nC=nnz(data.sp.cgs==2);
-        all_factors = nan(numel(good_chunks),nC);
+all_factors = nan(numel(good_chunks),nC);
         all_stability = all_factors;
+        all_firingRate=all_factors;
         %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
+        %run shift finding for each block
         for iRep=1:numel(good_chunks)
             ops_temp.trials = good_chunks{iRep};
-            [data_out,fighandles] = findBestShifts(data,ops_temp);
+            [data_out,~] = findBestShifts(data,ops_temp);
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             all_factors(iRep,:)=factors;
-            stability = data_out.all_stability(:,zero_idx);
-            all_stability(iRep,:)=stability;
+            
+
+            all_stability(iRep,:)=data_out.stability;
+            all_firingRate(iRep,:)=data_out.firing_rate;
         end
         
         mf =matfile(fullfile(savedir,session_name),'Writable',true);
+        mf.chunk_contrast = chunk_contrast;
         mf.region = data_out.region;
         mf.subregion = data_out.sub_reg;
         mf.depth = data_out.depth;
         mf.CID = data_out.CID;
-        mf.start_idx = good_chunks;
-        mf.chunk_contrast = chunk_contrast;
+        mf.good_chunks = good_chunks;
         mf.all_factors = all_factors;
         mf.all_stability = all_stability;
+        mf.FR = all_firingRate;
     catch ME
         fprintf('%s \nFailed for %s: %d \n',ME.message,filenames{iF},iF)
         rethrow(ME)
