@@ -88,7 +88,9 @@ st_tmp = data.sp.st(good_idx);
 [a,~,clus]=unique(clu_tmp);
 nClu = numel(a);
 %baseline map
-[spMapBL]=shiftAllMapsByFactor(ops,clus,st_tmp,nClu,data.posx,data.post,trial_sorted,speed_raw,0);
+[corrMat,b,shiftMat]=trialCorrMat(good_cells,ops.trials,data,ops.cm_ops);
+
+
 
 firing_rate = nan(numel(good_cells,1));
 idxVR = ismember(data.trial,ops.trials);
@@ -148,7 +150,7 @@ for cellIDX=1:numel(good_cells)
     all_stability(cellIDX,:)=STAB;
 end
 
-
+data_out.stability = nanmean(nanmean(corrMat,2),3);
 data_out.all_stability=all_stability;
 data_out.region = reg;
 data_out.sub_reg = sub_reg;
