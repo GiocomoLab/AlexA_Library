@@ -20,7 +20,7 @@ ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5/'
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast');
+savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast_block10');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
