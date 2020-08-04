@@ -101,7 +101,7 @@ parfor iF=1:numel(filenames)
             gain_switch = old_gain ~= current_gain;
             
             
-            if ~contrast_switch && bl_gain && ~gain_switch % add to list
+            if ~contrast_switch && bl_gain && ~gain_switch && numel(tmp)<ops.n_trials % add to list
                 tmp(end+1)=iT;
             elseif contrast_switch %end of chunk
                 %sprintf('contrast_switch at %d',iT)
@@ -109,15 +109,21 @@ parfor iF=1:numel(filenames)
                 chunk_size(current_chunk)=numel(tmp);
                 chunk_contrast(current_chunk)=old_contrast;
                 start_new = true;
-            elseif gain_switch && ~bl_gain
+            elseif gain_switch && ~bl_gain %gain change onset, save and reset tmp but don't start new
                 %sprintf('gain_switch at %d',iT)
                 
                     good_chunks{current_chunk}=tmp;
                     chunk_size(current_chunk)=numel(tmp);
                     chunk_contrast(current_chunk)=current_contrast;
-
-            elseif gain_switch && bl_gain
+                    tmp=[];
+            elseif gain_switch && bl_gain %start new after gain comes back to baseline, no saving
                 %sprintf('gain_switch at %d',iT)
+                start_new = true;
+            elseif numel(tmp)>=ops.n_trials
+                %sprintf('max trials at %d',iT)
+                good_chunks{current_chunk}=tmp;
+                chunk_size(current_chunk)=numel(tmp);
+                chunk_contrast(current_chunk)=old_contrast;
                 start_new = true;
             end
             if start_new
