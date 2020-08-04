@@ -64,7 +64,7 @@ end
 %%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(6);
+    parpool(12);
 end
 
 %%
