@@ -72,10 +72,11 @@ parfor iF=1:numel(filenames)
             ops_here = ops;
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
-            cellID = cellID(startsWith(reg,regions));
             reg(startsWith(reg,'VISpm'))={'VISm'};
             reg(startsWith(reg,'RSPa'))={'RA'};
             reg = reg(startsWith(reg,regions));
+            cellID = cellID(startsWith(reg,regions));
+
             if numel(cellID)<5
                 continue;
             end
