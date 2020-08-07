@@ -14,14 +14,14 @@ ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 ops.stab_thresh = 0.5;
 ops.trials_train = 1:6;
-ops.SpeedCutoff = -1;
+%ops.SpeedCutoff = -1;
 
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.5;
 contrast = 100;
-regions = {'VISp','RS'};
+regions = {'VISp','RS','MEC'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -31,7 +31,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_noSpeedCutoffV1RSC']);
+savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_noSpeedCutoffAll']);
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -73,6 +73,8 @@ parfor iF=1:numel(filenames)
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
             cellID = cellID(startsWith(reg,regions));
+            reg(startsWith(reg,'VISpm'))={'VISm'};
+            reg(startsWith(reg,'RSPa'))={'RA'};
             reg = reg(startsWith(reg,regions));
             if numel(cellID)<5
                 continue;
