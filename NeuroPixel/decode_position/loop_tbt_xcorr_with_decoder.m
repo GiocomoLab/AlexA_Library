@@ -31,7 +31,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_noSpeedCutoffAll']);
+savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_newNorm']);
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -42,7 +42,7 @@ if isempty(p)
     p = parpool(12);
 end
 %%
-parfor iF=1:numel(filenames)
+parfor iF=2%1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -91,15 +91,8 @@ parfor iF=1:numel(filenames)
             
             % extract firing rate map and position data for trials from this rep
             X = fr(:,ismember(trial,trials));
-            mm=max(X,[],2);
-            frN=frMat;
-            for iT=1:16
-                for iP=1:200
-                    frN(:,iT,iP)=frMat(:,iT,iP)./mm;
-                end
-            end
-            frMat = frN;
-            X=X./mm;
+            X = zscore(X,[],2);
+            
             stab = nanmean(nanmean(corrMat(:,1:6,1:6),2),3);
             if nnz(stab>ops.stab_thresh)<5
                 continue
@@ -111,8 +104,22 @@ parfor iF=1:numel(filenames)
             
             X=X(stab>ops.stab_thresh,:);
             
+            trial_this = trial(ismember(trial,trials));
+            posx_this = posx(ismember(trial,trials));
+            speed_this = speed(ismember(trial,trials));
+            posx_shifted = mod(posx_this+200,400);
+            %[~,~,posbin] = histcounts(posx_this,ops.xbinedges);
+            [~,~,posbin] = histcounts(posx_shifted,ops.xbinedges);
+            trial_tmp = trial_this-trial_this(1)+1;
             Xtilde = X;
-            
+            % turn Xtilde into frMat
+            frMat = zeros(size(Xtilde,1),16,200);
+            for iT=1:16
+                for iPos = 1:200
+                    idx = posbin==iPos & trial_tmp==iT;
+                    frMat(:,iT,iPos)=nanmean(Xtilde(:,idx),2);
+                end
+            end
             
 
             
@@ -129,36 +136,34 @@ parfor iF=1:numel(filenames)
                 take_idx(7:end)=false;
                 
                 tuning_curve = squeeze(mean(frMat(:,take_idx,:),2));
-                vn=vecnorm(tuning_curve,2,1);
-                tc_n = tuning_curve./vn;
+                %vn=vecnorm(tuning_curve,2,1);
+                %tc_n = tuning_curve./vn;
+                tc_n = tuning_curve;
                 Xt=squeeze(frMat(:,iFold,:));
-                Xt=Xt./vecnorm(Xt,2,1);
-                Xt(isnan(Xt))=0;
+                %Xt=Xt./vecnorm(Xt,2,1);
+                %Xt(isnan(Xt))=0;
                 %find closest poin on trajectory
                 dot_prod = tc_n' * Xt;
                 
-                [dist,max_bin] = max(dot_prod);
-                tmp_e = ops.xbincent - ops.xbincent(max_bin);
+                %[dist,max_bin] = max(dot_prod);
+                [~,iBin]=pdist2(tc_n',Xt','euclidean','Smallest',1);
+                tmp_e = ops.xbincent - ops.xbincent(iBin);
                 correction_idx = abs(tmp_e)>ops.TrackEnd/2;
                 tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
                 score_mat(:,iFold,:)=[tmp_e;dist];
             end
             
             
-            trial_this = trial(ismember(trial,trials));
-            posx_this = posx(ismember(trial,trials));
-            speed_this = speed(ismember(trial,trials));
-            posx_shifted = mod(posx_this+200,400);
-            %[~,~,posbin] = histcounts(posx_this,ops.xbinedges);
-            [~,~,posbin] = histcounts(posx_shifted,ops.xbinedges);
-
+            
+            tc_n=squeeze(mean(frMat(:,take_idx,:),2));
             % define encoding and decoding trials
             encode_trials = ismember(trial_this,trials(1:ops.num_tr_bl));
             decode_trials = ismember(trial_this,trials(ops.num_tr_bl+1:end));
-            Xn = X ./vecnorm(X,2,1);
-            dot_prod = tc_n'*Xn;
-            [dist,max_bin] = max(dot_prod);
-            tmp_e = posx_this' - ops.xbincent(max_bin);
+            %Xn = X ./vecnorm(X,2,1);
+            %dot_prod = tc_n'*Xn;
+            %[dist,max_bin] = max(dot_prod);
+            [~,iBin]=pdist2(tc_n',X','euclidean','Smallest',1);
+            tmp_e = posx_this' - ops.xbincent(iBin);
             correction_idx = abs(tmp_e)>ops.TrackEnd/2;
             tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
             
