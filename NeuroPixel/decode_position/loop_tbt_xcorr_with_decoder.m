@@ -14,7 +14,7 @@ ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 ops.stab_thresh = 0.5;
 ops.trials_train = 1:6;
-%ops.SpeedCutoff = -1;
+ops.SpeedCutoff = -1;
 
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
@@ -31,7 +31,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_newNorm']);
+savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_newNorm_nocutoff']);
 if ~isfolder(savepath)
     mkdir(savepath)
 end
@@ -42,7 +42,7 @@ if isempty(p)
     p = parpool(12);
 end
 %%
-parfor iF=2%1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -100,7 +100,6 @@ parfor iF=2%1:numel(filenames)
             
             cellID = cellID(stab>ops.stab_thresh);
             region = reg(stab>ops.stab_thresh);
-            frMat = frMat(stab>ops.stab_thresh,:,:);
             
             X=X(stab>ops.stab_thresh,:);
             
@@ -146,7 +145,7 @@ parfor iF=2%1:numel(filenames)
                 dot_prod = tc_n' * Xt;
                 
                 %[dist,max_bin] = max(dot_prod);
-                [~,iBin]=pdist2(tc_n',Xt','euclidean','Smallest',1);
+                [dist,iBin]=pdist2(tc_n',Xt','euclidean','Smallest',1);
                 tmp_e = ops.xbincent - ops.xbincent(iBin);
                 correction_idx = abs(tmp_e)>ops.TrackEnd/2;
                 tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
@@ -162,7 +161,7 @@ parfor iF=2%1:numel(filenames)
             %Xn = X ./vecnorm(X,2,1);
             %dot_prod = tc_n'*Xn;
             %[dist,max_bin] = max(dot_prod);
-            [~,iBin]=pdist2(tc_n',X','euclidean','Smallest',1);
+            [dist,iBin]=pdist2(tc_n',X','euclidean','Smallest',1);
             tmp_e = posx_this' - ops.xbincent(iBin);
             correction_idx = abs(tmp_e)>ops.TrackEnd/2;
             tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
