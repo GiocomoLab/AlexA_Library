@@ -42,7 +42,7 @@ if isempty(p)
     p = parpool(12);
 end
 %%
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -76,7 +76,7 @@ parfor iF=1:numel(filenames)
             reg(startsWith(reg,'RSPa'))={'RA'};
             reg = reg(startsWith(reg,regions));
             cellID = cellID(startsWith(reg,regions));
-
+            
             if numel(cellID)<5
                 continue;
             end
@@ -114,7 +114,7 @@ parfor iF=1:numel(filenames)
             Xtilde = X;
             
             
-
+            
             
             corrMat = corrMat(stab>ops.stab_thresh,:,:);
             shiftMat = shiftMat(stab>ops.stab_thresh,:,:);
@@ -149,9 +149,9 @@ parfor iF=1:numel(filenames)
             posx_this = posx(ismember(trial,trials));
             speed_this = speed(ismember(trial,trials));
             posx_shifted = mod(posx_this+200,400);
-            %[~,~,posbin] = histcounts(posx_this,ops.xbinedges);
+            [~,~,posbin_orig] = histcounts(posx_this,ops.xbinedges);
             [~,~,posbin] = histcounts(posx_shifted,ops.xbinedges);
-
+            
             % define encoding and decoding trials
             encode_trials = ismember(trial_this,trials(1:ops.num_tr_bl));
             decode_trials = ismember(trial_this,trials(ops.num_tr_bl+1:end));
@@ -162,27 +162,62 @@ parfor iF=1:numel(filenames)
             correction_idx = abs(tmp_e)>ops.TrackEnd/2;
             tmp_e(correction_idx) = tmp_e(correction_idx)-ops.TrackEnd*sign(tmp_e(correction_idx));
             
-%             % extra decoder
-%             
-%             train_trials = ops_here.trials(ops.trials_train);
-%             train_trial_idx=ismember(trial_this,train_trials);
-%             
-%             t = templateLinear('Learner','logistic');
-%             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal','FitPosterior',true,'Learners',t);
-%             Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal')
-%             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learners',t);
-%             [label] = predict(Mdl,Xtilde');
-%             %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
-%             %yhat = ops.xbincent(mod(round(label),ops.track_length/2)+1);
-%             yhat = label;
-%             yhat_error = label-posbin;
-%             %yhat_error = yhat-posbin;
+            %             % extra decoder
+            %
+            %             train_trials = ops_here.trials(ops.trials_train);
+            %             train_trial_idx=ismember(trial_this,train_trials);
+            %
+            %             t = templateLinear('Learner','logistic');
+            %             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal','FitPosterior',true,'Learners',t);
+            %             Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'coding','ordinal')
+            %             %Mdl = fitcecoc(Xtilde(:,train_trial_idx)',posbin(train_trial_idx),'Learners',t);
+            %             [label] = predict(Mdl,Xtilde');
+            %             %yhat{iFold} = ops.xbincent(predict(Mdl,Xtilde(:,test_trial_idx)'));
+            %             %yhat = ops.xbincent(mod(round(label),ops.track_length/2)+1);
+            %             yhat = label;
+            %             yhat_error = label-posbin;
+            %             %yhat_error = yhat-posbin;
+            % new normalization
+            X = fr(:,ismember(trial,trials));
+            X = zscore(X,[],2);
+            X=X(stab>ops.stab_thresh,:);
+            frMat = zeros(size(X,1),16,200);
+            for iT=1:16
+                for iPos = 1:200
+                    idx = posbin_orig==iPos & trial_this==trials(iT);
+                    frMat(:,iT,iPos)=nanmean(X(:,idx),2);
+                end
+            end
+            tc=zeros(size(X,1),200);
+            for iPos = 1:200
+                idx = posbin_orig==iPos & encode_trials;
+                tc(:,iPos)=nanmean(X(:,idx),2);
+            end
+            
+            tuning_curve = squeeze(mean(frMat(:,1:6,:),2))';
+            score_mat2 = zeros(size(frMat,2),size(frMat,3));
+            for iFold = 1:numel(trials)
+                
+                Xt=squeeze(frMat(:,iFold,:))';
+                [~,iBin]=pdist2(tuning_curve,Xt,'euclidean','Smallest',1);
+                tmp_e2 = ops.xbincent - ops.xbincent(iBin);
+                correction_idx = abs(tmp_e2)>ops.TrackEnd/2;
+                tmp_e2(correction_idx) = tmp_e2(correction_idx)-ops.TrackEnd*sign(tmp_e2(correction_idx));
+                score_mat2(iFold,:)=[tmp_e2];
+            end
+            
+            [~,iBin]=pdist2(tuning_curve,X','euclidean','Smallest',1);
+            tmp_eGain = posx_this' - ops.xbincent(iBin);
+            correction_idx = abs(tmp_eGain)>ops.TrackEnd/2;
+            tmp_eGain(correction_idx) = tmp_eGain(correction_idx)-ops.TrackEnd*sign(tmp_eGain(correction_idx));
             
             data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
             data_out.corrMat = corrMat;
             data_out.shiftMat = shiftMat;
             data_out.scoreMat = score_mat;
+            data_out.scoreMat2 = score_mat2;
             data_out.time_error = tmp_e;
+            data_out.time_error2=tmp_eGain;
             %data_out.yhat = yhat;
             %data_out.yhat_error = yhat_error;
             data_out.time_distance = dist;
