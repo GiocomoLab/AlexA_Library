@@ -14,14 +14,14 @@ ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 ops.stab_thresh = 0.5;
 ops.trials_train = 1:6;
-%ops.SpeedCutoff = -1;
+ops.SpeedCutoff = -1;
 
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
 gain = 0.5;
 contrast = 100;
-regions = {'VISp','RS','MEC'};
+regions = {'MEC'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -31,7 +31,7 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_noSpeedCutoffAll']);
+savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_speedCutoffMEC']);
 if ~isfolder(savepath)
     mkdir(savepath)
 end
