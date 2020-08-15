@@ -1,7 +1,7 @@
 
-cm_ops = load_default_opt;
+ops = load_default_opt;
+ops.cm_ops = load_default_opt;
 ops.factors = -.3:0.01:.3;
-ops.cm_ops = cm_ops;
 ops.BinWidth =1;
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
@@ -16,9 +16,11 @@ ops.speed_filter = spfi;
 ops.n_trials = 10;
 ops.plotfig = false;
 ops.maxLag = 20; % in cm
+OAK='F:';
 OAK='/oak/stanford/groups/giocomo/';
+
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_correctedData');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_new');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -38,14 +40,14 @@ mf.ops = ops;
 
 gain = 1;
 contrast = 100;
-region = 'VISp';
-%regions = {'VISp','RS','MEC'};
-regions={'CA'};
+%region = 'VISp';
+regions = {'VISp','RS','MEC'};
+%regions={'CA'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
     
-[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA'));
+[tmp1,tmp2] = getFilesCriteria(regions{iR},contrast,gain,fullfile(OAK,'attialex','NP_DATA_corrected'));
 filenames=cat(2,filenames,tmp1);
 triggers = cat(2,triggers,tmp2);
 end
@@ -93,6 +95,7 @@ parfor iF=1:numel(filenames)
         end
         nC=nnz(data.sp.cgs==2);
         all_factors = nan(numel(good_starts),nC);
+        all_factors_mgc = all_factors;
         all_stability = all_factors;
         all_firingRate=all_factors;
         %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
@@ -103,9 +106,12 @@ parfor iF=1:numel(filenames)
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             all_factors(iRep,:)=factors;
-            
-
+            [data_out_mgc] = findBestShifts_mgc(data,ops_temp);
+            [~,mi_mgc]=max(data_out_mgc.all_stability,[],2);
+            factors_mgc = ops_temp.factors(mi_mgc);
+            all_factors_mgc(iRep,:)=factors_mgc;
             all_stability(iRep,:)=data_out.stability;
+            
             all_firingRate(iRep,:)=data_out.firing_rate;
         end
         
@@ -116,6 +122,7 @@ parfor iF=1:numel(filenames)
         mf.CID = data_out.CID;
         mf.start_idx = good_starts;
         mf.all_factors = all_factors;
+        mf.all_factors_mgc = all_factors_mgc;
         mf.all_stability = all_stability;
         mf.FR = all_firingRate;
     catch ME
