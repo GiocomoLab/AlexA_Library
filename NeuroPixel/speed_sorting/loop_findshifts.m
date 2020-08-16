@@ -1,8 +1,9 @@
 
 ops = load_default_opt;
-ops.cm_ops = load_default_opt;
+ops.cm_ops = load_default_opt; %this one will get passed to the calcCorrMat (with 2cm spatial bin)
 ops.factors = -.3:0.01:.3;
 ops.BinWidth =1;
+ops.SpatialBin = 1; 
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
 ops.TimeBin = 0.02;
@@ -21,7 +22,7 @@ OAK='F:';
 OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_new');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_sameBin');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
