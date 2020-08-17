@@ -18,7 +18,7 @@ ops.speed_filter = spfi;
 ops.n_trials = 10;
 ops.plotfig = false;
 ops.maxLag = 20; % in cm
-OAK='F:';
+%OAK='Z:\giocomo';
 OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
@@ -59,17 +59,19 @@ end
 %%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(12);
+    parpool();
 end
 
 %%
 zero_idx = find(ops.factors==0);
-
+fprintf('Progress:\n');
+m=numel(filenames);
+fprintf(['\n' repmat('.',1,m) '\n\n']);
 parfor iF=1:numel(filenames)
     [~,session_name]=fileparts(filenames{iF});
-
+    fprintf('\b|\n');
     if isfile(fullfile(savedir,[session_name '.mat']))
-        disp('exisits')
+        %disp('exisits')
         continue
     end
     try
