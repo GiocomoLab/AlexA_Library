@@ -13,4 +13,4 @@
 module load matlab
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
 cd $HOME
-matlab -nodisplay -nosplash -r "run ./AlexA_Library/NeuroPixel/speed_sorting/loop_findshifts_v2.m,exit"
+matlab -nodisplay -nosplash -r "run ./AlexA_Library/NeuroPixel/speed_sorting/loop_findshifts.m,exit"
