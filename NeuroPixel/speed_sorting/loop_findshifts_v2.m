@@ -12,7 +12,7 @@ OAK='Z:\giocomo';
 OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx2');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -89,7 +89,6 @@ parfor iF=1:numel(filenames)
         end
         nC=nnz(data.sp.cgs==2);
         all_factors = nan(numel(good_starts),nC);
-        all_factors_mgc = all_factors;
         all_stability = all_factors;
         all_firingRate=all_factors;
         %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
@@ -100,7 +99,7 @@ parfor iF=1:numel(filenames)
             [data_out] = findBestShifts_mgc(data,ops_temp);
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
-            all_factors_mgc(iRep,:)=factors;
+            all_factors(iRep,:)=factors;
             all_stability(iRep,:)=data_out.stability;
             
         end
