@@ -36,10 +36,8 @@ if ~isempty(sub_reg)
 end
 depth = depth(data.sp.cgs==2);
 good_cells=data.sp.cids(data.sp.cgs==2);
-factors = ops.factors;
 trials = ops.trials;
 nT = numel(trials);
-edges = ops.edges;
 
     idx=triu(true(nT),1);
 
@@ -58,7 +56,7 @@ dat2=data;
             %fr_this = fr_this-nanmean(fr_this); % subtract mean on each trial
             %xcorr_this = xcorr(fr_this,0,'coeff')';
             %xcorr_this = reshape(xcorr_this,numel(trials),numel(trials));
-            xcorr_this = corr(fr_this);
+            xcorr_this = corr(fr_this(ops.idx,:));
             all_stability(i,dIdx)=nanmean(xcorr_this(idx));
             %corrMat(i,:,:) = xcorr_this+repmat(diag(nan(numel(trials),1)),[1 1]); % make diagonals nan
         end
@@ -69,9 +67,10 @@ clu_tmp = data.sp.clu(good_idx);
 st_tmp = data.sp.st(good_idx);
 [a,~,clus]=unique(clu_tmp);
 nClu = numel(a);
+[corrMat,~,~]=trialCorrMat(good_cells,ops.trials,data,ops.cm_ops);
 
 
-
+data_out.stability = nanmean(nanmean(corrMat,2),3);
 data_out.all_stability=all_stability;
 data_out.region = reg;
 data_out.sub_reg = sub_reg;
