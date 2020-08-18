@@ -9,7 +9,7 @@ ops.idx = [10:ops.SpatialBin:390]/ops.SpatialBin;
 ops.n_trials = 10;
 ops.plotfig = false;
 OAK='Z:\giocomo';
-%OAK='/oak/stanford/groups/giocomo/';
+OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
 savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx');
