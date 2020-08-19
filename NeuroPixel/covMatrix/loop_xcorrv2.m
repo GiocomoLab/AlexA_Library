@@ -12,11 +12,12 @@ ops.chunksize=100; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
 ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
-%OAK = '/Volumes/Samsung_T5/attialex';
+OAK = '/Volumes/Samsung_T5/attialex';
+OAK = '/users/attialex/';
 %%
 gain = 0.5;
 contrast = 100;
-regions = {'VISp','RS'};
+regions = {'VISp','RS','MEC'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -25,19 +26,20 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'tbtxcorr_05_reg_200cmChunk');
-shiftDir = fullfile(OAK,'attialex','speed_filtered_new_22binspace_5binspeed2');
+savepath = fullfile(OAK,'slidingWindow_05');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 
 %%
-p = gcp('nocreate');
-if isempty(p)
-    p = parpool(12);
-end
+% p = gcp('nocreate');
+% if isempty(p)
+%     p = parpool(12);
+% end
+filenames={'/Volumes/GoogleDrive/My Drive/alex_data/AA44_190925_gain_1.mat'};
+triggers{1}=[7];
 %%
-parfor iF=1:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
@@ -75,7 +77,7 @@ parfor iF=1:numel(filenames)
             ops_here.trials = trials;
             cellID = data.sp.cids(data.sp.cgs==2);
             
-            [PEAKS,SHIFTS,corrMat,shiftMat]=calculatePeakShiftSession_new(data,trials,ops);
+            [PEAKS,SHIFTS,corrMat,shiftMat,SPEED,SPEED2]=calculatePeakShiftSession_new(data,trials,ops);
             if ~all(data.trial_contrast(trials)==contrast)
                 error('gain trials violating contrast condition')
                 
