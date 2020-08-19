@@ -1,9 +1,9 @@
-function [PEAKS,SHIFTS,corrMat,shiftMat_all]=calculatePeakShiftSession_new(data,trials,ops)
+function [PEAKS,SHIFTS,corrMat,shiftMat_all,SPEED,SPEED2]=calculatePeakShiftSession_new(data,trials,ops)
 
 good_cells = data.sp.cids(data.sp.cgs==2);
 [corrMat,frMat,shiftMat_all]=trialCorrMat(good_cells,trials,data,ops);
-
-
+speed = calcSpeed(data.posx,ops);
+fast_idx = speed >= ops.SpeedCutoff;
 
 
 
@@ -32,6 +32,7 @@ nTrials = ops.num_tr_tot;
 nCells = numel(good_cells);
 SHIFTS = nan(nCells,nTrials,nReps);
 PEAKS = SHIFTS;
+SPEED = nan(nTrials,nReps);
 repidx = 0;
 
 trial2templateMap=zeros(1,nTrials);
@@ -59,4 +60,10 @@ for iStart = startVec
     
     PEAKS(:,:,repidx)=corrMat_snippet;
     SHIFTS(:,:,repidx)=sm;
+    for iT=1:numel(trials)
+        t_idx = data.trial ==trials(iT);
+        p_idx = data.posx>=ops.SpatialBin*startbin & data.posx<=stopbin*ops.SpatialBin;
+        SPEED(iT,repidx)=mean(speed(t_idx & p_idx));
+        SPEED2(iT,repidx)=mean(speed(t_idx & p_idx & fast_idx));
+    end
 end
