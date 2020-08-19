@@ -18,6 +18,7 @@ ops.SpeedCutoff = -1;
 
 OAK='/oak/stanford/groups/giocomo/';
 OAK = '/Volumes/Samsung_T5';
+OAK = 'F:/';
 %%
 gain = 0.5;
 contrast = 100;
@@ -31,24 +32,27 @@ for iR = 1:numel(regions)
     triggers = cat(2,triggers,tmp2);
 end
 
-savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_newNorm_nocutoff']);
+savepath = fullfile(OAK,'attialex',['tbtxcorr_decoder_' num2str(gain) '_Bayes_05']);
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(2);
+end
 %%
-for iF=45:numel(filenames)
+for iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
-        
+        data = load(filenames{iF});
+
         for iRep=1:numel(triggers{iF})
-            data = load(filenames{iF});
+            if isfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)))
+                continue
+            end
             
             if isfield(data.anatomy,'parent_shifted')
                 reg = data.anatomy.parent_shifted;
