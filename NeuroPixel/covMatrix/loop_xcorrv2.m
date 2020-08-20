@@ -8,7 +8,7 @@ smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.maxLag = ops.max_lag;
-ops.chunksize=50; %in bins,so thats 200 cm
+ops.chunksize=100; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
 ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
@@ -26,7 +26,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'slidingWindow_08_50cm');
+savepath = fullfile(OAK,'slidingWindow_08_100cm');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
