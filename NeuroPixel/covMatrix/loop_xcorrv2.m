@@ -8,14 +8,14 @@ smoothSigma = ops.smoothSigma/ops.BinWidth;
 ops.filter = gausswin(floor(smoothSigma*5/2)*2+1);
 ops.filter = ops.filter/sum(ops.filter);
 ops.maxLag = ops.max_lag;
-ops.chunksize=100; %in bins,so thats 200 cm
+ops.chunksize=50; %in bins,so thats 200 cm
 ops.stride_start = 1;%10;
 ops.stride = 5;
 OAK='/oak/stanford/groups/giocomo/attialex';
-OAK = '/Volumes/Samsung_T5/attialex';
-OAK = '/users/attialex/';
+%OAK = '/Volumes/Samsung_T5/attialex';
+%OAK = 'F:\attialex';
 %%
-gain = 0.5;
+gain = 0.8;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -26,26 +26,29 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'slidingWindow_05');
+savepath = fullfile(OAK,'slidingWindow_baseline');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
 
 %%
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
-filenames={'/Volumes/GoogleDrive/My Drive/alex_data/AA44_190925_gain_1.mat'};
-triggers{1}=[7];
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool();
+end
+% filenames={'/Volumes/GoogleDrive/My Drive/alex_data/AA44_190925_gain_1.mat'};
+% triggers{1}=[7];
 %%
-for iF=1:numel(filenames)
+parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
-        
+                    data = load(filenames{iF});
+
         for iRep=1:numel(triggers{iF})
-            data = load(filenames{iF});
+            if isfile(fullfile(savepath,sprintf('%s_%d.mat',sn,iRep)))
+                continue
+            end
 
             if isfield(data.anatomy,'parent_shifted')
                 reg = data.anatomy.parent_shifted;
@@ -79,7 +82,7 @@ for iF=1:numel(filenames)
             
             [PEAKS,SHIFTS,corrMat,shiftMat,SPEED,SPEED2]=calculatePeakShiftSession_new(data,trials,ops);
             if ~all(data.trial_contrast(trials)==contrast)
-                error('gain trials violating contrast condition')
+                err or('gain trials violating contrast condition')
                 
             end
             if ~all(data.trial_gain((0:3)+triggers{iF}(iRep))==gain)
@@ -103,13 +106,14 @@ for iF=1:numel(filenames)
             data_out.mec_entry = mec_entry;
             data_out.good_Cells = cellID;
             data_out.region_orig = reg_orig;
-            
+            data_out.SPEED = SPEED;
+            data_out.SPEED2 = SPEED2;
             data_out.trials = trials;
         end
     catch ME
         disp(ME.message)
         disp(sprintf('filenr: %d',iF))
-        rethrow(ME)
+        %rethrow(ME)
     end
 end
 

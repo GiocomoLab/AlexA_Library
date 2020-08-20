@@ -5,7 +5,7 @@ good_cells = data.sp.cids(data.sp.cgs==2);
 speed = calcSpeed(data.posx,ops);
 fast_idx = speed >= ops.SpeedCutoff;
 
-
+speed=speed./data.trial_gain(data.trial);
 
 template1_trials = 1:ops.num_tr_bl;
 template1={};

@@ -50,7 +50,7 @@ for iF=1:numel(filenames)
         data = load(filenames{iF});
 
         for iRep=1:numel(triggers{iF})
-            if isfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)))
+            if isfile(fullfile(savepath,sprintf('%s_%d.mat',sn,iRep)))
                 continue
             end
             
