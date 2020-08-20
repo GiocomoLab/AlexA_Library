@@ -1,6 +1,6 @@
 %new version that uses malcolms approach for shift correction
 ops = load_default_opt;
-ops.trial_range = [-10:9];
+ops.trial_range = [-6:9];
 ops.BinWidth = 2;
 ops.edges = 0:ops.BinWidth:400;
 ops.nBins = numel(ops.edges)-1;
