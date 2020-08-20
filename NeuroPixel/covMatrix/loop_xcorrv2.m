@@ -26,7 +26,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'slidingWindow_baseline');
+savepath = fullfile(OAK,'slidingWindow_08_50cm');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
