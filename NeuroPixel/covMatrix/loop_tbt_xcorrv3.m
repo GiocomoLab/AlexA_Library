@@ -122,7 +122,7 @@ parfor iF=1:numel(filenames)
                 dat2.sp.st(idx)=dat2.sp.st(idx)+factors(iC); %%verify
                 end
             end
-            [corrMatS,shiftMatS]=trialCorrMat(cellID,trials,dat2,ops);
+            [corrMatS,~,shiftMatS]=trialCorrMat(cellID,trials,dat2,ops);
 
             
             %set to nan where factor was nan
