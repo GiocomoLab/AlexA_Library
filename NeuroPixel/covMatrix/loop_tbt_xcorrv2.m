@@ -12,9 +12,9 @@ ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %%
-gain = 0.5;
+gain = 0.8;
 contrast = 100;
-regions = {'VISp','RS'};
+regions = {'MEC','VISp','RS'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -42,7 +42,7 @@ if gain ==1.0 %reduce number of triggers in baseline
     
     triggers=triggers_new;
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_05');
+savepath = fullfile(OAK,'attialex','tbtxcorr_08');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -53,17 +53,17 @@ save(fullfile(OAK,'attialex','parameters.mat'),'ops');
 %%
 p = gcp('nocreate');
 if isempty(p)
-    p = parpool(12);
+    p = parpool();
 end
 %%
 parfor iF=1:numel(filenames)
     
     try
         [~,sn]=fileparts(filenames{iF});
-        
+
         for iRep=1:numel(triggers{iF})
             data = load(filenames{iF});
-            
+
             if isfield(data.anatomy,'parent_shifted')
                 reg = data.anatomy.parent_shifted;
             else
