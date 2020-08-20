@@ -1,5 +1,5 @@
-pca_data = load('G:\My Drive\rep_clusters.mat');
-matfiles = dir('F:\attialex\slidingWindow_08\*.mat');
+pca_data = load('/Volumes/GoogleDrive/My Drive/rep_clusters.mat');
+matfiles = dir('/Users/attialex/slidingWindow_08_50cm/*.mat');
 
 regions = {'MEC','VISp','RS'};
 PEAKS = {};
@@ -51,10 +51,11 @@ for iF=1:numel(matfiles)
 end
 
 %%
-nChunks = 21;
+chunk_size = 50;
+nChunks = size(SHIFTS{1},3);
 x_vec=zeros(nChunks,16);
 for ii=1:16
-    x_vec(:,ii)=linspace(100,300,nChunks)+(ii-1)*400;
+    x_vec(:,ii)=linspace(50,350,nChunks)+(ii-1)*400;
     
 end
 x_vec = reshape(x_vec,1,[]);
@@ -68,7 +69,7 @@ for iTB=1:3
         
         sel_idx = find(startsWith(REG,regions{iR}) & CLU==1);
         trial_idx = trial_block{iTB};
-        FASTEST=zeros(numel(sel_idx),21);
+        FASTEST=zeros(numel(sel_idx),nChunks);
         SLOWEST = FASTEST;
         ALL=FASTEST;
         DIFF=FASTEST;
@@ -76,13 +77,13 @@ for iTB=1:3
             sp=SPEED(:,:,sel_idx(iRep));
             [ma,fastest]=max(sp(trial_idx,:));
             [mi,slowest]=min(sp(trial_idx,:));
-            p1=zeros(1,21);
+            p1=zeros(1,nChunks);
             p2=p1;
             %convert from subselect to 'global idx'
             DIFF(iRep,:)=ma-mi;
             fastest=fastest+trial_idx(1)-1;
             slowest = slowest+trial_idx(1)-1;
-            for ii=1:21
+            for ii=1:nChunks
                 FASTEST(iRep,ii)=nanmean(SHIFTS{sel_idx(iRep)}(:,fastest(ii),ii));
                 SLOWEST(iRep,ii)=nanmean(SHIFTS{sel_idx(iRep)}(:,slowest(ii),ii));
                 ALL(iRep,ii)=nanmean(nanmean(SHIFTS{sel_idx(iRep)}(:,trial_idx,ii),2),1);
@@ -119,7 +120,7 @@ for iR=1:3
         hold on
         sel_idx = find(startsWith(REG,regions{iR}) & CLU==1);
         trial_idx = trial_block{iTB};
-        FASTEST=zeros(numel(sel_idx),21);
+        FASTEST=zeros(numel(sel_idx),nChunks);
         SLOWEST = FASTEST;
         ALL=FASTEST;
         DIFF=FASTEST;
@@ -127,13 +128,13 @@ for iR=1:3
             sp=SPEED(:,:,sel_idx(iRep));
             [ma,fastest]=max(sp(trial_idx,:));
             [mi,slowest]=min(sp(trial_idx,:));
-            p1=zeros(1,21);
+            p1=zeros(1,nChunks);
             p2=p1;
             %convert from subselect to 'global idx'
             DIFF(iRep,:)=ma-mi;
             fastest=fastest+trial_idx(1)-1;
             slowest = slowest+trial_idx(1)-1;
-            for ii=1:21
+            for ii=1:nChunks
                 FASTEST(iRep,ii)=nanmean(SHIFTS{sel_idx(iRep)}(:,fastest(ii),ii));
                 SLOWEST(iRep,ii)=nanmean(SHIFTS{sel_idx(iRep)}(:,slowest(ii),ii));
                 ALL(iRep,ii)=nanmean(nanmean(SHIFTS{sel_idx(iRep)}(:,trial_idx,ii),2),1);
@@ -158,7 +159,7 @@ for iTB=1:3
         
         sel_idx = find(startsWith(REG,regions{iR}) & CLU==1);
         trial_idx = trial_block{iTB};
-        FASTEST=zeros(numel(sel_idx),21);
+        FASTEST=zeros(numel(sel_idx),nChunks);
         SLOWEST = FASTEST;
         ALL=FASTEST;
         DIF=FASTEST;
@@ -166,13 +167,13 @@ for iTB=1:3
             sp=SPEED(:,:,sel_idx(iRep));
             [ma,fastest]=max(sp(trial_idx,:));
             [mi,slowest]=min(sp(trial_idx,:));
-            p1=zeros(1,21);
+            p1=zeros(1,nChunks);
             p2=p1;
             %convert from subselect to 'global idx'
             DIFF(iRep,:)=ma-mi;
             fastest=fastest+trial_idx(1)-1;
             slowest = slowest+trial_idx(1)-1;
-            for ii=1:21
+            for ii=1:nChunks
                 FASTEST(iRep,ii)=nanmean(PEAKS{sel_idx(iRep)}(:,fastest(ii),ii));
                 SLOWEST(iRep,ii)=nanmean(PEAKS{sel_idx(iRep)}(:,slowest(ii),ii));
                 ALL(iRep,ii)=nanmean(nanmean(PEAKS{sel_idx(iRep)}(:,trial_idx,ii),2),1);
@@ -212,15 +213,15 @@ for iR=1:3
             sp=SPEED(:,:,sel_idx(iRep));
             [ma,fastest]=max(sp(trial_idx,:));
             [mi,slowest]=min(sp(trial_idx,:));
-            p1=zeros(1,21);
+            p1=zeros(1,nChunks);
             p2=p1;
             %convert from subselect to 'global idx'
             
             fastest=fastest+trial_idx(1)-1;
             slowest = slowest+trial_idx(1)-1;
-            tmpf=zeros(size(SHIFTS{sel_idx(iRep)},1),21);
+            tmpf=zeros(size(SHIFTS{sel_idx(iRep)},1),nChunks);
             tmps=tmpf;
-            for ii=1:21
+            for ii=1:nChunks
                 tmpf(:,ii) = SHIFTS{sel_idx(iRep)}(:,fastest(ii),ii);
                 tmps(:,ii) = SHIFTS{sel_idx(iRep)}(:,slowest(ii),ii);
                 
