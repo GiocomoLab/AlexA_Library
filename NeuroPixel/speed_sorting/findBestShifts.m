@@ -69,7 +69,8 @@ end
 OCC=zeros(nT,ops.nBins,numel(factors)); %occupancy matrix, calculates occupancy for each space bin for each shift
 
 for iFactor = 1:numel(factors)
-    posxhat = data.posx+factors(iFactor)*speed_raw;
+    %posxhat = data.posx+factors(iFactor)*speed_raw;
+    posxhat = data.posx;
     posxhat = mod(posxhat,max(ops.edges));
     spike_loc_hat = discretize(posxhat,edges);
     for iT=1:numel(spike_loc_hat)

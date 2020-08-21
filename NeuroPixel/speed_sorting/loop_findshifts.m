@@ -23,7 +23,7 @@ ops.maxLag = 30; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_old');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_oldOcc');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
