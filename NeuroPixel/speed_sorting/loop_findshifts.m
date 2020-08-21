@@ -12,17 +12,18 @@ ops.idx = [1:ops.BinWidth:399]/ops.BinWidth;
 fi = gausswin(22);
 fi=fi'/sum(fi);
 ops.filter = fi;
-spfi = gausswin(5);
+%spfi = gausswin(5);
+spfi = gausswin(1);
 spfi = spfi/sum(spfi);
 ops.speed_filter = spfi; 
 ops.n_trials = 10;
 ops.plotfig = false;
-ops.maxLag = 20; % in cm
+ops.maxLag = 30; % in cm
 %OAK='Z:\giocomo';
 OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_sameBin');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_old');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -110,10 +111,10 @@ parfor iF=1:numel(filenames)
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             all_factors(iRep,:)=factors;
-            [data_out_mgc] = findBestShifts_mgc(data,ops_temp);
-            [~,mi_mgc]=max(data_out_mgc.all_stability,[],2);
-            factors_mgc = ops_temp.factors(mi_mgc);
-            all_factors_mgc(iRep,:)=factors_mgc;
+%             [data_out_mgc] = findBestShifts_mgc(data,ops_temp);
+%             [~,mi_mgc]=max(data_out_mgc.all_stability,[],2);
+%             factors_mgc = ops_temp.factors(mi_mgc);
+%             all_factors_mgc(iRep,:)=factors_mgc;
             all_stability(iRep,:)=data_out.stability;
             
             all_firingRate(iRep,:)=data_out.firing_rate;
@@ -126,7 +127,7 @@ parfor iF=1:numel(filenames)
         mf.CID = data_out.CID;
         mf.start_idx = good_starts;
         mf.all_factors = all_factors;
-        mf.all_factors_mgc = all_factors_mgc;
+        %mf.all_factors_mgc = all_factors_mgc;
         mf.all_stability = all_stability;
         mf.FR = all_firingRate;
     catch ME
