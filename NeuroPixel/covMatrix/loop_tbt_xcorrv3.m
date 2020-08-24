@@ -14,7 +14,7 @@ OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5';
 %OAK = '/Volumes/Crucial X8/';
 %%
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
 regions = {'MEC','VISp','RS'};
 filenames = {};
@@ -44,7 +44,7 @@ if gain ==1.0 %reduce number of triggers in baseline
     
     triggers=triggers_new;
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_08_new');
+savepath = fullfile(OAK,'attialex','tbtxcorr_05_new');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx2');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -90,11 +90,23 @@ parfor iF=1:numel(filenames)
             cellID = data.sp.cids(data.sp.cgs==2);
             
             [corrMat,fr_map,shiftMat]=trialCorrMat(cellID,trials,data,ops);
+            
+            
             if ~all(data.trial_contrast(trials)==contrast)
                 %error('gain trials violating contrast condition')
                 disp('gain trials violating contrast condition')
                 continue
             end
+            
+            
+            data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
+            data_out.corrMat = corrMat;
+            data_out.shiftMat = shiftMat;
+            data_out.trials = trials;
+            data_out.region = reg;
+            data_out.region_orig = reg_orig;
+
+            data_out.baseline_map = squeeze(nanmean(fr_map(:,1:6,:),2));
 
             
             
@@ -136,21 +148,13 @@ parfor iF=1:numel(filenames)
             
             
             
-            data_out = matfile(fullfile(savepath,sprintf('%s_%d',sn,iRep)),'Writable',true);
-            data_out.corrMat = corrMat;
-            data_out.shiftMat = shiftMat;
-            data_out.baseline_map = squeeze(nanmean(fr_map(:,1:6,:),2));
+            
+            
             data_out.corrMatShifted = corrMatS;
             data_out.shiftMatShifted = shiftMatS;
             data_out.corrMatS2 = corrMatS;
-            data_out.shiftMatS2= shiftMatS;
-
-            
-            data_out.region = reg;
-            data_out.region_orig = reg_orig;
-            
+            data_out.shiftMatS2= shiftMatS;  
             data_out.factors = factors;
-            data_out.trials = trials;
         end
     catch ME
         disp(ME.message)
