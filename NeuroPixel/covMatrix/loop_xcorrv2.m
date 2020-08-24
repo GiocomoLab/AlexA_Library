@@ -15,7 +15,7 @@ OAK='/oak/stanford/groups/giocomo/attialex';
 %OAK = '/Volumes/Samsung_T5/attialex';
 %OAK = 'F:\attialex';
 %%
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
 regions = {'VISp','RS','MEC'};
 filenames = {};
@@ -26,7 +26,7 @@ for iR = 1:numel(regions)
     filenames=cat(2,filenames,tmp1);
     triggers = cat(2,triggers,tmp2);
 end
-savepath = fullfile(OAK,'slidingWindow_08_100cm');
+savepath = fullfile(OAK,'slidingWindow_05_100cm');
 if ~isfolder(savepath)
     mkdir(savepath)
 end
