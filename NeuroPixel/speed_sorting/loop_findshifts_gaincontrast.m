@@ -20,7 +20,7 @@ ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5/'
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast_block10');
+savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast_newMethod');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -64,7 +64,7 @@ end
 %%
 p=gcp('nocreate');
 if isempty(p)
-    parpool(12);
+    parpool();
 end
 
 %%
@@ -142,17 +142,18 @@ all_factors = nan(numel(good_chunks),nC);
         all_firingRate=all_factors;
         %ops_here.trial = find(data.trial_gain ==1 & data.trial_contrast==100);
         %run shift finding for each block
+        
         for iRep=1:numel(good_chunks)
             ops_temp.trials = good_chunks{iRep};
-            [data_out,~] = findBestShifts(data,ops_temp);
+            
+            [data_out] = findBestShifts_mgc(data,ops_temp);
             [~,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             all_factors(iRep,:)=factors;
-            
-
             all_stability(iRep,:)=data_out.stability;
-            all_firingRate(iRep,:)=data_out.firing_rate;
+            
         end
+        
         
         mf =matfile(fullfile(savedir,session_name),'Writable',true);
         mf.chunk_contrast = chunk_contrast;
@@ -163,7 +164,7 @@ all_factors = nan(numel(good_chunks),nC);
         mf.good_chunks = good_chunks;
         mf.all_factors = all_factors;
         mf.all_stability = all_stability;
-        mf.FR = all_firingRate;
+        %mf.FR = all_firingRate;
     catch ME
         fprintf('%s \nFailed for %s: %d \n',ME.message,filenames{iF},iF)
         rethrow(ME)
