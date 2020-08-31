@@ -120,7 +120,7 @@
 % MEC_CLUSTERS = rep_cluster(ALLR==1);
 % clearvars -except MEC*
 %%
-matfiles = dir('/Volumes/Samsung_T5/tbtxcorr_range/*.mat')
+matfiles = dir('/Volumes/Samsung_T5/attialex/tbtxcorr_range/*.mat')
 
 TG = zeros(212,numel(matfiles));
 gains = [0.5, 0.6 0.7 0.8];
