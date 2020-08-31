@@ -1,24 +1,17 @@
 
 
-cm_ops = load_default_opt;
+ops = load_default_opt;
+ops.cm_ops = load_default_opt; %this one will get passed to the calcCorrMat (with 2cm spatial bin)
 ops.factors = -.3:0.01:.3;
-ops.cm_ops = cm_ops;
-ops.BinWidth =1;
-ops.edges = 0:ops.BinWidth:400;
-ops.nBins = numel(ops.edges)-1;
-ops.TimeBin = 0.02;
-ops.idx = [10:ops.BinWidth:390]/ops.BinWidth;% in bins
-fi = gausswin(22);
-fi=fi'/sum(fi);
-ops.filter = fi;
-spfi = gausswin(5);
-spfi = spfi/sum(spfi);
-ops.speed_filter = spfi; 
+
+ops.SpatialBin = 1; 
+ops.idx = [10:ops.SpatialBin:390]/ops.SpatialBin;
+
 ops.n_trials = 10;
 ops.plotfig = false;
-ops.maxLag = 20; % in cm
 OAK='/oak/stanford/groups/giocomo/';
 %OAK = '/Volumes/Samsung_T5/'
+%OAK = '/Volumes/Crucial X8/'
 %% savedir =
 savedir = fullfile(OAK,'attialex','speed_filtered_gaincontrast_newMethod2');
 %savedir = fullfile('F:/temp/','speed_filtered');
