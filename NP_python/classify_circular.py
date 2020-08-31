@@ -136,7 +136,7 @@ track_start = 0
 track_end = 400
 dx=2
 dt=0.02
-every_nth_time_bin = 1
+every_nth_time_bin = 2
 numposbins = np.floor((track_end-track_start)/dx)
 posx_edges = np.arange(0,402,2)
 
@@ -304,7 +304,8 @@ def run_for_file_gain(data,TRIALS):
         group = anatomy['parent_shifted']
     else:
         group = anatomy['cluster_parent']
-    regions = ('MEC','VISp','RS')
+    #regions = ('MEC','VISp','RS')
+    regions = ('MEC')
     idx = [str(ss).startswith(regions) for ss in group]
     idx = np.array(idx)
     posx=np.mod(data['posx'],track_end)
@@ -312,7 +313,8 @@ def run_for_file_gain(data,TRIALS):
     trial = data['trial']
     sp = data['sp']
     good_cells = sp['cids'][np.logical_and(idx,sp['cgs']==2)]
-
+    if len(good_cells)<5:
+        return None
 
     # posx categories for position decoding (binned)
     posx_bin = np.digitize(posx,posx_edges)
@@ -347,38 +349,41 @@ def run_for_file_gain(data,TRIALS):
 
     # count spikes in each time bin for each cell
     spikecount = np.empty((len(good_cells),len(post)-1,))
-    spikecount[:] = np.nan
+    #spikecount[:] = np.nan
     for cell_idx in range(len(good_cells)):   
         spike_t = sp['st'][sp['clu']==good_cells[cell_idx]]
         spikecount[cell_idx,:] = np.histogram(spike_t,bins=post)[0]
 
     fr = spikecount.sum(axis=1)/post.max()
-    valid_idx = np.logical_and(stab>.5,fr>=1)
+    valid_idx = np.logical_and(stab>.3,fr>=1)
     if sum(valid_idx)<5:
         return None    
     spikecount = np.hstack((spikecount,np.zeros((spikecount.shape[0],1))))  
     spikerate = spikecount/dt
     spikes = np.transpose(spikerate)
     spikes = spikes[:,valid_idx]
+    spikes[np.logical_not(np.isfinite(spikes))]=0
     X = gaussian_filter1d(spikes, SMOOTHNESS, axis=0)
 
     speed = helpers.calcSpeed(posx)
     position = np.mod(posx,track_end)
     n_units = spikes.shape[1]
-    speed_idx = speed>5
+    speed_idx = speed>0
     trial_idx = np.in1d(trial,TRIALS)
     valid_idx = np.logical_and(speed_idx,trial_idx) #only take data from trials of interest and above speed threshold
     speed_r = speed[valid_idx]
     speed_r = speed_r[0::every_nth_time_bin]
     position_r = position[valid_idx]
+    position_r = np.mod(position_r+200,400)
     position_r = position_r[0::every_nth_time_bin]
+    position_r[np.logical_not(np.isfinite(position_r))]=0
     trial_r = trial[valid_idx]
     trial_r = trial_r[0::every_nth_time_bin]
     posbin_r = posx_bin[valid_idx]
     posbin_r = posbin_r[0::every_nth_time_bin]
 
     X_r = X[valid_idx,:]
-    X_r = scipy.stats.zscore(X_r,axis=0)
+    #X_r = scipy.stats.zscore(X_r,axis=0)
     X_r = X_r[0::every_nth_time_bin,:]
     #theta = ((position_r - position_r.min()) / position_r.max()) * 2 * np.pi - np.pi
     theta = ((position_r) / track_end) * 2 * np.pi - np.pi
@@ -427,10 +432,12 @@ def run_for_file_gain(data,TRIALS):
     return output
 
 if __name__=='__main__':
-    neuropix_folder = os.path.join('/Volumes','Samsung_T5','attialex','NP_DATA')
+    #works in base environment
+    gain = sys.argv[1]
+    neuropix_folder = os.path.join('/Volumes','Samsung_T5','attialex','NP_DATA_corrected')
     files = glob.glob(os.path.join(neuropix_folder,'*.mat'))
         #files = glob.glob('/oak/stanford/groups/giocomo/attialex/NP_DATA/np*_gain*.mat'
-    path = '/Volumes/Samsung_T5/attialex/python_circular_gain'
+    path = '/Volumes/Samsung_T5/attialex/python_circular_gain_'+gain
     TRIALS = np.arange(5,21)
 
     if not os.path.exists(path):
@@ -445,31 +452,32 @@ if __name__=='__main__':
             continue
         data = lm.loadmat(iF)
         try:
-            ons = get_gain_onsets(data,0.8,100)
+            ons = get_gain_onsets(data,float(gain),100)
         except:
             ons = []
         
+        try:
 
-        
-        for nbr,iO in enumerate(ons):
-            trials = iO+np.arange(-5,4)
-            output = run_for_file_gain(data,trials)
-            sn = session_name[0:-4]
-            session_name = '{}_{}.mat'.format(sn,nbr+1)
-        
-            if output is not None:
-                plt.subplot(211)
-                fig = plt.plot(output['true_theta'])
-                fig = plt.plot(output['predicted_theta'])
-                plt.subplot(212)
-                plt.plot(output['pos_bin'])
-                plt.plot(output['predicted_bin'])
-                plt.savefig(os.path.join(path,'{}.png'.format(session_name[0:-4])))
-                plt.close()
-                scipy.io.savemat(os.path.join(path,'{}'.format(session_name)),output)
-            else:
-                print('skipped {} because of too few units'.format(session_name))
-
+            for nbr,iO in enumerate(ons):
+                trials = iO+np.arange(-5,4)
+                output = run_for_file_gain(data,trials)
+                sn = session_name[0:-4]
+                session_name = '{}_{}.mat'.format(sn,nbr+1)
+            
+                if output is not None:
+                    plt.subplot(211)
+                    fig = plt.plot(output['true_theta'])
+                    fig = plt.plot(output['predicted_theta'])
+                    plt.subplot(212)
+                    plt.plot(output['pos_bin'])
+                    plt.plot(output['predicted_bin'])
+                    plt.savefig(os.path.join(path,'{}.png'.format(session_name[0:-4])))
+                    plt.close()
+                    scipy.io.savemat(os.path.join(path,'{}'.format(session_name)),output)
+                else:
+                    print('skipped {} because of too few units'.format(session_name))
+        except:
+            print('skipped {} because of error'.format(session_name))
 
 '''
 if __name__=='__main__':
