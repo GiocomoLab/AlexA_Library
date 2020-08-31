@@ -1,4 +1,4 @@
-function [spike_times_struct,win,aux_mat] = extract_triggered_spikeTimes(sp_struct,time_idx, varargin)
+function [spike_times_struct,win,aux_mat,time_idx_used] = extract_triggered_spikeTimes(sp_struct,time_idx, varargin)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 p = inputParser;
@@ -26,9 +26,13 @@ end
 
 
 spike_times=sp_struct.st(take_idx);
+take_idx_time = true(size(time_idx));
+take_idx_time(time_idx+win(1)<=0)=false;
+take_idx_time(time_idx+win(2)>max(spike_times))=false;
 
 time_idx(time_idx+win(1)<=0)=[];
 time_idx(time_idx+win(2)>max(spike_times))=[];
+time_idx_used = take_idx_time;
 n_times = length(time_idx);
 cluster_ID=sp_struct.clu(take_idx);
 
