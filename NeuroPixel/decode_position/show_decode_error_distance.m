@@ -8,7 +8,7 @@ distance_time_mat = [];
 take_idx_time = -100:100;
 check_idx=1:100;
 cluster_group = [];
-
+figure
 for iF=1:numel(matfiles)
     [~,sn]=fileparts(matfiles(iF).name);
     cluster_this = pca_data.MEC_CLUSTERS(strcmp(pca_data.MEC_NAMES,sn));
@@ -16,7 +16,7 @@ for iF=1:numel(matfiles)
         continue
     end
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
-
+    
     cluster_group(end+1)=cluster_this;
     errorMat = cat(3,errorMat,squeeze(data_out.scoreMat(1,:,:)));
     distanceMat = cat(3,distanceMat,squeeze(data_out.scoreMat(2,:,:)));
@@ -42,7 +42,22 @@ for iF=1:numel(matfiles)
             distance_time_mat = cat(1,distance_time_mat,t2(remap_ons(iO)+take_idx_time));
         end
     end
+    x_vec = 1:2:399;
+    subplot(2,1,1)
+    hold on
+    for iT=1:16
+        tmp = squeeze(data_out.scoreMat(1,iT,:));
+        
+        plot(x_vec+(iT-7)*400,tmp,'b')
+        
+    end
+    axis tight
+    ylim([-40 40])
     
+    subplot(2,1,2)
+    imagesc(squeeze(nanmean(data_out.corrMat)),[0 .7])
+   % pause
+    clf
 end
 %%
 figure('Renderer','Painters')
@@ -75,14 +90,14 @@ N=floor(size(errorMat_cluster,3)/slices);
 figure('Renderer','Painters')
 iT=7;
 for iS=1:slices
-idx = (iS-1)*N+1:iS*N;
-idx=sidx(idx);
-subplot(2,1,1)
-hold on
-plot(squeeze(median(errorMat_cluster(iT,:,idx),3)))
-subplot(2,1,2)
-hold on
-plot(squeeze(median(distanceMat_cluster(iT,:,idx),3)));
+    idx = (iS-1)*N+1:iS*N;
+    idx=sidx(idx);
+    subplot(2,1,1)
+    hold on
+    plot(squeeze(median(errorMat_cluster(iT,:,idx),3)))
+    subplot(2,1,2)
+    hold on
+    plot(squeeze(median(distanceMat_cluster(iT,:,idx),3)));
 end
 
 %%
@@ -93,16 +108,16 @@ r = squeeze(mean(d_mat_cluster(7,1:50,:),2))-squeeze(mean(d_mat_cluster(7,150:20
 slices = 2;
 N=floor(size(e_mat_cluster,3)/slices);
 figure
-    for iS=1:slices
-idx = (iS-1)*N+1:iS*N;
-idx=sidx(idx);
-subplot(2,1,1)
-hold on
-plot(squeeze(median(e_mat_cluster(7,:,idx),3)))
-subplot(2,1,2)
-hold on
-plot(squeeze(median(d_mat_cluster(7,:,idx),3)))
-    end
+for iS=1:slices
+    idx = (iS-1)*N+1:iS*N;
+    idx=sidx(idx);
+    subplot(2,1,1)
+    hold on
+    plot(squeeze(median(e_mat_cluster(7,:,idx),3)))
+    subplot(2,1,2)
+    hold on
+    plot(squeeze(median(d_mat_cluster(7,:,idx),3)))
+end
 
 
 %%
@@ -116,7 +131,25 @@ subplot(2,1,2)
 plot(-398:2:0,squeeze(median(distanceMat(6,:,:),3)))
 hold on
 plot(2:2:400,squeeze(median(distanceMat(7,:,:),3)))
-
+%%
+cmap = cbrewer('qual','Set2',3);
+figure
+x_vec = 1:2:399;
+for iG=1:3
+    cluster_idx = cluster_group==iG;
+    subplot(2,1,1)
+    hold on
+    for iT=1:16
+        plot(x_vec+(iT-7)*400,squeeze(median(errorMat(iT,:,cluster_idx),3)),'Color',cmap(iG,:))
+        
+    end
+    subplot(2,1,2)
+    hold on
+    for iT=1:16
+        plot(x_vec+(iT-7)*400,squeeze(median(distanceMat(iT,:,cluster_idx),3)),'Color',cmap(iG,:))
+        
+    end
+end
 %% trigger error on remap, 1 trigger per selected trial
 triggered_error=[];
 triggered_distance =[];
@@ -181,7 +214,7 @@ for iSlice = 1:n_slices
     subplot(2,1,2)
     hold on
     plot(squeeze(median(errorMat(7,:,idx),3)))
-
+    
 end
 
 
@@ -250,22 +283,23 @@ saveas(gcf,fullfile('/Users/attialex/Dropbox/temporary_images','fig6_decode_cos_
 %%
 figure
 for ii=1:130
-    subplot(2,1,1)
-    plot(-398:2:0,squeeze((errorMat(6,:,ii))))
+    %subplot(2,1,1)
+    plot(-398:2:0,squeeze((errorMat(7,:,ii))),'b')
     hold on
     x_vec = 2:2:400;
-    plot(x_vec,squeeze((errorMat(7,:,ii))))
-    t1=squeeze(errorMat(7,:,ii));
-    remap_ons = strfind(abs(t1)>50,[0 0 0 1 1 1])+3;
-    if numel(remap_ons)>=1
-        plot(x_vec(remap_ons(1)),t1(remap_ons(1)),'ro')
-    end
+    plot(x_vec,squeeze((errorMat(8,:,ii))),'b')
+    ylim([-40 40])
+    %     t1=squeeze(errorMat(7,:,ii));
+    %     remap_ons = strfind(abs(t1)>50,[0 0 0 1 1 1])+3;
+    %     if numel(remap_ons)>=1
+    %         plot(x_vec(remap_ons(1)),t1(remap_ons(1)),'ro')
+    %     end
     
     
-    subplot(2,1,2)
-    plot(-398:2:0,squeeze((distanceMat(6,:,ii))))
+    yyaxis right
+    plot(-398:2:0,squeeze((distanceMat(7,:,ii))),'r')
     hold on
-    plot(2:2:400,squeeze((distanceMat(7,:,ii))))
+    plot(2:2:400,squeeze((distanceMat(8,:,ii))),'r')
     
     pause
     clf
