@@ -25,7 +25,7 @@ imdir = fullfile(savedir,'images');
 %% find files
 
 
-gain = 0.8;
+gain = 0.5;
 contrast = 100;
 region = 'VISp';
 regions = {'VISp','MEC','RS'};
@@ -118,7 +118,7 @@ t2=nanmean(speedMatRaw(7,:,:),3);
 figure
 plot(t1,'k')
 hold on
-plot(t2,'Color',get_color(0.8,100))
+plot(t2,'Color',get_color(0.5,100))
 %%
   t1=nanmean(nanmean(speedMatRaw(3:6,:,:),3),1);
 t2=nanmean(nanmean(speedMatRaw(7:10,:,:),3),1);
@@ -138,12 +138,16 @@ figure('Position',[440   378   881   420],'Renderer','Painters')
 subplot(2,2,1)
 %errorbar(1:2:400,t1,e1)
 boundedline(1:2:400,t1,e1,'cmap',[0 0 0],'alpha')
-boundedline(1:2:400,t2,e2,'cmap',get_color(0.8,100),'alpha')
+boundedline(1:2:400,t2,e2,'cmap',get_color(0.5,100),'alpha')
+xticks([0:80:400])
+for ii=1:4
+    xline(ii*80,'k--')
+end
 % plot(t1,'k')
 % hold on
 % plot(t2,'Color',get_color(0.8,100))
 % plot(t3,'k--')
-subplot(2,2,3)
+subplot(2,2,3) 
 t1=squeeze(nanmean(tmpSM(3:6,:,:)));
 t2=squeeze(nanmean(tmpSM(7:10,:,:)));
 pvals = zeros(1,200);
@@ -160,4 +164,4 @@ t2=squeeze(nanmean(nanmean(tmpSM(7:10,:,:),1),2));
 %plotSpread({t1-t2})
 violin(t1-t2)
 xlabel(sprintf('%.3f',signrank(t1,t2)))
-saveas(gcf,fullfile('/Volumes/Samsung_T5/attialex/images','running.pdf'));
+saveas(gcf,fullfile('/Volumes/Samsung_T5/attialex/images','running05std.pdf'));
