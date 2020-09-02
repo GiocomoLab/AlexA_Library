@@ -2,7 +2,7 @@
 #SBATCH -p giocomo
 #SBATCH --job-name=find_shifts
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=12
+#SBATCH --cpus-per-task=24
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=attialex@stanford.edu
 #SBATCH --mem-per-cpu=4G
