@@ -56,7 +56,7 @@ dat2=data;
             %fr_this = fr_this-nanmean(fr_this); % subtract mean on each trial
             %xcorr_this = xcorr(fr_this,0,'coeff')';
             %xcorr_this = reshape(xcorr_this,numel(trials),numel(trials));
-            xcorr_this = corr(fr_this(ops.idx,:));
+            xcorr_this = corr(fr_this(ops.idx,:)); %this should be the same as mean subtracted xcorr at 0 lag
             all_stability(i,dIdx)=nanmean(xcorr_this(idx));
             %corrMat(i,:,:) = xcorr_this+repmat(diag(nan(numel(trials),1)),[1 1]); % make diagonals nan
         end
