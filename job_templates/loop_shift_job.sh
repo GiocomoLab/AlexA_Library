@@ -2,7 +2,7 @@
 #SBATCH -p giocomo
 #SBATCH --job-name=find_shifts
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=12
+#SBATCH --cpus-per-task=24
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=attialex@stanford.edu
 #SBATCH --mem-per-cpu=4G
@@ -13,4 +13,4 @@
 module load matlab
 echo "$(date): job $SLURM_JOBID starting on $SLURM_NODELIST"
 cd $HOME
-matlab -nodisplay -nosplash -r "run ./AlexA_Library/NeuroPixel/speed_sorting/loop_findshifts_gaincontrast.m,exit"
+matlab -nodisplay -nosplash -r "run ./AlexA_Library/NeuroPixel/speed_sorting/loop_findshifts_v3.m,exit"
