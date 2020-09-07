@@ -315,13 +315,7 @@ for iC=[0 .9;.1 1]%nChunks
     
 end
 
-%%
-cmap = cbrewer('seq','Reds',5);
-figure
-hold on
-for ii=1:nSlices
-    plot(opt.time_vecs,squeeze(mean(avg_all(:,ii,:)))','Color',cmap(ii,:))
-end
+
 %% double peak V1
 %cmap = cbrewer('div','RdBu',20);
 %cmap=flipud(cmap);
@@ -340,7 +334,7 @@ MM_ms = MM-mean(MM(:,bl),2);
 chunksize=50;
 nChunks = floor(size(MM,1)/chunksize);
 
-for iC=[1 nChunks]%nChunks
+for iC=[1:nChunks]%nChunks
     figure
     sub_idx=(iC-1)*chunksize+(1:chunksize);
     IDX = sidx(sub_idx);
