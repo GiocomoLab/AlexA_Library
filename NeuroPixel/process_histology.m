@@ -1,10 +1,17 @@
 function histology = process_histology()
 if ispc()
     histo_table = readtable('Z:\giocomo\attialex\NP_DATA\Histology_Quantification.xlsx');
+elseif ismac()
+    histo_table = readtable('/Users/attialex/code/AlexA_Library/NeuroPixel/histology/Histology_Quantification.xlsx');
 else
     histo_table = readtable('/oak/stanford/groups/giocomo/attialex/NP_DATA/Histology_Quantification.xlsx');
 end
-time_dat = datestr(histo_table.Date,'mmdd');
+
+time_dat = cell(numel(histo_table.Date),1);
+for iD=1:numel(histo_table.Date);
+    time_dat{iD}=datestr(histo_table.Date(iD),'mmdd');
+end
+
 year = datestr(histo_table.Date,'yy');
 histology.date = time_dat;
 histology.year = year;
