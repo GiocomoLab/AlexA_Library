@@ -10,12 +10,12 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/T7';
 gains = [0.5, 0.6, 0.7, 0.8];
 %%
 gain = [];
 contrast = 50;
-regions = {'MEC','VISp','RS'};
+regions = {'MEC'};
 filenames = {};
 triggers = {};
 for iR = 1:numel(regions)
@@ -32,10 +32,10 @@ end
 
 save(fullfile(savepath,'parameters.mat'),'ops');
 %%
-% p = gcp('nocreate');
-% if isempty(p)
-%     p = parpool(12);
-% end
+p = gcp('nocreate');
+if isempty(p)
+    p = parpool(12);
+end
 %%
 
 %%
