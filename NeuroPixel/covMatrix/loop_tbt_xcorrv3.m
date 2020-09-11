@@ -11,10 +11,10 @@ ops.filter = ops.filter/sum(ops.filter);
 ops.max_lag = 30;
 ops.maxLag = ops.max_lag;
 OAK='/oak/stanford/groups/giocomo/';
-%OAK = '/Volumes/Samsung_T5';
+%OAK = '/Volumes/T7';
 %OAK = '/Volumes/Crucial X8/';
 %%
-gain = 0.5;
+gain = 0.8;
 contrast = 100;
 regions = {'MEC','VISp','RS'};
 filenames = {};
@@ -44,7 +44,7 @@ if gain ==1.0 %reduce number of triggers in baseline
     
     triggers=triggers_new;
 end
-savepath = fullfile(OAK,'attialex','tbtxcorr_05_new');
+savepath = fullfile(OAK,'attialex','tbtxcorr_08_new');
 shiftDir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx2');
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -90,7 +90,8 @@ parfor iF=1:numel(filenames)
             cellID = data.sp.cids(data.sp.cgs==2);
             
             [corrMat,fr_map,shiftMat]=trialCorrMat(cellID,trials,data,ops);
-            
+            trial_idx = ismember(data.trial,trials);
+            speed = calcSpeed(data.posx(trial_idx),ops);
             
             if ~all(data.trial_contrast(trials)==contrast)
                 %error('gain trials violating contrast condition')
@@ -105,6 +106,8 @@ parfor iF=1:numel(filenames)
             data_out.trials = trials;
             data_out.region = reg;
             data_out.region_orig = reg_orig;
+            data_out.speed = speed;
+            data_out.trials = data.trial(trial_idx);
 
             data_out.baseline_map = squeeze(nanmean(fr_map(:,1:6,:),2));
 
