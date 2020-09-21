@@ -1,7 +1,7 @@
 
 ops = load_default_opt;
 ops.cm_ops = load_default_opt; %this one will get passed to the calcCorrMat (with 2cm spatial bin)
-ops.factors = -.3:0.01:.3;
+ops.factors = -.5:0.01:.5;
 
 ops.SpatialBin = 1; 
 ops.idx = [10:ops.SpatialBin:390]/ops.SpatialBin;
@@ -12,7 +12,7 @@ OAK='Z:\giocomo';
 OAK='/oak/stanford/groups/giocomo/';
 
 %% savedir =
-savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx2');
+savedir = fullfile(OAK,'attialex','speed_filtered_correctedData_shortidx3');
 %savedir = fullfile('F:/temp/','speed_filtered');
 imdir = fullfile(savedir,'images');
 if ~isfolder(savedir)
@@ -33,7 +33,8 @@ mf.ops = ops;
 gain = 1;
 contrast = 100;
 %region = 'VISp';
-regions = {'VISp','RS','MEC'};
+%regions = {'VISp','RS','MEC'};
+regions = {'MEC'};
 %regions={'CA'};
 filenames = {};
 triggers = {};
