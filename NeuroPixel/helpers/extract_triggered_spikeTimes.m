@@ -1,4 +1,4 @@
-function [spike_times_struct,win,aux_mat,time_idx_used] = extract_triggered_spikeTimes(sp_struct,time_idx, varargin)
+function [spike_times_struct,win,aux_mat,time_idx_used,count_vec] = extract_triggered_spikeTimes(sp_struct,time_idx, varargin)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 p = inputParser;
@@ -9,6 +9,7 @@ addParameter(p,'win',defaultwin);
 addParameter(p,'aux',defaultaux); % assumes that first row is time vec
 addParameter(p,'aux_win',defaultAuxWin)
 addParameter(p,'cluIDs',[])
+addParameter(p,'opt',[])
 
 parse(p,varargin{:});
 
@@ -22,6 +23,11 @@ if isempty(p.Results.cluIDs)
     take_idx = ismember(sp_struct.clu,good_cells);
 else
     take_idx = ismember(sp_struct.clu,p.Results.cluIDs);
+    good_cells = p.Results.cluIDs;
+end
+
+if isempty(p.Results.opt)
+    opt = load_mismatch_opt;
 end
 
 
@@ -60,4 +66,15 @@ if ~isempty(aux)
         aux_IDX=idx+idx_win;
         aux_mat(:,iT,:)=aux(2:end,aux_IDX);
     end
+    
+    trial_vec =cat(1,spike_times_struct{:});
+    count_vec = zeros(numel(good_cells),numel(opt.time_bins)-1);
+    for iC=1:numel(good_cells)
+        idx = trial_vec(:,2)==good_cells(iC);
+        [spike_count]=histcounts(trial_vec(idx,1),opt.time_bins);
+        count_vec(iC,:)=spike_count;
+        
+    end
+    n_trigs_included = numel(unique(trial_vec(:,3)));
+    count_vec = count_vec/n_trigs_included/opt.TimeBin;
 end
