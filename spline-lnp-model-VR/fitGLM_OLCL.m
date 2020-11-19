@@ -54,7 +54,7 @@ A{1} = velMgrid(1:n_OL,:);
 B{1} = velMgrid(n_OL+1:end,:);
 all_control_points{1} = ctl_pts_velM;
 A{2} = velPgrid(1:n_OL,:);
-B{2} = velPgrid(n_OL+1:end,:)
+B{2} = velPgrid(n_OL+1:end,:);
 all_control_points{2} = ctl_pts_velP;
 %% pupil
 areaVec = linspace(min([pupil_area;pupil_area_cl]),max([pupil_area;pupil_area_cl]),11);
@@ -81,13 +81,6 @@ B{5}=yGrid(n_OL+1:end,:);
 all_control_points{3} = ctl_pts_area;
 all_control_points{4} = ctl_pts_x;
 all_control_points{5} = ctl_pts_y;
-%% MM
-ff = zeros(size(dataOL.vr_data_resampled.MM,2),4);
-for ii=1:4
-    ff(:,ii)=circshift(dataOL.vr_data_resampled.MM,(ii-1)*5); 
-end
-
-A{6}=ff;
 
 %%
 for iA=1:numel(A)
@@ -125,11 +118,13 @@ for cellIDX=1:length(good_cells)
         
         vars = sort(bestModels);
         X=ones(length(spiketrain),1);
+        BX = ones(length(velM_cl),1);
         for iV=vars
             X=[X A{iV}];
+            BX = [BX B{iV}];
         end
         yhat = exp(X*parameters{end}');
-        
+        yhat_cl = exp(BX*parameters{end}');
         
     catch ME
         fprintf('Model fitting failed for %d \n',cellIDX)
@@ -142,6 +137,7 @@ for cellIDX=1:length(good_cells)
         tuning_curves ={};
         final_pval = nan;
         yhat =[];
+        yhat_cl = [];
     end
     try
         tuning_curves = glm_tuning_curves_noPos(A,bestModels,parameters{end},all_control_points,s,median(diff(dataOL.post(sample_idx))));
@@ -159,6 +155,7 @@ for cellIDX=1:length(good_cells)
     glmData(cellIDX).parameters = parameters;
     glmData(cellIDX).pvals = pvals;
     glmData(cellIDX).yhat = yhat;
+    glmData(cellIDX).yhat_cl = yhat_cl;
     glmData(cellIDX).var_name = var_name;
     glmData(cellIDX).final_pval = final_pval;
     glmData(cellIDX).tuning_curves  = tuning_curves;
