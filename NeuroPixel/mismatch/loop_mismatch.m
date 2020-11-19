@@ -1,7 +1,7 @@
 
 matfiles = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
 wave_path = 'Z:\giocomo\attialex\mean_waveforms';
-%matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_corrected/*mismatch*.mat');
+matfiles = dir('/Volumes/T7/mismatch/np*mismatch*.mat');
 %matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
 %matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
@@ -61,7 +61,7 @@ for iF=1:numel(matfiles)
         if iscolumn(reg)
             reg = reg';
         end
-        valid_region = startsWith(reg,{'VISp'});
+        valid_region = startsWith(reg,{'MEC','ECT'});
     end
     if nnz(valid_region)==0
         continue
@@ -83,6 +83,7 @@ for iF=1:numel(matfiles)
     region_this = reg(data_out.sp.cgs==2 & valid_region);
     all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
     true_speed = data_out.true_speed;
+    out = fitGLM_mismatch(data,good_cells);
     if iscolumn(true_speed)
         speed=true_speed';
     else
@@ -258,7 +259,8 @@ MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
 
 chunksize=203;
 nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
+%cmap = cbrewer('div','RdBu');
+cmap = brewermap(21,'RdBu');
 cmap=flipud(cmap);
 for iC=[1 nChunks]%nChunks
     figure
@@ -291,7 +293,7 @@ MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
 
 chunksize=203;
 nChunks = floor(size(MM,1)/chunksize);
-cmap = cbrewer('div','RdBu',20);
+cmap = brewermap(21,'RdBu');
 cmap=flipud(cmap);
 
 for iC=[0 .9;.1 1]%nChunks
@@ -331,7 +333,7 @@ colormap(cmap)
 
 MM_ms = MM-mean(MM(:,bl),2);
 
-chunksize=50;
+chunksize=250;
 nChunks = floor(size(MM,1)/chunksize);
 
 for iC=[1:nChunks]%nChunks
