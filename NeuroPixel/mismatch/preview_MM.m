@@ -11,6 +11,7 @@ if iscolumn(mismatch_trigger)
     mismatch_trigger = mismatch_trigger';
 end
 good_cells = data.sp.cids(data.sp.cgs==2);
+%good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.rf_cluster.group,'good'));
 %%
 opt.speed_t=0.05;
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
