@@ -91,7 +91,8 @@ parfor iF=1:numel(filenames)
         for iRep=1:numel(good_starts)
             ops_temp.trials = good_starts(iRep)+[0:ops_temp.n_trials-1];
             
-            [data_out] = findBestShifts_mgc(data,ops_temp);
+            %[data_out] = findBestShifts_mgc(data,ops_temp);
+            [data_out] = findBestShifts(data,ops_temp);
             [a,mi]=max(data_out.all_stability,[],2);
             factors = ops_temp.factors(mi);
             factors(isnan(a))=nan;
