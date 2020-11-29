@@ -1,11 +1,28 @@
 %%
 matfiles = dir("F:\Alex\matfiles_new\*_MM_*.mat");
 %%
+files = {
+    'AA_200919_1_MM_10-47-17.mat',
+    'AA_200919_1_MM_17-41-26.mat',
+    'AA_200919_1_MM_201007_15-28-09.mat',
+    'AA_200919_3_MM_201010_14-43-47.mat',
+    'AA_200919_3_MM_201011_14-25-36.mat',
+    'AA_200919_3_MM_201013_16-36-05.mat',
+    'AA_200920_4_MM_13-14-15.mat'       ,
+    'AA_200920_4_MM_14-54-12.mat'      ,
+    'AA_200920_5_MM_201010_16-46-40.mat',
+    'AA_200920_5_MM_201011_12-22-36.mat',
+    'AA_200920_5_MM_201013_14-33-40.mat',
+    'AA_200920_5_MM_201014_14-21-14.mat',
+        };
+
+%%
 MM=[];
 RUN=[];
 CHANNEL = [];
-for iF=1:13
-data = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
+FR = [];
+for iF=1:numel(files)
+data = load(fullfile(matfiles(1).folder,files{iF}));
 mismatch_trigger = data.vr_data_resampled.MM>0.5;
 good_cells = data.sp.cids(data.sp.cgs==2);
 good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.ks_cluster.KSLabel,'good'));
@@ -31,7 +48,12 @@ mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
 %%
 opt = load_mismatch_opt;
 [spikeTimes,~,aux,~,count_vec]=extract_triggered_spikeTimes(data.sp,data.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data.post' ;smooth_speed],'aux_win',opt.aux_win);
-
+duration = max(data.post)-min(data.post);
+fr = nan(size(good_cells));
+for iC=1:numel(good_cells)
+    n = nnz(data.sp.clu==good_cells(iC));
+    fr(iC)=n/duration;
+end
 
 
 run_ons = strfind(smooth_speed>opt.speed_t,[zeros(1,30),ones(1,30)])+30;
@@ -44,25 +66,44 @@ chan_number =data.sp.waveform_metrics.peak_channel(ismember(data.sp.waveform_met
 RUN=cat(1,RUN,count_vec_run);
 MM=cat(1,MM,count_vec);
 CHANNEL = cat(1,CHANNEL,chan_number);
+FR=cat(1,FR,fr);
 end
 %%
-valid_idx = mean(RUN,2)>1 & mean(MM,2)>1;
+valid_idx = FR>3;
 [~,sid]=sort(CHANNEL(valid_idx),'descend');
-MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',10);
-RUN_smooth = smoothdata(RUN(valid_idx,:),2,'gaussian',10);
-count_vecN=MM_smooth./max(MM_smooth,[],2);
-count_vec_runN = RUN_smooth./max(RUN_smooth,[],2);
-figure
+MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',5);
+RUN_smooth = smoothdata(RUN(valid_idx,:),2,'gaussian',5);
+%count_vecN=MM_smooth./max(MM_smooth,[],2);
+%count_vec_runN = RUN_smooth./max(RUN_smooth,[],2);
+MM_smooth = MM_smooth-nanmean(MM_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-1),2);
+count_vecN = MM_smooth./FR(valid_idx);
+RUN_smooth = RUN_smooth-nanmean(RUN_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-1),2);
+count_vec_runN = RUN_smooth./FR(valid_idx);
+figure('Color','w')
 subplot(3,2,[1 3])
-imagesc(opt.time_vecs,1:nnz(valid_idx),count_vecN(sid,:));
+imagesc(opt.time_vecs,1:nnz(valid_idx),count_vecN(sid,:),[-2 2]);
 ylabel('ventral -> dorsal')
-
+xlim([-1 3])
 subplot(3,2,[2 4])
-imagesc(opt.time_vecs,1:nnz(valid_idx),count_vec_runN(sid,:));
+imagesc(opt.time_vecs,1:nnz(valid_idx),count_vec_runN(sid,:),[-2 2]);
+xlim([-1 3])
 
 subplot(3,2,5)
-plot(opt.time_vecs,nanmean(count_vecN));
+%plot(opt.time_vecs,nanmean(count_vecN));
+boundedline(opt.time_vecs,nanmean(count_vecN),nanstd(count_vecN)/sqrt(nnz(valid_idx)))
+xlim([-1 3])
+
 title('MM')
 subplot(3,2,6)
-plot(opt.time_vecs,nanmean(count_vec_runN));
+boundedline(opt.time_vecs,nanmean(count_vec_runN),nanstd(count_vec_runN)/sqrt(nnz(valid_idx)))
 title('Run')
+xlim([-1 3])
+
+
+%%
+figure
+valid_idx = mean(RUN,2)>1 & mean(MM,2)>1;
+[~,sid]=sort(CHANNEL(valid_idx),'descend');
+MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',5);
+tmp = MM_smooth-nanmean(MM_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-.6),2);
+imagesc(opt.time_vecs,1:nnz(valid_idx),tmp(sid,:),[-2 2])
