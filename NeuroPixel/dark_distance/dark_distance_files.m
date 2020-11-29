@@ -1,12 +1,13 @@
 if ispc()
-    data_dir = 'Z:\giocomo\attialex\NP_DATA\';
-    image_dir = 'Z:\giocomo\attialex\images\';
+    data_dir = 'F:\Alex\matfiles_new';
+    image_dir = 'F:\Alex\images';
 else
     data_dir = '/oak/stanford/groups/giocomo/attialex/NP_DATA';
     image_dir = '/oak/stanford/groups/giocomo/attialex/images';
 end
-files = dir(fullfile(data_dir,'*dark*.mat'));
+files = dir(fullfile(data_dir,'*MMdark*.mat'));
 params = readtable('UniversalParams.xlsx');
+%%
 for iF=1:length(files)
     load(fullfile(data_dir,files(iF).name));
     DATA=struct;
