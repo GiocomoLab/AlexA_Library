@@ -14,12 +14,19 @@ if ~isfield(opt,'dark')
 end
 
 % extract data for given trials
+if ~isempty(trials)
 posx = dat.posx(ismember(dat.trial,trials));
 post = dat.post(ismember(dat.trial,trials));
 trial = dat.trial(ismember(dat.trial,trials));
 
 % total distance run
 total_dist = posx + opt.track_length * (trial-min(trial));
+else
+    posx = dat.posx;
+    post = dat.post;
+    total_dist = posx;
+end
+
 if adjust_for_gain
     total_dist = total_dist/gain_correction;
 end
