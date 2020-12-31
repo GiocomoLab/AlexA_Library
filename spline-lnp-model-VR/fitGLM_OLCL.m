@@ -44,6 +44,7 @@ s = 0.5; % spline parameter
 %% velM and velP
 spdVec = linspace(min([velM; velP;velM_cl;]),max([velM; velP; velM_cl]),15);
 spdVec(1)=spdVec(1)-0.1;
+spdVec(end)=spdVec(end)+0.1;
 %spdVec(1)=-0.01; %for boundary condition
 %maybe use linspace?
 [velMgrid,ctl_pts_velM] = spline_1d([velM;velM_cl],spdVec,s);
@@ -112,6 +113,9 @@ for cellIDX=1:length(good_cells)
     %         train_ind{k} = setdiff(1:T,test_ind{k});
     %     end
     %%%%%%%% FORWARD SEARCH PROCEDURE %%%%%%%%%
+    mean_fr = mean(spiketrain); %mean per bin
+    yhat =mean_fr*ones(size(A{1},1),1);
+        yhat_cl = mean_fr*ones(size(B{1},1),1);
     try
         fprintf('\t Fitting model  for cell %d \n', cellIDX);
         [allModelTestFits, allModelTrainFits, bestModels, bestModelFits, parameters, pvals, final_pval] = forward_search_kfold(A,spiketrain,train_ind,test_ind);
@@ -123,8 +127,10 @@ for cellIDX=1:length(good_cells)
             X=[X A{iV}];
             BX = [BX B{iV}];
         end
+        if final_pval<=0.05 %only use model if fit is sig better than average firing rate model
         yhat = exp(X*parameters{end}');
         yhat_cl = exp(BX*parameters{end}');
+        end
         
     catch ME
         fprintf('Model fitting failed for %d \n',cellIDX)
@@ -136,8 +142,7 @@ for cellIDX=1:length(good_cells)
         pvals = [];
         tuning_curves ={};
         final_pval = nan;
-        yhat =[];
-        yhat_cl = [];
+        
     end
     try
         tuning_curves = glm_tuning_curves_noPos(A,bestModels,parameters{end},all_control_points,s,median(diff(dataOL.post(sample_idx))));
