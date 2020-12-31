@@ -1,5 +1,5 @@
 %%
-cl_filenames=dir('Z:\giocomo\attialex\NP_DATA_corrected\*_mismatch*.mat')
+cl_filenames=dir('Z:\giocomo\attialex\NP_DATA_2\*_mismatch*.mat');
 
 %%
 % n=0;
@@ -61,7 +61,7 @@ for iF=1:size(cl_filenames,1)
         
         [spikeTimes,~,aux,~,count_vec]=extract_triggered_spikeTimes(data.sp,data.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',aux_vec,'aux_win',opt.aux_win);
         
-        p=cat(2,glmDataPB(:).yhat);
+        p=cat(2,glmDataPB(:).yhat_cl);
         snps = extract_snps(p',mm_trigs,'win',[-100 149]);
         
         run_ons = strfind(smooth_speed>opt.speed_t,[zeros(1,30),ones(1,30)])+30;
@@ -81,7 +81,7 @@ for iF=1:size(cl_filenames,1)
         else
             reg = {};
         end
-        mf = matfile(['F:\Alex\glmFits_oldData\' fn_new],'Writable',true);
+        mf = matfile(['F:\Alex\glmFits_oldData2\' fn_new],'Writable',true);
         mf.glmData = glmDataPB;
         mf.mm_resp = count_vec;
         mf.mm_predicted = avg_yhat;
