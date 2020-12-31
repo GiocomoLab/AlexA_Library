@@ -32,7 +32,8 @@ A={};
 s = 0.5; % spline parameter
 
 %% velM and velP
-spdVec = linspace(min([velM; velP;velM_cl;]),max([velM; velP; velM_cl]),15);
+%spdVec = linspace(min([velM; velP;velM_cl;velP_cl]),max([velM; velP; velM_cl;velP_cl]),15);
+spdVec = prctile([velM; velP;velM_cl;velP_cl],linspace(0,100,25));
 spdVec(1)=spdVec(1)-0.1;
 spdVec(end)=spdVec(end)+0.1;
 %spdVec(1)=-0.01; %for boundary condition
