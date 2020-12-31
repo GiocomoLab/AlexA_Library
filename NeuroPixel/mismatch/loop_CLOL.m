@@ -92,7 +92,8 @@ for iF=1:numel(pb_files)
     fr = calcFRVsTime(good_cells,data_pb,load_default_opt);
     corrM = corr(fr',speed_pb');
     corrV = corr(fr',vis_flow_pb);
-    
+    glmData = fitGLM_OLCL_oldDataFormat(data_pb,data_mm,good_cells,1);
+
     for iC=1:numel(good_cells)
         idx = trial_vec_mm(:,2)==good_cells(iC);
         [spike_count]=histcounts(trial_vec_mm(idx,1),opt.time_bins);
