@@ -93,7 +93,7 @@ for iF=1:size(files,1)
 end
 %%
 
-files = rs_files;
+files = visp_files;
 hmfig = figure();
 tracefig = figure();
 ops = load_mismatch_opt;
@@ -123,68 +123,46 @@ hold on
 scatter(PROM_ALL(TUNED_ALL==1),peak_zscore(TUNED_ALL==1),45,'b','.')
 scatter(PROM_ALL(TUNED_ALL==0),peak_zscore(TUNED_ALL==0),45,'k','.')
 fprintf('%d out of %d tuned \n',nnz(TUNED_ALL),numel(TUNED_ALL));
-%% final figure
-yl=[0 100]
-figure
-data = load(fullfile(data_dir,visp_files{2,1}{1}));
-    [~,sn]=fileparts(files{iF}{1});
-    
-    [~,sid]=sort(data.chan_number,'descend');
-    ACG = data.ACG(sid,:);
-    
-    
-    PI=[];
-   
-    subplot(1,2,1)
-    imagesc([0:2:800],1:size(ACG,1),ACG,[0 0.4])
-colormap summer
-title('V1')
-    
-subplot(1,2,2)
-data = load(fullfile(data_dir,rs_files{3,1}{1}));
-    [~,sn]=fileparts(files{iF}{1});
-    
-    [~,sid]=sort(data.chan_number,'descend');
-    ACG = data.ACG(sid,:);
-    
-    
-    PI=[];
-   
-    imagesc([0:2:800],1:size(ACG,1),ACG,[0 0.4])
-    title('RSC')
-colormap summer
-for ii=1:2
-    set(subplot(1,2,ii),'YLim',yl)
-end
+
 
 %%
 figure
 ACG_ALL=[];
+DEPTH = [];
 ma = 0;
 for iF=1:size(visp_files,1)
     data = load(fullfile(data_dir,visp_files{iF,1}{1}));
     idx = ismember(data.chan_number,visp_files{iF,2}{1});
-    [~,sid]=sort(data.chan_number(idx),'descend');
+    %[~,sid]=sort(data.chan_number(idx),'descend');
+    tmp = data.chan_number(idx);
+    tmp = tmp-min(tmp);
+    DEPTH = cat(1,DEPTH,tmp);
     ACG = data.ACG(idx,:);
-    ACG = ACG(sid,:);
+    %ACG = ACG(sid,:);
     ACG_ALL=cat(1,ACG_ALL,ACG);
 end
 ma = max(size(ACG_ALL,1),ma);
 subplot(1,2,1)
-imagesc(ACG_ALL,[0 0.4])
+[~,sid]=sort(DEPTH);
+imagesc(ACG_ALL(sid,:),[0 0.4])
 title('V1')
 colormap summer
 ACG_ALL=[];
+DEPTH = [];
 for iF=1:size(rs_files,1)
     data = load(fullfile(data_dir,rs_files{iF,1}{1}));
     idx = ismember(data.chan_number,rs_files{iF,2}{1});
-    [~,sid]=sort(data.chan_number(idx),'descend');
+    %[~,sid]=sort(data.chan_number(idx),'descend');
+     tmp = data.chan_number(idx);
+    tmp = tmp-min(tmp);
+    DEPTH = cat(1,DEPTH,tmp);
     ACG = data.ACG(idx,:);
-    ACG = ACG(sid,:);
+    %ACG = ACG(sid,:);
     ACG_ALL=cat(1,ACG_ALL,ACG);
 end
 subplot(1,2,2)
-imagesc(ACG_ALL,[0 0.4])
+[~,sid]=sort(DEPTH);
+imagesc(ACG_ALL(sid,:),[0 0.4])
 ma = max(size(ACG_ALL,1),ma);
 
 title('RSC')
