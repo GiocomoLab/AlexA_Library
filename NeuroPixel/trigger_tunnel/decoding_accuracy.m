@@ -1,9 +1,12 @@
 %data=load('/Volumes/T7/AA_201025_3_TowerTraining_201125_18-27-26.mat');
 accuracy_all = {};
-mf = dir('F:\Alex\new_2\*Tower*.mat');
+mf = dir('/Volumes/T7/*Tower*.mat');
 for iF=1:numel(mf)
     data = load(fullfile(mf(iF).folder,mf(iF).name));
 good_cells = data.sp.cids(data.sp.cgs==2);
+good_cells = data.sp.ks_cluster.cluster_id(strcmp(data.sp.ks_cluster.KSLabel,'mua'));
+good_cells = data.sp.rf_cluster.cluster_id(strcmp(data.sp.rf_cluster.group,'good'));
+
 tmp = diff(data.posx)<-50;
 data.trial = [0;cumsum(tmp)];
 opt = load_mismatch_opt;
