@@ -1,8 +1,8 @@
 %data=load('/Volumes/T7/AA_201025_3_TowerTraining_201125_18-27-26.mat');
 accuracy_all = {};
-mf = dir('.../*Tower*.mat');
+mf = dir('F:\Alex\new_2\*Tower*.mat');
 for iF=1:numel(mf)
-    data = load(fullfile(mf(iF).folder,mf(iF).file));
+    data = load(fullfile(mf(iF).folder,mf(iF).name));
 good_cells = data.sp.cids(data.sp.cgs==2);
 tmp = diff(data.posx)<-50;
 data.trial = [0;cumsum(tmp)];
@@ -66,7 +66,7 @@ CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,...
     figure('Name',mf(iF).name)
     cv1=smoothdata(count_vec1,2,'gaussian',11);
     cv2=smoothdata(count_vec2,2,'gaussian',11);
-    for iC=1:numel(sig_idx)
+    for iC=1:min(numel(sig_idx),12)
         subplot(4,3,iC)
         plot(opt.time_vecs,count_vec1(sig_idx(iC),:))
         hold on
