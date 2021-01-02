@@ -1,4 +1,8 @@
-data=load('/Volumes/T7/AA_201025_3_TowerTraining_201125_18-27-26.mat');
+%data=load('/Volumes/T7/AA_201025_3_TowerTraining_201125_18-27-26.mat');
+accuracy_all = {};
+mf = dir('.../*Tower*.mat');
+for iF=1:numel(mf)
+    data = load(fullfile(mf(iF).folder,mf(iF).file));
 good_cells = data.sp.cids(data.sp.cgs==2);
 tmp = diff(data.posx)<-50;
 data.trial = [0;cumsum(tmp)];
@@ -34,13 +38,14 @@ accuracy = zeros(1,size(X_new,2));
 loss = accuracy;
 for ii=1:numel(accuracy)
     obs = squeeze(X_new(:,ii,:));
-    CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,...
-    'Learner','logistic','Solver','sparsa','Regularization','lasso');
+    CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,'Learner','logistic','Solver','sparsa','Regularization','lasso');
     yhat = CVMdl.kfoldPredict;
     accuracy(ii) = nnz(yhat==labels)/numel(labels);
     loss(ii)=kfoldLoss(CVMdl);
 end
-figure;plot(opt.time_vecs,accuracy)
+accuracy_all{end+1}=accuracy;
+figure('Name',mf(iF).name)
+plot(opt.time_vecs,accuracy)
 
 %% refit best model
 [~,mi]=max(accuracy);
@@ -58,7 +63,7 @@ CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,...
     end
     sig_cells = all(abs(bias)>0,2);
     [sig_idx]=find(sig_cells);
-    figure
+    figure('Name',mf(iF).name)
     cv1=smoothdata(count_vec1,2,'gaussian',11);
     cv2=smoothdata(count_vec2,2,'gaussian',11);
     for iC=1:numel(sig_idx)
@@ -69,3 +74,4 @@ CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,...
         
 
     end
+end
