@@ -67,14 +67,18 @@ if ~isempty(aux)
         aux_mat(:,iT,:)=aux(2:end,aux_IDX);
     end
     
-    trial_vec =cat(1,spike_times_struct{:});
-    count_vec = zeros(numel(good_cells),numel(opt.time_bins)-1);
-    for iC=1:numel(good_cells)
-        idx = trial_vec(:,2)==good_cells(iC);
-        [spike_count]=histcounts(trial_vec(idx,1),opt.time_bins);
-        count_vec(iC,:)=spike_count;
-        
-    end
-    n_trigs_included = numel(unique(trial_vec(:,3)));
-    count_vec = count_vec/n_trigs_included/opt.TimeBin;
+else
+    aux_mat = [];
 end
+
+trial_vec =cat(1,spike_times_struct{:});
+count_vec = zeros(numel(good_cells),numel(opt.time_bins)-1);
+for iC=1:numel(good_cells)
+    idx = trial_vec(:,2)==good_cells(iC);
+    [spike_count]=histcounts(trial_vec(idx,1),opt.time_bins);
+    count_vec(iC,:)=spike_count;
+    
+end
+n_trigs_included = numel(unique(trial_vec(:,3)));
+count_vec = count_vec/n_trigs_included/opt.TimeBin;
+
