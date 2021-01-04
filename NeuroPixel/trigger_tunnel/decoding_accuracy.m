@@ -14,9 +14,14 @@ opt = load_mismatch_opt;
 %%
 trigs_1=strfind(data.vr_data_resampled.Object==1,[0 0 1 1])+2;
 trigs_2=strfind(data.vr_data_resampled.Object==0,[0 0 1 1])+2;
-[spikeTimes1,~,~,~,count_vec1]=extract_triggered_spikeTimes(data.sp,data.post(trigs_1),'cluIDs',good_cells,'win',opt.extract_win);
+filt = gausswin(61); %61 pretty close to what we use in other
+filt = filt/sum(filt);
+smooth_speed = conv(data.vr_data_resampled.velM,filt,'same');
+aux_vec = [data.post' ;smooth_speed];
 
-[spikeTimes2,~,~,~,count_vec2]=extract_triggered_spikeTimes(data.sp,data.post(trigs_2),'cluIDs',good_cells,'win',opt.extract_win);
+[spikeTimes1,~,aux1,~,count_vec1]=extract_triggered_spikeTimes(data.sp,data.post(trigs_1),'cluIDs',good_cells,'win',opt.extract_win,'aux',aux_vec,'aux_win',opt.extract_win*50);
+
+[spikeTimes2,~,aux2,~,count_vec2]=extract_triggered_spikeTimes(data.sp,data.post(trigs_2),'cluIDs',good_cells,'win',opt.extract_win,'aux',aux_vec,'aux_win',opt.extract_win*50);
 
 %%
 stim_1_ind=zeros(numel(good_cells),numel(opt.time_vecs),numel(spikeTimes1));
@@ -30,12 +35,21 @@ for ii=1:numel(spikeTimes2)
 end
 
 X=cat(3,stim_1_ind,stim_2_ind);
+Xrun = cat(1,squeeze(aux1),squeeze(aux2))';
 labels=[ones(numel(spikeTimes1),1) ;zeros(numel(spikeTimes2),1)];
 
 %%
 X_new = smoothdata(X,2,'movmean',11);
 sample_idx = 1:11:numel(opt.time_vecs);
 %X_new = X_new(:,1:5:end,:);
+%%
+accuracy_run = zeros(1,size(X_new,2));
+for ii=1:numel(accuracy_run)
+    obs_run = Xrun(ii,:)';
+    CVMdlrun  = fitclinear(obs_run,labels,'KFold',5,'Learner','logistic','Solver','sparsa','Regularization','lasso');
+    %yhatrun = CVMdl.kfoldLoss;
+    accuracy_run(ii)=1-CVMdlrun.kfoldLoss;
+end
 %%
 accuracy = zeros(1,size(X_new,2));
 loss = accuracy;
@@ -46,10 +60,12 @@ for ii=1:numel(accuracy)
     accuracy(ii) = nnz(yhat==labels)/numel(labels);
     loss(ii)=kfoldLoss(CVMdl);
 end
-accuracy_all{end+1}=accuracy;
+accuracy_all{end+1}=[accuracy;acccuracy_run];
 figure('Name',mf(iF).name)
 plot(opt.time_vecs,accuracy)
-
+hold on
+plot(opt.time_vecs,accuracy_run);
+legend('neurons','behavior')
 %% refit best model
 [~,mi]=max(accuracy);
 obs = squeeze(X_new(:,mi,:));
