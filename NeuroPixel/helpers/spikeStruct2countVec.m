@@ -7,7 +7,3 @@ for iC=1:numel(good_cells)
     count_vec(iC,:)=spike_count;
     
 end
-
-
-n_trigs_included = numel(unique(trial_vec(:,3)));
-count_vec = count_vec/n_trigs_included/opt.TimeBin;
