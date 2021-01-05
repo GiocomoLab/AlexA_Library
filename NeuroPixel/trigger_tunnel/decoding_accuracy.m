@@ -37,7 +37,8 @@ end
 X=cat(3,stim_1_ind,stim_2_ind);
 Xrun = cat(1,squeeze(aux1),squeeze(aux2))';
 labels=[ones(numel(spikeTimes1),1) ;zeros(numel(spikeTimes2),1)];
-
+xsum = sum(sum(X,2),3);
+X=X(xsum>size(X,3)*5,:,:);
 %%
 X_new = smoothdata(X,2,'movmean',11);
 sample_idx = 1:11:numel(opt.time_vecs);
@@ -60,7 +61,7 @@ for ii=1:numel(accuracy)
     accuracy(ii) = nnz(yhat==labels)/numel(labels);
     loss(ii)=kfoldLoss(CVMdl);
 end
-accuracy_all{end+1}=[accuracy;acccuracy_run];
+accuracy_all{end+1}=[accuracy;accuracy_run];
 figure('Name',mf(iF).name)
 plot(opt.time_vecs,accuracy)
 hold on
