@@ -1,7 +1,8 @@
+addpath(genpath('F:\code\cortexlab_spikes\analysis\'))
 
 matfiles = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
-wave_path = 'Z:\giocomo\attialex\mean_waveforms';
-matfiles = dir('/Volumes/T7/mismatch/np*mismatch*.mat');
+wave_path = 'I:\mean_waveforms\mean_waveforms';
+matfiles = dir('I:\mismatch_mec\np*mismatch*.mat');
 %matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
 %matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
@@ -26,25 +27,38 @@ WAVEFORM = [];
 SID = [];
 MM_R=[];
 THETA_POWER = [];
+FIRING_RATE = [];
 %cmap_fr = cbrewer('seq','BuPu',20);
-cmap_fr = summer(20);  
+cmap_fr = summer(20);
 SPIKE_TIMES=cell(numel(matfiles),1);
 RUN_TRACES = cell(numel(matfiles),1);
 CLUIDS = RUN_TRACES;
 DEPTH = [];
 REGION = {};
+FR=[];
+SPIKE_CHANNEL = [];
+templateDuration = [];
+templateWaveform = [];
+MM_THETA={};
 for iF=1:numel(matfiles)
     disp(iF)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
+    
+    [spikeAmps, spikeDepths, templateYpos, tempAmps, tempsUnW, tempDur, tempPeakWF] = ...
+        templatePositionsAmplitudes(data_out.sp.temps, data_out.sp.winv, data_out.sp.ycoords, data_out.sp.spikeTemplates, data_out.sp.tempScalingAmps);
+    nC=numel(data_out.sp.cgs);
+    
+    spike_channel = nan(nC,1);
+    for ii=1:nC
+        spike_channel(ii)=nanmedian(spikeDepths(data_out.sp.clu==data_out.sp.cids(ii)));
+    end
     if ~isfield(data_out,'anatomy')
+        disp(matfiles(iF).name)
         disp('no anatomy')
-        
-        continue
-        valid_region = data_out.sp.cgs==2;
-        depth = nan(size(data_out.sp.cgs));
-        reg = zeros(size(data_out.sp.cgs));
-        %depth_this = depth(data_out.sp.cgs==2 & valid_region);
-        %region_this = reg(data_out.sp.cgs==2 & valid_region);
+        reg = repmat({'UNK'},1,nC);
+        depth = nan(nC,1); % go via channel number
+        %continue
+        valid_region = true(size(reg));
     else
         
         if ~isfield(data_out.anatomy,'depth')
@@ -83,7 +97,7 @@ for iF=1:numel(matfiles)
     region_this = reg(data_out.sp.cgs==2 & valid_region);
     all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
     true_speed = data_out.true_speed;
-    out = fitGLM_mismatch(data,good_cells);
+    %out = fitGLM_mismatch(data,good_cells);
     if iscolumn(true_speed)
         speed=true_speed';
     else
@@ -104,42 +118,25 @@ for iF=1:numel(matfiles)
         speed = speed';
     end
     %[~,sp] = calcSpeed(data_out.posx,load_default_opt);
-    %% MM
-    %[spike_mat,win,adata]=extract_triggered_spikes(data_out.sp,data_out.post(mm_trigs),'win',[-4 4],'aux',[data_out.post'; [speed];sp'],'aux_win',[-200 200]);
-    %[spike_mat_random,~,adata_random]=extract_triggered_spikes(data_out.sp,data_out.post(possibles_random),'win',[-4 4],'aux',[data_out.post'; [speed]],'aux_win',[-200 200]);
-    [spikeTimes,~,aux]=extract_triggered_spikeTimes(data_out.sp,data_out.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data_out.post' ;smooth_speed],'aux_win',opt.aux_win);
-    [spikeTimesAll,~,auxAll]=extract_triggered_spikeTimes(data_out.sp,data_out.post(all_mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data_out.post' ;smooth_speed],'aux_win',opt.aux_win);
+    [spikeTimes,~,aux,~,count_vec]=extract_triggered_spikeTimes(data_out.sp,data_out.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data_out.post' ;smooth_speed],'aux_win',opt.aux_win);
+    [spikeTimesAll,~,auxAll,~,count_vec_all]=extract_triggered_spikeTimes(data_out.sp,data_out.post(all_mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data_out.post' ;smooth_speed],'aux_win',opt.aux_win);
     
     SPIKE_TIMES{iF}=spikeTimesAll;
     RUN_TRACES{iF}=squeeze(auxAll);
-    [spikeTimesRandom]=extract_triggered_spikeTimes(data_out.sp,data_out.post(possibles_random),'cluIDs',good_cells,'win',opt.extract_win);
+    [spikeTimesRandom,~,~,~,count_vec_random]=extract_triggered_spikeTimes(data_out.sp,data_out.post(possibles_random),'cluIDs',good_cells,'win',opt.extract_win);
     
     trial_vec =cat(1,spikeTimes{:});
     trial_vec_random = cat(1,spikeTimesRandom{:});
     CLUIDS{iF}=good_cells;
-    count_vec = zeros(numel(good_cells),numel(opt.time_bins)-1);
-    count_vec_random = count_vec;
-    for iC=1:numel(good_cells)
-        idx = trial_vec(:,2)==good_cells(iC);
-        [spike_count]=histcounts(trial_vec(idx,1),opt.time_bins);
-        count_vec(iC,:)=spike_count;
-        idx = trial_vec_random(:,2)==good_cells(iC);
-        [spike_count]=histcounts(trial_vec_random(idx,1),opt.time_bins);
-        count_vec_random(iC,:)=spike_count;
-        
-    end
-    n_trigs_included = numel(unique(trial_vec(:,3)));
-    n_trigs_included_random = numel(unique(trial_vec_random(:,3)));
     
-    count_vec = count_vec/n_trigs_included/opt.TimeBin;
-    count_vec_random = count_vec_random/n_trigs_included_random/opt.TimeBin;
     %theta
     tB=0:opt.TimeBin:max(data_out.sp.st);
     
     frMat= zeros(numel(good_cells),numel(tB)-1);
-    
+    firing_rate = zeros(numel(good_cells),1);
     for iC=1:numel(good_cells)
         idx = data_out.sp.clu==good_cells(iC);
+        firing_rate(iC)=nnz(idx);
         frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
     end
     
@@ -151,13 +148,34 @@ for iF=1:numel(matfiles)
     %     rest_idx = ~theta_idx & FSpikes>1;
     %     thetaPower = mean(PxxSpikes(theta_idx,:));
     %     restPower = mean(PxxSpikes(rest_idx,:));
-    
+    trigs = [];
+    [p,s,t]=pspectrum(frMat(iC,:),1/opt.TimeBin,'spectrogram','FrequencyLimits',[0 10],'FrequencyResolution',[1]);
+    for iT=1:numel(mm_trigs)
+        [~,idx]=min(abs(data_out.post(mm_trigs(iT))-t));
+        trigs(end+1)=idx;
+    end
+    power_estimate = zeros(numel(good_cells),81);
+    power_estimate_low = power_estimate;
+    for iC=1:numel(good_cells)
+        [p,s,t]=pspectrum(frMat(iC,:),1/opt.TimeBin,'spectrogram','FrequencyLimits',[0 10],'FrequencyResolution',[1]);
+        snps = extract_snps(p,trigs,'win',[-40 40]);
+        est = mean(mean(snps(s>6 & s<8,:,:),1),3);
+        est_l= mean(mean(snps(s< 6 & s>=1,:,:),1),3);
+        power_estimate(iC,:)=est;
+        power_estimate_low(iC,:)=est_l;
+    end
+    dt = mean(diff(t));
+    time_vec = linspace(-40*dt,40*dt,81);
+    P.power_estimate = power_estimate;
+    P.power_estimate_low = power_estimate_low;
+    P.time_vec = time_vec;
+    MM_THETA=cat(1,MM_THETA,{P});
     %[~,theta_sort] = sort(thetaPower./(thetaPower+restPower),'descend');
     nC=size(frMat,1);
     maxLag=50;
     xcorrs=zeros(nC,2*maxLag+1);
     for iC=1:nC
-        xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag);
+        xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag,'coeff');
     end
     thetaPower = xcorrs(:,58);
     thetaPower_low = xcorrs(:,54);
@@ -172,16 +190,33 @@ for iF=1:numel(matfiles)
         %p = ismember(wave_data.clusters_good,good_cells);
         %temp = data_out.sp.cgs==2;
         tmp_reg = reg(data_out.sp.cgs==2);
-        tmp_idx = startsWith(tmp_reg,'VISp');
+        %tmp_idx = startsWith(tmp_reg,'VISp');
+        tmp_idx = true(size(tmp_reg));
         waveform = wave_data.mean_waveforms(tmp_idx,:);
-
+        
     else
         waveform = nan(numel(good_cells),82);
     end
+    %tempPeakWF
+    %cluID_this = unique(data_out.sp.clu);
+    tmpWF = nan(numel(good_cells),82);
+    tmpDur = nan(numel(good_cells),1);
+    for iC=1:numel(good_cells)
+        temp_id=unique(data_out.sp.spikeTemplates(data_out.sp.clu==good_cells(iC)));
+        if ~isempty(temp_id)
+            temp_id = temp_id(1)+1;
+            tmpWF(iC,:)=tempPeakWF(temp_id,:);
+            tmpDur(iC)=tempDur(temp_id);
+        end
+    end
+    
+    templateWaveform = cat(1,templateWaveform,tmpWF);
+    templateDuration = cat(1,templateDuration,tmpDur);
     WAVEFORM = cat(1,WAVEFORM,waveform);
     MM=cat(1,MM,count_vec);
     REGION = cat(2,REGION,region_this);
     MM_R = cat(1,MM_R,count_vec_random);
+    FR= cat(1,FR,firing_rate);
     THETA_POWER = cat(1,THETA_POWER,[thetaPower,thetaPower_low]);
     SID = cat(1,SID,ones(numel(good_cells),1)*iF);
     DEPTH = cat(1,DEPTH,depth_this);
@@ -227,8 +262,9 @@ for iF=1:numel(matfiles)
 end
 %%
 figure
+[~,sid]=sort(abs(templateDuration));
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
-imagesc((MM_ms),[-20 20])
+imagesc((MM_ms(sid,:)),[-20 20])
 %cmap = cbrewer('div','RdBu',20);
 %cmap=flipud(cmap);
 %colormap(cmap);
