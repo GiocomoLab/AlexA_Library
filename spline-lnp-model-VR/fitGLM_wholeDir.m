@@ -12,7 +12,7 @@ end
 
 %%
 
-for iF=1:numel(matfiles)
+parfor iF=1:numel(matfiles)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
     
     try
