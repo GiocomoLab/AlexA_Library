@@ -87,6 +87,7 @@ for cellIDX=1:length(good_cells)
     glmData(cellIDX).pvals = pvals;
     glmData(cellIDX).all_control_points = all_control_points;
     glmData(cellIDX).var_name = var_name;
+    glmData(cellIDX).clu = good_cells(cellIDX);
 
 end
 
