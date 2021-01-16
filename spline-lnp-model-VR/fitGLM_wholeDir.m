@@ -2,6 +2,8 @@
 
 %matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 OAK = '/Volumes/T7/attialex';
+OAK='/oak/stanford/groups/giocomo/attialex';
+
 matfiles = dir(fullfile(OAK,'NP_DATA_corrected/*.mat'));
 savedir = fullfile(OAK,'glmFits');
 if ~isfolder(savedir)
