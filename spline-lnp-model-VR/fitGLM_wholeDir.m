@@ -14,7 +14,9 @@ end
 
 parfor iF=1:numel(matfiles)
     data_out = load(fullfile(matfiles(iF).folder,matfiles(iF).name));
-    
+    if isfile(fullfile(savedir,matfiles(iF).name))
+        continue
+    end
     try
     good_cells=data_out.sp.cids(data_out.sp.cgs==2);
     trials = 1:(max(data_out.trial));
