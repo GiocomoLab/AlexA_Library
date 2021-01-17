@@ -22,7 +22,9 @@ parfor iF=1:numel(matfiles)
     trials = 1:(max(data_out.trial));
     trials = trials(data_out.trial_contrast == 100 & data_out.trial_gain==1);
     glmData = fitGLM(data_out,trials,good_cells);
-    save(fullfile(savedir,matfiles(iF).name),'glmData');
+    mf = matfile(fullfile(savedir,matfiles(iF).name))
+    mf.glmData = glmData;
+    %save(fullfile(savedir,matfiles(iF).name),'glmData');
     catch ME
         disp(ME.message)
     end
