@@ -1,10 +1,10 @@
-addpath(genpath('F:\code\cortexlab_spikes\analysis\'))
+%addpath(genpath('F:\code\cortexlab_spikes\analysis\'))
 
 matfiles = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
 wave_path = 'I:\mean_waveforms\mean_waveforms';
 matfiles = dir('I:\mismatch_mec\np*mismatch*.mat');
 %matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
-%matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
+matfiles = dir('/Volumes/T7/attialex/mismatch_mec/*mismatch*.mat');
 %matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 %%
 plotfig= false;
@@ -139,7 +139,7 @@ for iF=1:numel(matfiles)
         firing_rate(iC)=nnz(idx);
         frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
     end
-    
+    firing_rate = firing_rate/(data_out.post(end)-data_out.post(1));
     %[PxxSpikes,FSpikes]=pwelch(frMat',size(frMat,2),[],[],1/opt.TimeBin);
     
     
@@ -156,6 +156,7 @@ for iF=1:numel(matfiles)
     end
     power_estimate = zeros(numel(good_cells),81);
     power_estimate_low = power_estimate;
+    mean_specgram = [];
     for iC=1:numel(good_cells)
         [p,s,t]=pspectrum(frMat(iC,:),1/opt.TimeBin,'spectrogram','FrequencyLimits',[0 10],'FrequencyResolution',[1]);
         snps = extract_snps(p,trigs,'win',[-40 40]);
@@ -163,12 +164,14 @@ for iF=1:numel(matfiles)
         est_l= mean(mean(snps(s< 6 & s>=1,:,:),1),3);
         power_estimate(iC,:)=est;
         power_estimate_low(iC,:)=est_l;
+        mean_specgram = cat(3,mean_specgram,mean(snps,3));
     end
     dt = mean(diff(t));
     time_vec = linspace(-40*dt,40*dt,81);
     P.power_estimate = power_estimate;
     P.power_estimate_low = power_estimate_low;
     P.time_vec = time_vec;
+    P.mean_specgram = mean_specgram;
     MM_THETA=cat(1,MM_THETA,{P});
     %[~,theta_sort] = sort(thetaPower./(thetaPower+restPower),'descend');
     nC=size(frMat,1);
