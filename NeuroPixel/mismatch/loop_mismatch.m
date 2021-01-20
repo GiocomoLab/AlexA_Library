@@ -4,8 +4,9 @@ matfiles = dir('Z:\giocomo\attialex\NP_DATA\*mismatch*.mat');
 wave_path = 'I:\mean_waveforms\mean_waveforms';
 matfiles = dir('I:\mismatch_mec\np*mismatch*.mat');
 %matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
-matfiles = dir('/Volumes/T7/attialex/mismatch_mec/*mismatch*.mat');
+matfiles = dir('/Volumes/T7/attialex/mismatch_mec/np*mismatch*.mat');
 %matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
+histo_table = process_histology();
 %%
 plotfig= false;
 if plotfig
@@ -36,6 +37,7 @@ CLUIDS = RUN_TRACES;
 DEPTH = [];
 REGION = {};
 FR=[];
+POS3D=[];
 SPIKE_CHANNEL = [];
 templateDuration = [];
 templateWaveform = [];
@@ -81,6 +83,17 @@ for iF=1:numel(matfiles)
         continue
     end
     
+    parts = split(matfiles(iF).name,'_');
+    animal = parts{1};
+    date = parts{2};
+    
+    session_num=find(startsWith(histo_table.animal,animal) & startsWith(histo_table.date,date));
+    if numel(session_num) ==1
+    pos3D = histo_table.origin(session_num,:)+spike_channel.*histo_table.unit_vector(session_num,:);
+    else
+        pos3D = nan(nC,3);
+    end
+    
     
     mismatch_trigger = data_out.mismatch_trigger;
     if size(mismatch_trigger,1) ~=1
@@ -95,6 +108,7 @@ for iF=1:numel(matfiles)
     good_cells = data_out.sp.cids(data_out.sp.cgs==2 & valid_region);
     depth_this = depth(data_out.sp.cgs==2 & valid_region);
     region_this = reg(data_out.sp.cgs==2 & valid_region);
+    pos3d_this = pos3D(data_out.sp.cgs==2 & valid_region,:);
     all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
     true_speed = data_out.true_speed;
     %out = fitGLM_mismatch(data,good_cells);
@@ -223,6 +237,7 @@ for iF=1:numel(matfiles)
     THETA_POWER = cat(1,THETA_POWER,[thetaPower,thetaPower_low]);
     SID = cat(1,SID,ones(numel(good_cells),1)*iF);
     DEPTH = cat(1,DEPTH,depth_this);
+    POS3D = cat(1,POS3D,pos3d_this);
     %MMR=cat(1,MMR,count_vec_random);
     [~,sn] = fileparts(matfiles(iF).name);
     mm_resp = mean(count_vec(:,105:125),2)-mean(count_vec(:,75:100),2);
