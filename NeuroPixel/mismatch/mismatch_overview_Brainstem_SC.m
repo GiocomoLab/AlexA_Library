@@ -1,5 +1,6 @@
 %%
-matfiles = dir("F:\Alex\matfiles_new\*_MM_*.mat");
+%matfiles = dir("F:\Alex\matfiles_new\*_MM_*.mat");
+matfiles = dir('F:\Alex\Brainstem\*.mat');
 %%
 files = {
     'AA_200919_1_MM_10-47-17.mat',
@@ -21,8 +22,8 @@ MM=[];
 RUN=[];
 CHANNEL = [];
 FR = [];
-for iF=1:numel(files)
-data = load(fullfile(matfiles(1).folder,files{iF}));
+for iF=1:numel(matfiles)
+data = load(fullfile(matfiles(1).folder,matfiles(iF).name));
 mismatch_trigger = data.vr_data_resampled.MM>0.5;
 good_cells = data.sp.cids(data.sp.cgs==2);
 good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.ks_cluster.KSLabel,'good'));
@@ -69,15 +70,15 @@ CHANNEL = cat(1,CHANNEL,chan_number);
 FR=cat(1,FR,fr);
 end
 %%
-valid_idx = FR>3;
+valid_idx = FR>1;
 [~,sid]=sort(CHANNEL(valid_idx),'descend');
 MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',5);
 RUN_smooth = smoothdata(RUN(valid_idx,:),2,'gaussian',5);
 %count_vecN=MM_smooth./max(MM_smooth,[],2);
 %count_vec_runN = RUN_smooth./max(RUN_smooth,[],2);
-MM_smooth = MM_smooth-nanmean(MM_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-1),2);
+MM_smooth = MM_smooth-nanmean(MM_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-.6),2);
 count_vecN = MM_smooth./FR(valid_idx);
-RUN_smooth = RUN_smooth-nanmean(RUN_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-1),2);
+RUN_smooth = RUN_smooth-nanmean(RUN_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-.6),2);
 count_vec_runN = RUN_smooth./FR(valid_idx);
 figure('Color','w')
 subplot(3,2,[1 3])
@@ -107,3 +108,35 @@ valid_idx = mean(RUN,2)>1 & mean(MM,2)>1;
 MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',5);
 tmp = MM_smooth-nanmean(MM_smooth(:,opt.time_vecs<-.1 & opt.time_vecs>-.6),2);
 imagesc(opt.time_vecs,1:nnz(valid_idx),tmp(sid,:),[-2 2])
+
+%%
+    valid_idx = FR>1;
+[~,sid]=sort(CHANNEL(valid_idx),'descend');
+MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',5);
+count_vecN = MM_smooth./FR(valid_idx);
+figure
+hold on
+for ii=1:4
+    sta = round((ii-1)*numel(sidx)/4)+1;
+    sto = round(ii*numel(sidx)/4);
+    take_idx = sta:sto;
+    idx = sid(take_idx);
+    boundedline(opt.time_vecs,nanmean(count_vecN(idx,:)),nanstd(count_vecN(idx,:))/sqrt(nnz(idx)))
+xlim([-1 3])
+end
+%%
+   valid_idx = FR>1;
+[~,sid]=sort(CHANNEL(valid_idx),'descend');
+MM_smooth = smoothdata(MM(valid_idx,:),2,'gaussian',5);
+count_vecN = MM_smooth./FR(valid_idx);
+figure
+hold on
+col = jet(4);
+for ii=1:4
+    sta = round((ii-1)*numel(sid)/4)+1;
+    sto = round(ii*numel(sid)/4);
+    take_idx = sta:sto;
+    idx = sid(take_idx);
+    boundedline(opt.time_vecs,nanmean(count_vecN(idx,:)),nanstd(count_vecN(idx,:))/sqrt(nnz(idx)),'cmap',col(ii,:),'alpha')
+xlim([-1 3])
+end
