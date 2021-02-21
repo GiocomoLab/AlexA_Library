@@ -4,7 +4,7 @@ function [corrMat,frMat,shiftMat] = trialCorrMat(cell_id,trials,dat,opt)
 
 corrMat = nan(numel(cell_id),numel(trials),numel(trials));
 shiftMat = nan(numel(cell_id),numel(trials),numel(trials));
-max_lag = getOr(opt,'max_lag',0);
+max_lag = opt.max_lag;
 shift_all = -max_lag:opt.SpatialBin:max_lag;
 
 frMat = calcTrialFRMat(cell_id,trials,dat,opt); % single trial fr mat
@@ -14,6 +14,7 @@ for i = 1:numel(cell_id)
     else
         fr_this = squeeze(frMat(i,:,:))';
     end
+    fr_this(isnan(fr_this))=0;
     fr_this = fr_this-nanmean(fr_this); % subtract mean on each trial
     xcorr_this = xcorr(fr_this,max_lag/opt.SpatialBin,'coeff');
     [xcorr_this,max_idx] = max(xcorr_this,[],1); % take max over lags
