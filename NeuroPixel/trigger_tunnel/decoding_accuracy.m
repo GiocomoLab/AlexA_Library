@@ -1,6 +1,6 @@
 %data=load('/Volumes/T7/AA_201025_3_TowerTraining_201125_18-27-26.mat');
 accuracy_all = {};
-mf = dir('/Volumes/T7/*Tower*.mat');
+mf = dir('F:\Alex\new_2\*Tower*.mat');
 for iF=1:numel(mf)
     data = load(fullfile(mf(iF).folder,mf(iF).name));
 good_cells = data.sp.cids(data.sp.cgs==2);
@@ -14,7 +14,7 @@ opt = load_mismatch_opt;
 %%
 trigs_1=strfind(data.vr_data_resampled.Object==1,[0 0 1 1])+2;
 trigs_2=strfind(data.vr_data_resampled.Object==0,[0 0 1 1])+2;
-filt = gausswin(61); %61 pretty close to what we use in other
+filt = gausswin(31); %61 pretty close to what we use in other
 filt = filt/sum(filt);
 smooth_speed = conv(data.vr_data_resampled.velM,filt,'same');
 aux_vec = [data.post' ;smooth_speed];
@@ -40,14 +40,14 @@ labels=[ones(numel(spikeTimes1),1) ;zeros(numel(spikeTimes2),1)];
 xsum = sum(sum(X,2),3);
 X=X(xsum>size(X,3)*5,:,:);
 %%
-X_new = smoothdata(X,2,'movmean',11);
+X_new = smoothdata(X,2,'movmean',25);
 sample_idx = 1:11:numel(opt.time_vecs);
 %X_new = X_new(:,1:5:end,:);
 %%
 accuracy_run = zeros(1,size(X_new,2));
 for ii=1:numel(accuracy_run)
     obs_run = Xrun(ii,:)';
-    CVMdlrun  = fitclinear(obs_run,labels,'KFold',5,'Learner','logistic','Solver','sparsa','Regularization','lasso');
+    CVMdlrun  = fitclinear(obs_run,labels,'KFold',numel(labels),'Learner','logistic','Solver','sparsa','Regularization','lasso');
     %yhatrun = CVMdl.kfoldLoss;
     accuracy_run(ii)=1-CVMdlrun.kfoldLoss;
 end
@@ -56,17 +56,23 @@ accuracy = zeros(1,size(X_new,2));
 loss = accuracy;
 for ii=1:numel(accuracy)
     obs = squeeze(X_new(:,ii,:));
-    CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,'Learner','logistic','Solver','sparsa','Regularization','lasso');
+    %CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',numel(labels),'Learner','logistic','Solver','sparsa','Regularization','lasso');
+    CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',numel(labels),'Learner','logistic','Solver','sparsa');
     yhat = CVMdl.kfoldPredict;
     accuracy(ii) = nnz(yhat==labels)/numel(labels);
     loss(ii)=kfoldLoss(CVMdl);
 end
 accuracy_all{end+1}=[accuracy;accuracy_run];
 figure('Name',mf(iF).name)
+subplot(1,2,1)
 plot(opt.time_vecs,accuracy)
 hold on
 plot(opt.time_vecs,accuracy_run);
 legend('neurons','behavior')
+subplot(1,2,2)
+plot(opt.time_vecs,mean(Xrun(1:250,labels==1),2))
+hold on
+plot(opt.time_vecs,mean(Xrun(1:250,labels==0),2));
 %% refit best model
 [~,mi]=max(accuracy);
 obs = squeeze(X_new(:,mi,:));
@@ -95,3 +101,9 @@ CVMdl = fitclinear(obs,labels,'ObservationsIn','columns','KFold',5,...
 
     end
 end
+
+%%
+ACC=cat(3,accuracy_all{:});
+figure
+plot(opt.time_vecs,mean(squeeze(ACC(1,:,:)),2))
+hold on;plot(opt.time_vecs,mean(squeeze(ACC(2,:,:)),2))
