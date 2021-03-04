@@ -65,3 +65,32 @@ def calcSpeed(posx):
     speed[idx_n]=np.interp(idx_n,idx_v,speed[~np.isnan(speed)])
     speed = spi.gaussian_filter1d(speed,10)
     return speed
+
+def _fast_occ(occupancy,trials,bins):
+
+    for i,j in zip(trials,bins):
+        if (j<0) or j>=occupancy.shape[0] or i>=occupancy.shape[1]:
+            pass
+        else:
+            occupancy[j,i]+=1
+
+def _fast_bin(counts, trials, bins, neurons):
+    """
+    Given coordinates of spikes, compile binned spike counts. Throw away
+    spikes that are outside of tmin and tmax.
+    Turns into a matrix neurons x bins x trials
+    """
+    for i, j, k in zip(trials, bins, neurons):
+        if (j < 0) or (int(j) >= counts.shape[1]) or i>=counts.shape[2]:
+            pass
+        else:
+            counts[k, int(j), i] += 1
+
+def calculateFiringRate():
+    pass
+
+def calculateSpatialFiringRate():
+    pass
+
+def calculateSimilarityMatrix():
+    pass
