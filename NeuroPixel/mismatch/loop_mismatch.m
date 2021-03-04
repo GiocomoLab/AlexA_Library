@@ -241,7 +241,12 @@ for iF=1:numel(matfiles)
     %MMR=cat(1,MMR,count_vec_random);
     [~,sn] = fileparts(matfiles(iF).name);
     mm_resp = mean(count_vec(:,105:125),2)-mean(count_vec(:,75:100),2);
-    %save(['/Users/attialex/temp/' sn '.mat'],'count_vec','trial_vec','trial_vec_random','good_cells','theta','mm_resp');
+    freq_idx = s>6 & s<8;
+    theta_power = mean(mean(P.mean_specgram(freq_idx,:,:),1),2);
+    theta_powerN = squeeze(theta_power./mean(mean(P.mean_specgram(~freq_idx,:,:),1),2));
+    theta = theta_power;
+    theta_norm = theta_powerN;
+    save(['/Users/attialex/temp/' sn '.mat'],'count_vec','trial_vec','trial_vec_random','good_cells','theta','mm_resp','theta_norm','firing_rate');
     if plotfig
         imsavedir_this = fullfile(imsavedir,sn);
         if ~isfolder(imsavedir_this)
