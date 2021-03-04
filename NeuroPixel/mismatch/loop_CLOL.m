@@ -4,8 +4,9 @@ opt.time_vecs = opt.time_bins(1:end-1)*0.5+opt.time_bins(2:end)*0.5;
 opt.extract_win = [-2 3];
 opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
-pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
 %pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
+%pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
+pb_files = dir('/Volumes/T7/attialex/NP_DATA_corrected/np*playback_*.mat');
 MM=[];
 PB=[];
 PB_slow=[];
@@ -92,7 +93,7 @@ for iF=1:numel(pb_files)
     fr = calcFRVsTime(good_cells,data_pb,load_default_opt);
     corrM = corr(fr',speed_pb');
     corrV = corr(fr',vis_flow_pb);
-    glmData = fitGLM_OLCL_oldDataFormat(data_pb,data_mm,good_cells,1);
+    %glmData = fitGLM_OLCL_oldDataFormat(data_pb,data_mm,good_cells,1);
 
     for iC=1:numel(good_cells)
         idx = trial_vec_mm(:,2)==good_cells(iC);
@@ -171,7 +172,7 @@ figure('Color','White')
 scatter(CORR(:,2),CORR(:,1),25,mm_resp,'o','filled')
 set(gca,'CLim',[-5 5])
 cmap = flipud(cbrewer('div','RdBu',20));
-colormap(cmap)
+colormap(brewermap(20,'*RdBu'))
 axis image
 lims = [-.8 .8];
 xlim(lims)
