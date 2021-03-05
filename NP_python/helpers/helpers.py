@@ -85,9 +85,30 @@ def _fast_bin(counts, trials, bins, neurons):
             pass
         else:
             counts[k, int(j), i] += 1
+            
+def calculateFiringRate(data,good_cells=None,t_edges = None):
+    if good_cells is None:
+        good_cells = data['sp']['cids'][data['sp']['cgs']==2]
+    if t_edges is None:
+        dt= 0.2;
+        t_edges = np.arange(0,data['sp']['st'].max()+dt,dt)
+    else:
+        dt = np.mean(np.diff(t_edges))
+    # count spikes in each time bin for each cell
+    
+    spikecount = np.full((len(good_cells),len(t_edges)-1),np.nan)
+    
+    for cell_idx in range(len(good_cells)):   
+        spike_t = data['sp']['st'][data['sp']['clu']==good_cells[cell_idx]]
+        spikecount[cell_idx,:] = np.histogram(spike_t,bins=t_edges)[0]
 
-def calculateFiringRate():
-    pass
+      
+    spikecount = np.hstack((spikecount,np.zeros((spikecount.shape[0],1))))  
+    spikerate = spikecount/dt
+    spikes = np.transpose(spikerate)
+    X = gaussian_filter1d(spikes, 2, axis=0)
+    return spikes,X,t_edges
+
 
 def calculateSpatialFiringRate():
     pass
