@@ -50,5 +50,6 @@ function data_out = calc_distance_tuning(data_in,good_cells,opt)
     data_out.peak_prom_all = peak_prom_all;
     data_out.xcorrs = xcs;
     data_out.pvals = pval;
+    data_out.good_cells = good_cells;
     
 end
