@@ -1,6 +1,9 @@
 import numpy as np
 import scipy as sp
 import scipy.ndimage as spi
+from scipy.ndimage import gaussian_filter1d
+import pandas as pd
+
 def preprocess(data,nth_bin = 10):
     track_start = 0
     track_end = 400
@@ -109,9 +112,87 @@ def calculateFiringRate(data,good_cells=None,t_edges = None):
     X = gaussian_filter1d(spikes, 2, axis=0)
     return spikes,X,t_edges
 
+class options:
+    
+    def __init__(self):
+        self.speed_t=0.05;
+        self.extract_win = [-2,3];
+        self.aux_win = [-50,50];
+        self.TimeBin = 0.02;
+        self.time_bins =np.arange(-2,3,0.02);
+        self.extract_win = [-2,3]
+        self.speedSigma = 10;
+        self.smoothSigma_time = 0.2; # in sec; for smoothing fr vs time
+        self.smoothSigma_dist = 2; # in cm; for smoothing fr vs distance
+        self.SpatialBin = 2;
+        self.TrackStart = 0
+        self.TrackEnd = 400
+        self.SpeedCutof = 2
+        self.stab_thresh = 0.5
+        self.max_lag = 30
+                
+    @property            
+    def time_vecs(self):
+        return self.time_bins[0:-1]*0.5 + self.time_bins[1:]*0.5
+    @property
+    def xbinedges(self):
+        return np.arange(self.TrackStart,self.TrackEnd+self.SpatialBin,self.SpatialBin)
+    @property
+    def xbincent(self):
+        return self.xbinedges[0:-1]+self.SpatialBin/2
 
-def calculateSpatialFiringRate():
-    pass
+
+def calculateFiringRateMap(data,trials2extract=None,good_cells = None,ops=None):
+    posx=np.mod(data['posx'],ops.TrackEnd)
+    post=data['post']
+    trial = data['trial'] 
+    sp = data['sp']
+    if good_cells is None:
+        good_cells = sp['cids'][sp['cgs']==2]
+    if trials2extract is None:
+        trials2extract = np.arange(trial.min(),trial.max()+1)
+    
+    
+    posx_bin = np.digitize(posx,ops.xbinedges)
+    validSpikes = np.in1d(data['sp']['clu'],good_cells)
+    spike_clu = data['sp']['clu'][validSpikes]
+    (bla,spike_idx) = np.unique(spike_clu,return_inverse=True)
+    spiketimes = np.digitize(data['sp']['st'][validSpikes],data['post'])
+    spikelocations = posx_bin[spiketimes]-1 # to start at 0
+    spiketrials = data['trial'][spiketimes] # to start at 0
+    
+    valid_trialsSpike = np.in1d(spiketrials,trials2extract)
+    spiketimes = spiketimes[valid_trialsSpike]
+    spikelocations = spikelocations[valid_trialsSpike]
+    spiketrials = spiketrials[valid_trialsSpike]
+    spike_idx=spike_idx[valid_trialsSpike] 
+    
+    valid_trials = np.in1d(trial,trials2extract)
+    occupancy = np.zeros((len(ops.xbinedges)-1,len(trials2extract)),dtype = float)
+    
+    _fast_occ(occupancy,trial[valid_trials]-trials2extract[0],posx_bin[valid_trials]-1)
+    occupancy *=ops.TimeBin
+    
+    n_cells = len(good_cells)
+    shape = (n_cells, len(ops.xbinedges)-1, len(trials2extract))
+    counts = np.zeros(shape, dtype=float)
+    _fast_bin(counts,spiketrials-spiketrials.min(),spikelocations,spike_idx)
+    spMapN = np.zeros(counts.shape)
+    stab =np.zeros(n_cells)
+    for iC in range(n_cells):
+        tmp = np.divide(counts[iC,:,:],occupancy)
+        df = pd.DataFrame(tmp)
+        df.interpolate(method='pchip', axis=0, limit=None, inplace=True)
+        tmp = df.values
+        #print((np.isnan(tmp).sum()))
+        tmp_f = gaussian_filter1d(tmp,ops.smoothSigma_dist, axis=0,mode='wrap')
+        spMapN[iC]=tmp_f
+        cc=np.corrcoef(np.transpose(tmp_f))
+        
+
+        stab[iC]=np.nanmean(cc[np.triu(np.full(cc.shape,True),1)])
+    
+    return counts,spMapN,stab
 
 def calculateSimilarityMatrix():
     pass
