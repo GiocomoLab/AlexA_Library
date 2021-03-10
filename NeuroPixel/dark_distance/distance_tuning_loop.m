@@ -1,4 +1,4 @@
-root = 'F:\attialex\';
+%root = 'F:\attialex\';
 root = '/oak/stanford/groups/giocomo/attialex/'
 files = dir(fullfile(root,'NP_DATA_corrected','np*dark*'));
 savepath = fullfile(root,'distance_tuning');
