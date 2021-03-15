@@ -42,6 +42,7 @@ cmap = brewermap(3,'Set2');
 cmap = parula(3);
 figure
 % [~,~,stim]=unique(round(data.mismatch_trigger*10));
+% data.mismatch_trigger = data.vr_data_resampled.Move;
 % stim=zeros(size(data.mismatch_trigger));
 % stim(data.mismatch_trigger==0)=1;
 % stim(data.mismatch_trigger==0.5)=2;
