@@ -10,11 +10,12 @@ opt.time_vecs = opt.time_bins(1:end-1)*0.5+opt.time_bins(2:end)*0.5;
 opt.extract_win = [-2 3];
 opt.aux_win = [-50 50];
 opt.TimeBin = 0.02;
+opt.speed_filt_win = 61
 opt.speedSigma = 10;
 opt.smoothSigma_time = 0.2; % in sec; for smoothing fr vs time
 opt.smoothSigma_dist = 5; % in cm; for smoothing fr vs distance
 opt.SpatialBin = 2;
-
+opt.run_window = -30:30;
 
 % opt = struct();
 % 
