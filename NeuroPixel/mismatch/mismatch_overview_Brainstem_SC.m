@@ -29,7 +29,6 @@ good_cells = data.sp.cids(data.sp.cgs==2);
 good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.ks_cluster.KSLabel,'good'));
 good_cells = good_cells(ismember(good_cells,data.sp.waveform_metrics.cluster_id));
 %%
-opt.speed_t=0.05;
 all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
 true_speed = data.vr_data_resampled.velM;
 if iscolumn(true_speed)
