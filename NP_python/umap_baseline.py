@@ -13,6 +13,7 @@ from sklearn import linear_model
 from sklearn.decomposition import PCA
 import glob
 from sklearn.cluster import DBSCAN,KMeans
+import shutil
 
 def speedFilterFR(X,speed,speed_threshold = 0):
     X_out = X[speed>speed_threshold]
@@ -22,7 +23,7 @@ def speedFilterFR(X,speed,speed_threshold = 0):
 def preprocess(X,speed,ds_factor = 5,gauss_win = 15,speed_threshold = 0):
     X,speed_ds = speedFilterFR(X,speed,speed_threshold = speed_threshold)
     X=gaussian_filter1d(X,gauss_win,axis=0)
-    X_z = scipy.stats.zscore(X[::ds_factor,:],axis=1)
+    X_z = scipy.stats.zscore(X[::ds_factor,:],axis=0)
     speed_ds = speed_ds[::ds_factor]
     return X_z,speed_ds
 
@@ -31,10 +32,14 @@ if __name__=='__main__':
 
     #files = glob.glob('/Volumes/T7/attialex/NP_DATA_corrected/*.mat')
     #im_path ='/Volumes/T7/attialex/umap_baseline'
-    im_path = r'F:\attialex\umap_baseline'
-    files = glob.glob(r'F:\attialex\NP_DATA_corrected\*.mat')
+    im_path = r'F:\attialex\pca_only'
+    files = glob.glob(r'F:\attialex\NP_DATA_corrected\np*.mat')
     if not os.path.isdir(im_path):
         os.makedirs(im_path)
+    
+
+    shutil.copy2(os.path.abspath(__file__),im_path)
+    
     for fi in files:
         try:
             data = lm.loadmat(fi)
@@ -52,13 +57,17 @@ if __name__=='__main__':
             fr_idx = FR>0.1
             spMapN=spMapN[fr_idx]
             (X_gain,speed_ds)=preprocess(spikes_gain[:,fr_idx],speed_gain,speed_threshold = 2)
+            pca = PCA(n_components=6)
+            
+            X_new=pca.fit_transform(X_gain)
 
-            reducer = umap.UMAP(n_components=2)
-            X_um=reducer.fit_transform(X_gain)
-
+            #reducer = umap.UMAP(n_components=2)
+            #X_um=reducer.fit_transform(X_new)
+            X_um = X_new
             fig,ax = plt.subplots(1,4,figsize=(15,5))
             try:
                 tri,_=speedFilterFR(data['trial'],speed_gain,speed_threshold=2)
+                
 
                 ax[0].scatter(X_um[:,0][::2],X_um[:,1][::2],c=tri[::5][::2],s=3)
                 ax[0].set_title('trial')
@@ -84,7 +93,8 @@ if __name__=='__main__':
             except:
                 pass
             
-
+            # import pdb
+            # pdb.set_trace()
             sim_all = np.zeros((spMapN.shape[0],spMapN.shape[2],spMapN.shape[2]))
             for iC in range(spMapN.shape[0]):
                 sim_all[iC]= np.corrcoef(spMapN[iC,:,:],rowvar=False)
