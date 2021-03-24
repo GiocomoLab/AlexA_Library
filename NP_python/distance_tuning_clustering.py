@@ -22,7 +22,7 @@ def cluster_plotXCorrs(X_umap,peak_locs,xcorrs):
     axs=axs.flatten()
     axs[0].scatter(X_umap[:,0],X_umap[:,1],marker='.',s=4,c=db.labels_,cmap='Set2')
     axs[1].imshow(xcorrs[sidx],aspect='auto')
-    axs[1].scatter(peak_locs[sidx],np.arange(np.sum(idx)),s=4,c='r')
+    axs[1].scatter(peak_locs[sidx],np.arange(len(sidx)),s=4,c='r')
     labs = np.unique(db.labels_)
     sep=[]
     m_xcorrs = np.zeros((len(labs),xcorrs.shape[1]))
@@ -104,7 +104,7 @@ def preprocess(X,speed,ds_factor = 5,gauss_win = 15,speed_threshold = 0):
     X=gaussian_filter1d(X,gauss_win,axis=0)
     fr = X.mean(axis=0)
     X=X[:,fr>0.1]
-    X_z = scipy.stats.zscore(X,axis=1)
+    X_z = scipy.stats.zscore(X,axis=0)
     X_z = X_z[::ds_factor,:]
     speed_ds = speed_ds[::ds_factor]
     return X_z,speed_ds
