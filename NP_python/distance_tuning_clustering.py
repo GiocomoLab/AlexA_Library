@@ -122,9 +122,10 @@ def runUMAPForCluster(good_cells,data,ds_factor=5):
     #reducer = umap.UMAP(n_components=3,metric='cosine',init='spectral',n_neighbors=1000,min_dist=0.8)
     #reducer = umap.UMAP(n_components=3,metric='cosine',init='spectral',min_dist=0.8)
     #reducer = umap.UMAP(n_components=3,metric='cosine',init='spectral',min_dist=0.8)
-    reducer = umap.UMAP(n_components = 3)
+    reducer = umap.UMAP(n_components = 3,metric='cosine')
     #reducer = umap.UMAP(n_components=3,metric='cosine',min_dist = 1)
     Xu = reducer.fit_transform(X_new)
+    #Xu = X_new
     return Xu,X_new[:,0]
     
 def plotResults(Xu,trial,posx,speed,speed_threshold=2,ds_factor=5):
@@ -149,13 +150,13 @@ def plotResults(Xu,trial,posx,speed,speed_threshold=2,ds_factor=5):
 
 if __name__=='__main__':
     root = '/Users/attialex/distance_tuning'
-    umap_version = 'Vanilla'
+    umap_version = 'Cosine_PCAUMAP'
     files = glob.glob(os.path.join('/Users/attialex/distance_tuning','*.mat'))
     umap_save_path = os.path.join(root,umap_version)
-    shutil.copy2('/Users/attialex/code/AlexA_Library/NP_python/distance_tuning_clustering.py',umap_save_path)
 
     if not os.path.isdir(umap_save_path):
         os.makedirs(umap_save_path)
+    shutil.copy2('/Users/attialex/code/AlexA_Library/NP_python/distance_tuning_clustering.py',umap_save_path)
 
     for fi in files:
         print(fi)
@@ -184,7 +185,7 @@ if __name__=='__main__':
         # fig.savefig(sn)
         good_cells = data_out['good_cells'][idx]
         summary = []
-        ds_factor = 10
+        ds_factor = 5
         for iClu,cluID in enumerate(np.unique(labels)):
             n=np.sum(labels==cluID)
             pwd_this = mean_pwd[iClu]
