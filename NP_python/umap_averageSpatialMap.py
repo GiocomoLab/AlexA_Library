@@ -22,8 +22,8 @@ if __name__=='__main__':
 
     #files = glob.glob('/Volumes/T7/attialex/NP_DATA_corrected/*.mat')
     #im_path ='/Volumes/T7/attialex/umap_baseline'
-    im_path = r'F:\attialex\umap_gain05AverageSpatialMap_V1_v1'
-    files = glob.glob(r'F:\attialex\NP_DATA_corrected\AA*.mat')
+    im_path = r'F:\attialex\umap_BLAverageSpatialMap_MEC_v2'
+    files = glob.glob(r'F:\attialex\NP_DATA_corrected\np*.mat')
     if not os.path.isdir(im_path):
         os.makedirs(im_path)
     
@@ -33,7 +33,7 @@ if __name__=='__main__':
     for fi in files:
         try:
             data = lm.loadmat(fi)
-            gain_val = 0.5
+            gain_val = 0.8
             values = (data['trial_gain']==gain_val) & (data['trial_contrast']==100)
             matches =  (np.logical_not(values[:-1])) & (values[1:]) 
             onsets = np.where(matches)[0] +1
@@ -41,6 +41,7 @@ if __name__=='__main__':
                 continue
 
             trial_range = onsets[0]+np.arange(-5,11)
+            trial_range = np.arange(2,21)
 
             try:
                 anatomy = data['anatomy']
@@ -53,7 +54,7 @@ if __name__=='__main__':
             else:
                 group = anatomy['cluster_parent']
             #regions = ('MEC','VISp','RS')
-            regions = ('VISp')
+            regions = ('MEC')
             idx = [str(ss).startswith(regions) for ss in group]
             region_idx = np.array(idx)
 
@@ -76,16 +77,24 @@ if __name__=='__main__':
             tcComb = np.vstack((tcPre,tcGain,tcPost))
             # import pdb
             # pdb.set_trace()
-            tcZ = scipy.stats.zscore(tcComb[:,fr>0.1],axis=0)
-            tcZ = tcComb[:,fr>0.1]
+            # tcZ = scipy.stats.zscore(tcComb[:,fr>0.1],axis=0)
 
+            # tcZ = tcComb[:,fr>0.1]
+            v_idx = (fr>0.1) & (stab>0.4)
+            # import pdb
+            # pdb.set_trace()
+            if v_idx.sum()<10:
+                continue
+            tcZ = tc[:,v_idx]
             reducer = PCA(n_components=3)
 
       
-            pos =  np.vstack((np.arange(200),np.arange(200),np.arange(200)))
-            gain = np.vstack((np.ones((200,1)),np.ones((200,1))*gain_val,np.ones((200,1))))
-            tri = np.vstack((np.ones((200,1)),np.ones((200,1))*2,np.ones((200,1))*3))
-
+            # pos =  np.vstack((np.arange(200),np.arange(200),np.arange(200)))
+            # gain = np.vstack((np.ones((200,1)),np.ones((200,1))*gain_val,np.ones((200,1))))
+            # tri = np.vstack((np.ones((200,1)),np.ones((200,1))*2,np.ones((200,1))*3))
+            pos = np.arange(200)
+            gain = np.ones((200,1))
+            tri = np.ones((200,1))
            
             #reducer = umap.UMAP(n_components=2,metric='cosine')
             X_um = reducer.fit_transform(tcZ)
