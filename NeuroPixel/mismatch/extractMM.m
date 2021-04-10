@@ -22,5 +22,13 @@ run_periods=smooth_speed>opt.speed_t;
 possibles=strfind(run_periods,ones(1,length(opt.run_window)))+floor(.5*length(opt.run_window));
 
 mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
-
-[spike_times,win,aux_mat,time_idx_used,count_vec]=extract_triggered_spikeTimes(data.sp,data.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data.post' ;smooth_speed],'aux_win',opt.aux_win);
+if numel(mm_trigs)>=5
+    [spike_times,win,aux_mat,time_idx_used,count_vec]=extract_triggered_spikeTimes(data.sp,data.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data.post' ;smooth_speed],'aux_win',opt.aux_win);
+else
+    warning('less than 5 MM events, returning nans')
+    spike_times = nan;
+    win = nan;
+    aux_mat = nan;
+    time_idx_used = nan;
+    count_vec = nan(numel(good_cells),250);
+end
