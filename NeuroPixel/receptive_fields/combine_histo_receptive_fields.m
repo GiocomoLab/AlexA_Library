@@ -1,7 +1,10 @@
 %%
-data_table = readtable("C:\Users\giocomolab\Downloads\vi_trippy_pairs.xlsx");
-trippy_path = 'F:\Alex\receptive_fields';
-projection = load('C:\code\AlexA_Library\NeuroPixel\receptive_fields\dorsal_projection.mat');
+%data_table = readtable("C:\Users\giocomolab\Downloads\vi_trippy_pairs.xlsx");
+data_table = readtable('/Volumes/T7/attialex/receptive_fields/vi_trippy_pairs.xlsx');
+%trippy_path = 'F:\Alex\receptive_fields';
+trippy_path = '/Volumes/T7/attialex/receptive_fields';
+%projection = load('C:\code\AlexA_Library\NeuroPixel\receptive_fields\dorsal_projection.mat');
+projection = load('/users/attialex/code/AlexA_Library/NeuroPixel/receptive_fields/dorsal_projection.mat');
 projection = projection.projection;
 uA= unique(projection);
 annotation_volume_location = 'C:\code\allenCCF\Allen\annotation_volume_10um_by_index.npy';
