@@ -14,7 +14,7 @@ if ~exist('av','var') || ~exist('st','var')
 end
 %%
 groups=unique(data_table.group);
-marker = {'x','.','o'};
+marker = {'x','*','o'};
 cols = brewermap(3,'Set1');
 for iG=1%:numel(groups)
     idx = find(data_table.group == groups(iG));
@@ -24,7 +24,7 @@ for iG=1%:numel(groups)
     if length(idx)<2
         continue
     end
-    figure
+    figure('Renderer','Painters','Color','white')
     for ii=1:numel(idx)
         data = load(fullfile(trippy_path,data_table.Trippy_name{idx(ii)},'receptive_fields.mat'));
         
@@ -40,9 +40,9 @@ for iG=1%:numel(groups)
                 else
                     col = 'r';
                 end
-                subplot(1,3,1)
-                hold on
-                plot(p{iROI}.xy(1:3:end,1),p{iROI}.xy(1:3:end,2),strcat(marker{ii},col))
+%                 subplot(1,3,1)
+%                 hold on
+%                 plot(p{iROI}.xy(1:3:end,1),p{iROI}.xy(1:3:end,2),strcat(marker{ii},col))
                 
                 
                 MU=cat(1,MU,p{iROI}.mu);
@@ -56,11 +56,13 @@ for iG=1%:numel(groups)
                 allMU=cat(1,allMU,MU);
             end
         end
-        subplot(1,3,2)
+        subplot(1,2,1)
         hold on
-        scatter(allMU(:,1),allMU(:,2),13,cols(ii,:),marker{ii})
-        
-        subplot(1,3,3)
+        scatter(allMU(:,1),allMU(:,2),20,cols(ii,:),marker{ii})
+        axis image
+        set(gca,'YDir','reverse')
+
+        subplot(1,2,2)
         for iA=2:numel(uA)
             BW = projection == uA(iA);
             [B,L] = bwboundaries(BW,'noholes');
@@ -73,7 +75,7 @@ for iG=1%:numel(groups)
         hold on
         hold on
         for aP=1:numel(pp)
-            scatter(pp{aP}(2,3),pp{aP}(2,1),12,cols(aP,:),marker{aP})
+            scatter(pp{aP}(2,3),pp{aP}(2,1),32,cols(aP,:),marker{aP})
         end
         
         bregma = allenCCFbregma();
@@ -84,13 +86,18 @@ for iG=1%:numel(groups)
         xlabel('L->R')
         ylabel('P->A')
         set(gca,'YDir','reverse')
-        
+        axis image
+        xlim([600 990])
+        ylim([600 1200])
         
     end
 title('Probe entry points')
-    subplot(1,3,2)
+
+    subplot(1,2,1)
     title('RF Centers on screen')
     xlabel('lateral -> medial')
     ylabel('down -> up')
-    legend(data_table.Trippy_name(idx),'Interpreter','None')
+    xlim([0 176])
+    ylim([0 96])
+    %legend(data_table.Trippy_name(idx),'Interpreter','None')
 end
