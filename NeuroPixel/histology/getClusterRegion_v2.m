@@ -1,13 +1,16 @@
 function [cluster_table]=getClusterRegion_v2(tbl_row,borders_table,trajectory,metrics)
 
-
+if ~isfield(metrics,'tip_distance')
 ycoords = [];
 for ii=1:192
     tmp = (ii-1)*20;
     ycoords = cat(1,ycoords,[tmp;tmp]);
 end
 tip_distance=ycoords(metrics.peak_channel+1);
-vars={'x','y','z'}
+else
+tip_distance = metrics.tip_distance
+end
+vars={'x','y','z'};
 for iVar = 1:3
     var = vars{iVar};
     pos.(var)=diff(trajectory.(var))*tip_distance*10+trajectory.(var)(1)*10; %from pixel to um
@@ -65,5 +68,11 @@ for iC =1:length(tip_distance)
 end
 cluster_region = acr;
 cluster_parent = parent;
-cluster_table = table(metrics.cluster_id,cluster_region',cluster_parent',pos.x,pos.y,pos.z,depth,'VariableNames',{'cluster_id','cluster_region','cluster_parent','xpos','ypos','zpos','depth'});
+if ~isrow(cluster_region)
+cluster_region = cluster_region';
+end
+if ~isrow(cluster_parent)
+cluster_parent = cluster_parent';
+end
+cluster_table = table(metrics.cluster_id,cluster_region,cluster_parent,pos.x,pos.y,pos.z,depth,'VariableNames',{'cluster_id','cluster_region','cluster_parent','xpos','ypos','zpos','depth'});
 end

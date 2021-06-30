@@ -13,6 +13,10 @@ for iS=1:size(session_infos,1)
         clear probe_table
         hemisphere = session_info.Hemisphere{iR};
         sagittal = session_info.Sagittal(iR);
+        if ~session_info.Histology(iR)
+            disp('no histology')
+            continue
+        end
         
         if sagittal
             if hemisphere == 'R'

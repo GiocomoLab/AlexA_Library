@@ -28,6 +28,8 @@ end
 
 if isempty(p.Results.opt)
     opt = load_mismatch_opt;
+else
+    opt = p.Results.opt;
 end
 
 

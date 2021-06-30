@@ -1,4 +1,4 @@
-function [brainfig,ProbePoints] = plotProbeTrackAnimal(animalName,brainfig,annotated_volume,structure_tree)
+function [brainfig,ProbePoints] = plotProbeTrackAnimal(animalName,brainfig,annotated_volume,structure_tree,probe_numbers)
 
 % ------------------------------------------------------------------------
 %          Display Probe Track
@@ -27,6 +27,11 @@ structure_tree_location = 'F:\code\allenCCF\Allen\structure_tree_safe_2017.csv';
 
 % either set to 'all' or a list of indices from the clicked probes in this file, e.g. [2,3]
 probes_to_analyze = 'all';  % [1 2]
+if isempty(probe_numbers)
+    probes_to_analyze = 'all';  % [1 2]
+else
+    probes_to_analyze = probe_numbers;
+end
 
 % -----------
 % parameters
@@ -197,5 +202,10 @@ for selected_probe = probes
     % plot line the length of the entire probe in reference space
     plot3(start_point(1)+p(1)*[1 probe_length], start_point(3)+p(3)*[1 probe_length], start_point(2)+p(2)*[1 probe_length], ...
         'Color', ProbeColors(selected_probe,:), 'LineWidth', 2, 'LineStyle',':');
+    x=start_point(1)+p(1)*[active_probe_position(1) active_probe_position(2)];
+    z=start_point(3)+p(3)*[active_probe_position(1) active_probe_position(2)];
+    y=start_point(2)+p(2)*[active_probe_position(1) active_probe_position(2)];
+    endPoints = [x(2),y(2),z(2)];
+    ProbePoints{end}=cat(1,ProbePoints{end},endPoints);
 end
 end
