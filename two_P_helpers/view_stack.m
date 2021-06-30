@@ -1,4 +1,4 @@
-function view_stack(data, varargin)
+ function view_stack(data, varargin)
 %%view_stack(data, varargin)
 % viewer for stacks and movies
 %
@@ -37,6 +37,8 @@ try
     addParameter(p,'FrameRate',0,@isnumeric)
     addParameter(p,'FrameZero',0,@isnumeric)
     addParameter(p,'map','gray',@ischar)
+    addParameter(p,'targetsXY',[],@isnumeric)
+    addParameter(p,'clim',[])
 catch % for older matlab versions
     addParamValue(p,'marks',[],@isnumeric)
     addParamValue(p,'adata',[],@isnumeric)
@@ -54,12 +56,21 @@ map=p.Results.map;
 params.adata=p.Results.adata;
 params.FrameRate=p.Results.FrameRate;
 params.FrameZero=p.Results.FrameZero;
+params.clim = p.Results.clim;
+
 if isempty(params.adata)
     params.draw_adata = 0;
 else
     params.draw_adata = 1;
     params.adata(params.adata<0) = 0;
     params.adata = ntzo(params.adata);
+end
+
+if ~isempty(p.Results.targetsXY)
+    drawtargets = true;
+    targetsXY = p.Results.targetsXY;
+else
+    drawtargets = false;
 end
  
 hf=figure;
@@ -89,12 +100,13 @@ template=data(:,:,round(size(data,3)/2));
 low_contrast_lim=prctile(reshape(template,numel(template),1),10);
 high_contrast_lim=prctile(reshape(template,numel(template),1),99.99);
 
-
-if low_contrast_lim< high_contrast_lim
-    params.clim=[low_contrast_lim high_contrast_lim];
-else
-    disp('set params.clim to default values')
-    params.clim=[0 255];
+if isempty(params.clim)
+    if low_contrast_lim< high_contrast_lim
+        params.clim=[low_contrast_lim high_contrast_lim];
+    else
+        disp('set params.clim to default values')
+        params.clim=[0 255];
+    end
 end
 if params.draw_adata
     lim1 = 0.975;
@@ -119,6 +131,18 @@ yl=ylim;xl=xlim;
 params.h_txt=text(xl(2)/20,yl(2)/20,'1','fontsize',12,'color','w','fontweight','bold');
 
 colormap(map);
+if drawtargets
+    for t = 1:size(targetsXY,1)
+        if targetsXY(t,3)
+            tColor = 'w';
+            markerform = 'o';
+        else
+            tColor = 'c';
+            markerform = '-s';
+        end
+        plot(targetsXY(t,1),targetsXY(t,2),markerform,'MarkerSize',6,'color',tColor)
+    end
+end
 
 h_sl_ax=axes('position',[0 0 1 0.03],'color','k');
 sl_x_pos=0;
@@ -134,7 +158,6 @@ set(hf,'menubar','none','color','k');
 set(params.h_f_ax,'clim',params.clim);
 set(params.h_f_ax,'TickLength',[0 0]);
 set(hf,'UserData',params);
-
 
 function view_stack_winmotfcn(hf,e,h_sl_ax,h_sl_bar,data)
 params=get(hf,'UserData');
@@ -338,6 +361,9 @@ switch event.Character
         end
         set(hf,'UserData',params);
         assignin('base','marks',params.marks)
+        
+    case 'p'
+        assignin('base','movie_params',params);
 end
 
 switch event.Key
@@ -493,9 +519,3 @@ if isfield(params,'sup_fig2_h') && ishandle(params.sup_fig2_h)
     close(params.sup_fig2_h);
 end
 delete(hf)
-
-
-
-
-
-
