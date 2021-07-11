@@ -22,8 +22,8 @@ if __name__=='__main__':
 
     #files = glob.glob('/Volumes/T7/attialex/NP_DATA_corrected/*.mat')
     #im_path ='/Volumes/T7/attialex/umap_baseline'
-    im_path = r'F:\attialex\umap_gain08SpatialMap_RSC'
-    files = glob.glob(r'F:\attialex\NP_DATA_corrected\AA*.mat')
+    im_path = r'F:\attialex\umap_SpatialMap'
+    files = glob.glob(r'F:\attialex\NP_DATA_corrected\*.mat')
     if not os.path.isdir(im_path):
         os.makedirs(im_path)
     
@@ -40,7 +40,8 @@ if __name__=='__main__':
             if len(onsets)==0:
                 continue
 
-            trial_range = onsets[0]+np.arange(-5,11)
+            #trial_range = onsets[0]+np.arange(-5,11)
+            trial_range = np.arange(5,21)
 
             try:
                 anatomy = data['anatomy']
@@ -52,8 +53,8 @@ if __name__=='__main__':
                 group = anatomy['parent_shifted']
             else:
                 group = anatomy['cluster_parent']
-            #regions = ('MEC','VISp','RS')
-            regions = ('RS')
+            regions = ('MEC','VISp','RS')
+            #regions = ('RS')
             idx = [str(ss).startswith(regions) for ss in group]
             idxagl = [str(ss).startswith('RSPagl') for ss in group]
 
