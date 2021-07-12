@@ -4,3 +4,6 @@
 *.mexw64
 *.m~
 .DS_Store
+NP_python/.ipynb_checkpoints/basic_functions-checkpoint.ipynb
+NP_python/.ipynb_checkpoints/classify_circular-checkpoint.py
+.ipynb_checkpoints

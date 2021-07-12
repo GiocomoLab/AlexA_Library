@@ -1,72 +1,74 @@
-%%
-%matfiles = dir("F:\Alex\matfiles_new\*_MM_*.mat");
-matfiles = dir('F:\Alex\Brainstem\*.mat');
-%%
-files = {
-    'AA_200919_1_MM_10-47-17.mat',
-    'AA_200919_1_MM_17-41-26.mat',
-    'AA_200919_1_MM_201007_15-28-09.mat',
-    'AA_200919_3_MM_201010_14-43-47.mat',
-    'AA_200919_3_MM_201011_14-25-36.mat',
-    'AA_200919_3_MM_201013_16-36-05.mat',
-    'AA_200920_4_MM_13-14-15.mat'       ,
-    'AA_200920_4_MM_14-54-12.mat'      ,
-    'AA_200920_5_MM_201010_16-46-40.mat',
-    'AA_200920_5_MM_201011_12-22-36.mat',
-    'AA_200920_5_MM_201013_14-33-40.mat',
-    'AA_200920_5_MM_201014_14-21-14.mat',
-        };
-
+matfiles = dir('F:\Alex\matfiles_new\AA_2009*MM_*');
+path25 = 'F:\Alex\new_2';
 %%
 MM=[];
+MM25=[];
 RUN=[];
 CHANNEL = [];
 FR = [];
-for iF=1:numel(matfiles)
-data = load(fullfile(matfiles(1).folder,matfiles(iF).name));
-mismatch_trigger = data.vr_data_resampled.MM>0.5;
-good_cells = data.sp.cids(data.sp.cgs==2);
-good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.ks_cluster.KSLabel,'good'));
-good_cells = good_cells(ismember(good_cells,data.sp.waveform_metrics.cluster_id));
-%%
-all_mm_trigs=strfind(mismatch_trigger>0.9,[0 0 1 1])+2;
-true_speed = data.vr_data_resampled.velM;
-if iscolumn(true_speed)
-    speed=true_speed';
-else
-    speed=true_speed;
-end
-filt = gausswin(61); %61 pretty close to what we use in other
-filt = filt/sum(filt);
-smooth_speed = conv(speed,filt,'same');
-%%
-run_periods=smooth_speed>opt.speed_t;
-run_window=-30:30;
-possibles=strfind(run_periods,ones(1,length(run_window)))+floor(.5*length(run_window));
-
-mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
-%%
+FR25=[];
 opt = load_mismatch_opt;
-[spikeTimes,~,aux,~,count_vec]=extract_triggered_spikeTimes(data.sp,data.post(mm_trigs),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data.post' ;smooth_speed],'aux_win',opt.aux_win);
+for iF=1:numel(matfiles)
+file25 = fullfile(path25,strrep(matfiles(iF).name,'.mat','_KS25.mat'));
+if ~isfile(file25)
+    continue
+end
+    data = load(fullfile(matfiles(1).folder,matfiles(iF).name));
+data25 = load(file25);
+
+good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.ks_cluster.KSLabel,'good'));
+good_cells25 = data25.sp.ks_cluster.cluster_id(startsWith(data25.sp.ks_cluster.KSLabel,'good'));
+
+[~,count_vec]=extractMM(data,good_cells,opt);
 duration = max(data.post)-min(data.post);
 fr = nan(size(good_cells));
 for iC=1:numel(good_cells)
     n = nnz(data.sp.clu==good_cells(iC));
     fr(iC)=n/duration;
 end
-
-
-run_ons = strfind(smooth_speed>opt.speed_t,[zeros(1,30),ones(1,30)])+30;
-[spikeTimes,~,aux,~,count_vec_run]=extract_triggered_spikeTimes(data.sp,data.post(run_ons),'cluIDs',good_cells,'win',opt.extract_win,'aux',[data.post' ;smooth_speed],'aux_win',opt.aux_win);
-%%
+count_vecN = count_vec-mean(count_vec(:,opt.time_vecs<-.1 & opt.time_vecs>-.6),2);
+%count_vecN = smoothdata(count_vecN,2,'gaussian',5);
+count_vecN = count_vecN./fr;
 
 chan_number =data.sp.waveform_metrics.peak_channel(ismember(data.sp.waveform_metrics.cluster_id,good_cells));
 [~,sid]=sort(chan_number,'descend');
-%%
-RUN=cat(1,RUN,count_vec_run);
+
+subplot(2,2,1)
+imagesc(count_vecN(sid,:),[-2 2])
+subplot(2,2,3)
+hold on
+plot(opt.time_vecs,nanmean(count_vecN(fr>1,:)),'b')
+
+
+[~,count_vec25]=extractMM(data25,good_cells25,opt);
+duration = max(data.post)-min(data.post);
+fr25 = nan(size(good_cells25));
+for iC=1:numel(good_cells25)
+    n = nnz(data25.sp.clu==good_cells25(iC));
+    fr25(iC)=n/duration;
+end
+count_vecN = count_vec25-mean(count_vec25(:,opt.time_vecs<-.1 & opt.time_vecs>-.6),2);
+%count_vecN = smoothdata(count_vecN,2,'gaussian',5);
+count_vecN = count_vecN./fr25;
+
+chan_number =data25.sp.waveform_metrics.peak_channel(ismember(data25.sp.waveform_metrics.cluster_id,good_cells25));
+[~,sid]=sort(chan_number,'descend');
+
+subplot(2,2,2)
+imagesc(count_vecN(sid,:),[-2 2])
+subplot(2,2,3)
+hold on
+plot(opt.time_vecs,nanmean(count_vecN(fr25>1,:)),'r')
+
+
+
+pause
+clf
 MM=cat(1,MM,count_vec);
+MM25=cat(1,MM25,count_vec25);
 CHANNEL = cat(1,CHANNEL,chan_number);
 FR=cat(1,FR,fr);
+FR25= cat(1,FR25,fr25);
 end
 %%
 valid_idx = FR>1;
