@@ -3,18 +3,18 @@ OAK = '/oak/stanford/groups/giocomo';
 
 %NP_DIR = 'F:/NP_DATA';
 NP_DIR = fullfile(OAK,'attialex','NP_DATA');
-matfiles = dir(fullfile(NP_DIR,'AA*.mat'));
+matfiles = dir(fullfile(NP_DIR,'np*mismatch*.mat'));
 
 %dest_path = 'F:/NP_DATA2';
-dest_path = fullfile(OAK,'attialex','NP_DATA2');
+dest_path = fullfile(OAK,'attialex','NP_DATA_corrected');
 if ~isfolder(dest_path)
     mkdir(dest_path)
 end
 %malcolm_dir = 'Z:\giocomo\export\data\Projects\ContrastExperiment_neuropixels'
 malcolm_dir =  fullfile(OAK,'export','data','Projects','ContrastExperiment_neuropixels');
-malcolm_dir =  fullfile(OAK,'export','data','Projects','AlexA_NP');
+%malcolm_dir =  fullfile(OAK,'export','data','Projects','AlexA_NP');
 %%
-for iF=1:numel(matfiles)
+for iF=5:numel(matfiles)
     sn = matfiles(iF).name;
             dest_file = fullfile(dest_path,matfiles(iF).name);
     if isfile(dest_file)
@@ -39,7 +39,7 @@ for iF=1:numel(matfiles)
     pos_file = [pos_file 'position.txt'];
     
     
-    fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
+    fi = dir(fullfile(malcolm_dir,[animal '*'],'neuropixels_data','*',sn));
     if isempty(fi)
         %try alternate session name
         sn = [sn(1:2) sn(4:end)];
@@ -47,6 +47,7 @@ for iF=1:numel(matfiles)
         fi = dir(fullfile(malcolm_dir,[animal_name '*'],'neuropixels_data','*',sn));
     end
     [~,session_name]=fileparts(sn);
+    
     if numel(fi)==1
         data_dir = fi.folder;
         [~,main_name]=fileparts(data_dir);
