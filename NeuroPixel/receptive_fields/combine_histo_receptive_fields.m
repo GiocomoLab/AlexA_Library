@@ -1,10 +1,10 @@
 %%
-%data_table = readtable("C:\Users\giocomolab\Downloads\vi_trippy_pairs.xlsx");
-data_table = readtable('/Volumes/T7/attialex/receptive_fields/vi_trippy_pairs.xlsx');
-%trippy_path = 'F:\Alex\receptive_fields';
-trippy_path = '/Volumes/T7/attialex/receptive_fields';
-%projection = load('C:\code\AlexA_Library\NeuroPixel\receptive_fields\dorsal_projection.mat');
-projection = load('/users/attialex/code/AlexA_Library/NeuroPixel/receptive_fields/dorsal_projection.mat');
+data_table = readtable("C:\Users\giocomolab\Downloads\vi_trippy_pairs.xlsx");
+%data_table = readtable('/Volumes/T7/attialex/receptive_fields/vi_trippy_pairs.xlsx');
+trippy_path = 'F:\Alex\receptive_fields';
+%trippy_path = '/Volumes/T7/attialex/receptive_fields';
+projection = load('C:\code\AlexA_Library\NeuroPixel\receptive_fields\dorsal_projection.mat');
+%projection = load('/users/attialex/code/AlexA_Library/NeuroPixel/receptive_fields/dorsal_projection.mat');
 projection = projection.projection;
 uA= unique(projection);
 annotation_volume_location = 'C:\code\allenCCF\Allen\annotation_volume_10um_by_index.npy';
@@ -78,7 +78,10 @@ for iG=1%:numel(groups)
         hold on
         hold on
         for aP=1:numel(pp)
-            scatter(pp{aP}(2,3),pp{aP}(2,1),32,cols(aP,:),marker{aP})
+            %scatter(pp{aP}(2,3),pp{aP}(2,1),32,cols(aP,:),marker{aP})
+            scatter(pp{aP}(1,2),pp{aP}(1,1),32,cols(aP,:),marker{aP})
+            scatter(pp{aP}(2,2),pp{aP}(2,1),32,cols(aP,:),marker{aP})
+            
         end
         
         bregma = allenCCFbregma();

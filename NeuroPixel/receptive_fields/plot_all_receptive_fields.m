@@ -1,7 +1,7 @@
 data_table = readtable("C:\Users\giocomolab\Downloads\vi_trippy_pairs.xlsx");
 trippy_path = 'F:\Alex\new_2';
 v1_path = 'Z:\giocomo\attialex\NP_DATA_corrected';
-im_save_root = 'F:\Alex\receptive_fields';
+im_save_root = 'F:\Alex\receptive_fields_2';
 %%
 %% load all movs
 % movMat = [];
@@ -16,8 +16,8 @@ im_save_root = 'F:\Alex\receptive_fields';
 mov = load('F:\Alex\stim_movies\stim_movies.mat');
 movCell = mov.movCell;
 %%
-
-for iR = 17:size(data_table,1)
+cm = brewermap(20,'*RdBu');
+for iR = 1:size(data_table,1)
     try
     data_trippy = load(fullfile(trippy_path,data_table.Trippy_name{iR}));
     
@@ -82,7 +82,7 @@ for iR = 17:size(data_table,1)
     mm=squeeze(mean(mov2,3));
     offsets = 0.1:0.016:0.3;
     staMat = zeros(size(mov2,1),size(mov2,2),numel(offsets),numel(good_cells));
-    fig = figure();
+    fig = figure('Position',[ 172         277        1442         701]);
     fields = cell(numel(good_cells),1);
     for iC = 1:numel(good_cells)
         
@@ -102,6 +102,10 @@ for iR = 17:size(data_table,1)
         for iD=1:size(staMat,3)
             subplot(3,5,iD)
             imagesc(squeeze(staMat(:,:,iD,iC)),[-5 5])
+            colormap(cm)
+            axis image
+            
+
         end
         subplot(3,5,14)
         %tmp = squeeze(rf(:,:,:,ii));
@@ -114,13 +118,14 @@ for iR = 17:size(data_table,1)
         Z(abs(Z)<2.5)=0;
         
         imagesc(Z,[-5 5])
+        axis image
         hold on
         p = fit_receptive_field(tmp,2.5);
         for iROI=1:numel(p)
             if p{iROI}.field_sign ==-1
-                col='b';
+                col='g';
             else
-                col = 'r';
+                col = 'k';
             end
             plot(p{iROI}.xy(:,1),p{iROI}.xy(:,2),col)
         end
