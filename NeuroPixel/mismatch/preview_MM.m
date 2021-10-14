@@ -1,4 +1,4 @@
-function [count_vec,count_vec_run]=preview_MM(data)
+function [count_vec,count_vec_run,good_cells]=preview_MM(data)
 if isfield(data,'vr_data_resampled')
     if isfield(data.vr_data_resampled,'MM')
         mismatch_trigger = data.vr_data_resampled.MM>0.5;
