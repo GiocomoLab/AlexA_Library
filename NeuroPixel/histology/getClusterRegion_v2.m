@@ -8,12 +8,15 @@ for ii=1:192
 end
 tip_distance=ycoords(metrics.peak_channel+1);
 else
-tip_distance = metrics.tip_distance
+tip_distance = metrics.tip_distance;
 end
 vars={'x','y','z'};
 for iVar = 1:3
     var = vars{iVar};
-    pos.(var)=diff(trajectory.(var))*tip_distance*10+trajectory.(var)(1)*10; %from pixel to um
+    dd=max(tip_distance)-min(tip_distance);
+    tmp = (trajectory.(var)(1)-trajectory.(var)(2))/dd * tip_distance*10 + trajectory.(var)(2)*10; %because first pos is brain exit
+    pos.(var)=tmp;
+    %pos.(var)=diff(trajectory.(var))/dd*tip_distance*10+trajectory.(var)(1)*10; %from pixel to mm
 end
 
 
@@ -74,5 +77,5 @@ end
 if ~isrow(cluster_parent)
 cluster_parent = cluster_parent';
 end
-cluster_table = table(metrics.cluster_id,cluster_region,cluster_parent,pos.x,pos.y,pos.z,depth,'VariableNames',{'cluster_id','cluster_region','cluster_parent','xpos','ypos','zpos','depth'});
+cluster_table = table(metrics.cluster_id',cluster_region',cluster_parent',pos.x',pos.y',pos.z',depth','VariableNames',{'cluster_id','cluster_region','cluster_parent','xpos','ypos','zpos','depth'});
 end
