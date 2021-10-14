@@ -6,7 +6,8 @@ opt.TimeBin = 0.02;
 opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
 %pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
 %pb_files = dir('/Users/attialex/NP_DATA_2/*_playback_*.mat');
-pb_files = dir('/Volumes/T7/attialex/NP_DATA_corrected/np*playback_*.mat');
+pb_files = dir('Z:\giocomo\attialex\NP_DATA_corrected/np*playback_*.mat');
+
 MM=[];
 PB=[];
 PB_slow=[];
@@ -47,7 +48,7 @@ for iF=1:numel(pb_files)
     possibles=strfind(run_periods,ones(1,length(run_window)))+floor(.5*length(run_window));
     
     mm_trigs=all_mm_trigs(ismember(all_mm_trigs,possibles));
-    [vis_flow,sp] = calcSpeed(data_mm.posx,load_default_opt);
+    [vis_flow,sp] = calcSpeed(data_mm.posx,opt);
     [spikeTimesMM,~,aux_mm]=extract_triggered_spikeTimes(data_mm.sp,data_mm.post(mm_trigs),'win',opt.extract_win,'aux',[data_mm.post' ;sp';smooth_speed],'aux_win',[-50 50]);
     mm_trigs_pb = zeros(size(mm_trigs));
     for iT=1:numel(mm_trigs)
@@ -64,7 +65,7 @@ for iF=1:numel(pb_files)
     end
     speed_pb = gauss_smoothing(speed,10);
     
-    [vis_flow_pb,sp] = calcSpeed(data_pb.posx,load_default_opt);
+    [vis_flow_pb,sp] = calcSpeed(data_pb.posx,opt);
     [spikeTimesPB,~,aux]=extract_triggered_spikeTimes(data_pb.sp,data_pb.post(mm_trigs_pb),'win',opt.extract_win,'aux',[data_pb.post';sp';speed_pb],'aux_win',[-50 50]);
     run_speed=squeeze(mean(aux(2,:,25:75),3));
     [~,sidx_pb]=sort(run_speed);
@@ -90,7 +91,7 @@ for iF=1:numel(pb_files)
     count_vec_pb = count_vec;
     count_vec_pb_slow = count_vec;
     
-    fr = calcFRVsTime(good_cells,data_pb,load_default_opt);
+    fr = calcFRVsTime(good_cells,data_pb,opt);
     corrM = corr(fr',speed_pb');
     corrV = corr(fr',vis_flow_pb);
     %glmData = fitGLM_OLCL_oldDataFormat(data_pb,data_mm,good_cells,1);
@@ -171,8 +172,7 @@ mm_resp = mean(MM(:,105:130),2)-mean(MM(:,75:100),2);
 figure('Color','White')
 scatter(CORR(:,2),CORR(:,1),25,mm_resp,'o','filled')
 set(gca,'CLim',[-5 5])
-cmap = flipud(cbrewer('div','RdBu',20));
-colormap(brewermap(20,'*RdBu'))
+cmap = colormap(brewermap(20,'*RdBu'));
 axis image
 lims = [-.8 .8];
 xlim(lims)

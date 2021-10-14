@@ -1,8 +1,8 @@
 
-%matfiles = dir('Z:\giocomo\attialex\NP_DATA\mismatch\*mismatch*.mat');
+matfiles = dir('Z:\giocomo\attialex\NP_DATA_corrected\*mismatch*.mat');
 
 %matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA_corrected/*mismatch*.mat');
-matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA/*mismatch*.mat');
+%matfiles = dir('/Volumes/Samsung_T5/attialex/NP_DATA/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/NP_DATA_2/*mismatch*.mat');
 %matfiles = dir('/Users/attialex/mismatch/*mismatch*.mat');
 %matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
@@ -17,18 +17,22 @@ end
 opt = load_mismatch_opt;
 opt.TimeBin = 0.02;
 
-opt.time_bins =-1:opt.TimeBin:1;
+opt.time_bins =-1:opt.TimeBin:2;
 opt.time_vecs = opt.time_bins(1:end-1)*0.5+opt.time_bins(2:end)*0.5;
 opt.extract_win = [-2 3];
 opt.aux_win = [-50 50];
-opt.smoothSigma_time = 0.0; % in sec; for smoothing fr vs time
+opt.smoothSigma_time = 0.5; % in sec; for smoothing fr vs time
 
 MM=[];
 
 SID = [];
 MM_R=[];
 THETA_POWER = [];
-cmap_fr = cbrewer('seq','BuPu',20);
+CORR_M=[];
+DELAYS=[];
+FR=[];
+%cmap_fr = cbrewer('seq','BuPu',20);
+cmap_fr = brewermap(20,'BuPu');
 SPIKE_TIMES=cell(numel(matfiles),1);
 RUN_TRACES = cell(numel(matfiles),1);
 CLUIDS = RUN_TRACES;
@@ -64,7 +68,8 @@ for iF=1:numel(matfiles)
     if iscolumn(reg)
         reg = reg';
     end
-    valid_region = startsWith(reg,{'VISp','MEC','RS'});
+    valid_region = startsWith(reg,{'VISp','MEC','RS','ECT'});
+    valid_region = true(size(reg));
     if nnz(valid_region)==0
         continue
     end
@@ -81,6 +86,13 @@ for iF=1:numel(matfiles)
     filt = gausswin(61); %61 pretty close to what we use in other
     filt = filt/sum(filt);
     smooth_speed = conv(speed,filt,'same');
+    
+velM_s = gauss_smoothing(true_speed,opt.smoothSigma_time/opt.TimeBin);
+[fr,spikeCount] = calcFRVsTime(good_cells,data_out,opt);
+if isrow(velM_s)
+    velM_s=velM_s';
+end
+corr_m=corr(fr',velM_s);
     run_periods=smooth_speed>opt.speed_t;
     run_window=-30:30;
     possibles=strfind(run_periods,ones(1,length(run_window)))+floor(.5*length(run_window));
@@ -125,33 +137,38 @@ for iF=1:numel(matfiles)
     %theta
     tB=0:opt.TimeBin:max(data_out.sp.st);
     
-    frMat= zeros(numel(good_cells),numel(tB)-1);
     
+    delays = zeros(numel(good_cells),1);
     for iC=1:numel(good_cells)
-        idx = data_out.sp.clu==good_cells(iC);
-        frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
+        %idx = data_out.sp.clu==good_cells(iC);
+        %frMat(iC,:)=histcounts(data_out.sp.st(idx),tB);
+        [tmp,max_c] = finddelay(fr(iC,:),velM_s,50);
+        if max_c<1e-8
+            tmp = nan;
+        end
+        delays(iC)=tmp;
     end
     
-    %[PxxSpikes,FSpikes]=pwelch(frMat',size(frMat,2),[],[],1/opt.TimeBin);
+    [PxxSpikes,FSpikes]=pwelch(spikeCount',size(spikeCount,2),[],[],1/opt.TimeBin);
     
     
-    %     theta_range=[4 12];
-    %     theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
-    %     rest_idx = ~theta_idx & FSpikes>1;
-    %     thetaPower = mean(PxxSpikes(theta_idx,:));
-    %     restPower = mean(PxxSpikes(rest_idx,:));
+        theta_range=[4 12];
+        theta_idx = FSpikes>theta_range(1) & FSpikes<=theta_range(2);
+        rest_idx = ~theta_idx & FSpikes>1;
+        thetaPower = mean(PxxSpikes(theta_idx,:));
+        restPower = mean(PxxSpikes(rest_idx,:));
     
     %[~,theta_sort] = sort(thetaPower./(thetaPower+restPower),'descend');
-    nC=size(frMat,1);
-    maxLag=50;
-    xcorrs=zeros(nC,2*maxLag+1);
-    for iC=1:nC
-        xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag);
-    end
-    thetaPower = xcorrs(:,58);
-    thetaPower_low = xcorrs(:,54);
-    [~,theta_sort] = sort(thetaPower,'descend');
-    theta = thetaPower-thetaPower_low;
+%     nC=size(frMat,1);
+%     maxLag=50;
+%     xcorrs=zeros(nC,2*maxLag+1);
+%     for iC=1:nC
+%         xcorrs(iC,:)=xcorr(frMat(iC,:),maxLag,'coeff');
+%     end
+%     thetaPower = mean(xcorrs(:,56:60),2);
+%     thetaPower_low = xcorrs(:,54);
+%     [~,theta_sort] = sort(thetaPower,'descend');
+%     theta = thetaPower-thetaPower_low;
     %     r = 1:length(thetaPower);
     %     r(theta_sort) = r;
     %     r=r/length(thetaPowerN);
@@ -159,9 +176,14 @@ for iF=1:numel(matfiles)
     MM=cat(1,MM,count_vec);
     REGION = cat(2,REGION,region_this);
     MM_R = cat(1,MM_R,count_vec_random);
-    THETA_POWER = cat(1,THETA_POWER,[thetaPower,thetaPower_low]);
+    CORR_M=cat(1,CORR_M,corr_m);
+    THETA_POWER = cat(1,THETA_POWER,[thetaPower',restPower']);
     SID = cat(1,SID,ones(numel(good_cells),1)*iF);
     DEPTH = cat(1,DEPTH,depth_this);
+    DELAYS = cat(1,DELAYS,delays);
+    FR = cat(1,FR,mean(fr,2));
+    
+    
     %MMR=cat(1,MMR,count_vec_random);
     [~,sn] = fileparts(matfiles(iF).name);
     %save(['/Users/attialex/temp/' sn '.mat'],'count_vec','trial_vec','trial_vec_random','good_cells','theta','mm_resp');
@@ -203,7 +225,7 @@ for iF=1:numel(matfiles)
         close(gcf)
     end
 end
-%%
+%% plots average traces per region per site, stupid way to do it, but keep it to regenerate some old plots
 [uS]=unique(SID);
 frac = .2;
 mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
@@ -238,6 +260,7 @@ for iS=1:numel(uS)
     MM_All = cat(1,MM_All,tmp);
     plot(opt.time_vecs,tmp,'Color',col)
 end
+
 subplot(1,2,2)
 plot(opt.time_vecs,nanmedian(MM_All(Reg_All==2,:)),'b')
 hold on
@@ -245,6 +268,67 @@ plot(opt.time_vecs,median(MM_All(Reg_All==1,:)),'r')
 plot(opt.time_vecs,nanmedian(MM_All(Reg_All==3,:)),'k')
 
 legend({'MEC','VISp','RS'})
+%%
+regs ={'VISp','RSPv'};
+
+responses = struct();
+mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+for iR=1:numel(regs)
+    responses.(regs{iR}) = [];
+    for iS=1:numel(uS)
+        idx_this = strcmp(REGION,regs{iR}) & SID'==uS(iS);
+        resp_this = mm_resp(idx_this);
+        t=prctile(resp_this,8);
+        idx_this = idx_this & mm_resp'>t;
+        if nnz(idx_this)>10
+            mm=mean(MM_ms(idx_this,:));
+            responses.(regs{iR})=cat(1,responses.(regs{iR}),mm);
+        end
+        
+    end
+end
+
+
+figure
+hold on
+cmap = brewermap(numel(regs),'Set1');
+for iR=1:numel(regs)
+    plot(opt.time_vecs,responses.(regs{iR}),'Color',cmap(iR,:))
+end
+
+
+%% V1 and MEC
+% mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
+% uS=unique(SID);
+% for iS=1:numel(uS)
+%     if nnz(startsWith(REGION(SID==uS(iS)),'MEC'))>0 && nnz(startsWith(REGION(SID==uS(iS)),'ECT'))>0
+%         figure
+%         idx_mec = startsWith(REGION,'MEC') & SID'==uS(iS);
+%         
+%         resp_mec = mm_resp(idx_mec);
+%         [~,sid]=sort(resp_mec,'descend');
+%         N=round(numel(sid)/2);
+%         tmp_sid=sid(1:N);
+%         idx_mec=find(idx_mec);
+%         idx_mec=idx_mec(tmp_sid);
+%         mm_mec = nanmean(MM_ms(idx_mec,:));
+%         idx_ect = startsWith(REGION,'ECT') & SID'==uS(iS);
+%         
+%         resp_ect = mm_resp(idx_ect);
+%         [~,sid]=sort(resp_ect,'descend');
+%         N=round(numel(sid)/2);
+%         tmp_sid=sid(1:N);
+%         idx_ect=find(idx_ect);
+%         idx_ect=idx_ect(tmp_sid);
+%         
+%         mm_ect = nanmean(MM_ms(idx_ect,:));
+%     plot(opt.time_vecs,mm_mec)
+%     hold on
+%     plot(opt.time_vecs,mm_ect)
+%     legend({'MEC','ECT'})
+%     end
+% end
 %% RESp time V1
 figure
 frac = .5;
@@ -264,7 +348,7 @@ idx_down = ~idx_up;
     hold on
         scatter(opt.time_vecs(b(~idx_up))-opt.time_vecs(1),a(~idx_up))
 
-    %%
+    %% response time
 regions = {'VISp','MEC'};
 mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
@@ -272,7 +356,7 @@ MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
 figure('Color','white')
 hold on
 for iR = 1:numel(regions)
-    idx_this = startsWith(REGION,regions{iR});
+    idx_this = strcmp(REGION,regions{iR});
     resp_this = mm_resp(idx_this);
     [~,sid]=sort(resp_this,'descend');
     N=round(numel(sid)*.2);
@@ -293,3 +377,103 @@ ylabel('max response')
 subplot(2,1,2)
 xlabel('time to max response')
 legend(regions)
+%% delays
+
+
+%set(gca,'CLim',[-1 1])
+regs = {'ENTm','VISp'};
+figure
+hold on
+cmap = brewermap(2,'*Set1');
+for iR=1:numel(regs)
+    subplot(1,3,1)
+    hold on
+    idx = strcmp(REGION,regs{iR}) & FR'>1;
+    histogram(DELAYS(idx)/50,10,'normalization','pdf')
+    xlabel('Delay fr and run')
+    subplot(1,3,2)
+    hold on
+    scatter(CORR_M(idx),DELAYS(idx)/50,15,cmap(iR,:))
+    xlabel('corr run')
+    ylabel('delay')
+    subplot(1,3,3)
+    hold on
+    idx = strcmp(REGION,regs{iR}) & CORR_M>0.2;
+    histogram(DELAYS(idx)/50,10,'normalization','pdf')
+end
+for ii=1:3
+subplot(1,3,ii)
+    legend(regs)
+end
+%%
+figure
+hold on
+regs = {'MEC','VISp'};
+mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
+mm=mm_resp./FR;
+%mm=mm_resp;
+for iR=1:numel(regs)
+    idx = strcmp(REGION,regs{iR}) & FR'>1;
+    
+    scatter(CORR_M(idx),mm(idx),35,cmap(iR,:),'.')
+end
+legend(regs)
+grid on
+%%
+figure
+hold on
+regs = {'MEC','VISp'};
+mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
+mm=mm_resp./FR;
+for iR=1:numel(regs)
+    subplot(2,numel(regs),iR)
+    idx = strcmp(REGION,regs{iR}) & FR'>1;
+    
+    scatter(CORR_M(idx),mm(idx),35,DELAYS(idx),'.')
+    xlabel('corr_m')
+    ylabel('mmresp')
+    grid on
+    subplot(2,numel(regs),iR+numel(regs))
+    scatter(DELAYS(idx),mm(idx),35,CORR_M(idx),'.')
+    set(gca,'CLim',[-.5 .5])
+end
+%%
+%%
+figure
+hold on
+%regs = {'MEC','VISp','ECT','RSPd'};
+regs = {'ENTm','VISp','RSPd'};
+
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+MM_ms = smoothdata(MM_ms,2,'gaussian',5);
+%mm=MM_ms./FR;
+for iR=1:numel(regs)
+    subplot(1,numel(regs),iR)
+    idx = strcmp(REGION,regs{iR}) & FR'>1;
+    tmp_r = MM_ms(idx,:);
+    tmp_d = CORR_M(idx);
+    %tmp_d = FR(idx);
+    [~,sid]=sort(tmp_d);
+    imagesc(opt.time_vecs,1:numel(sid),tmp_r(sid,:),[-10 10]);
+    xlim([-.5 1.5])
+    colormap(brewermap(40,'*RdBu'))
+    title(regs{iR})
+    
+end
+
+%%
+regs = unique(REGION);
+%regs = {'MEC','ECT','VISp','RSPd','RSPv','RHP','RSPagl'}
+MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+for iR=1:numel(regs)
+    idx = strcmp(REGION,regs{iR}) & FR' >1;
+    if nnz(idx)>50
+        figure
+        %plot(opt.time_vecs,nanmean(MM_ms(idx,:)))
+        boundedline(opt.time_vecs,nanmean(MM_ms(idx,:)),nanstd(MM(idx,:))/sqrt(nnz(idx)))
+        title(sprintf('%s, n=%d',regs{iR},nnz(idx)))
+        xlim([-.5 2])
+    end
+end
+    
+    

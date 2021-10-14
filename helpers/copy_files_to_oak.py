@@ -7,11 +7,14 @@ from distutils import log
 log.set_verbosity(log.INFO)
 log.set_threshold(log.INFO)
 
-files = glob.glob(r'F:\CatGT2\catgt_AA_210114_3*\*\imec0_ks2')
+files = glob.glob(r'F:\CatGT2\catgt_AA_210114_4*\*\imec0_ks2')
 
-for iF in range(1,len(files)):
+for iF in range(0,len(files)):
     (root,tmp) = os.path.split(files[iF])
     json_files = glob.glob(os.path.join(root,'*.json'))
+    sync_file = glob.glob(os.path.join(root,'*SY_384_6_500.txt'))
+    sync_nidaq = glob.glob(os.path.join(os.path.split(root)[0],'*XA_0_500.txt'))
+    json_files = json_files + sync_file +sync_nidaq
     #print(json_files)
 
     parts = files[iF].split('\\')
