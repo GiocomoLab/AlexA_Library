@@ -1,5 +1,6 @@
-
+mec_clu = data.anatomy.cluster_id(startsWith(data.anatomy.cluster_parent,'RHP'));
 good_cells = data.sp.cids(data.sp.cgs==2);
+good_cells = good_cells(ismember(good_cells,mec_clu));
 %good_cells = data.sp.ks_cluster.cluster_id(startsWith(data.sp.ks_cluster.KSLabel,'good'))
 pos_idx = discretize(data.sp.st,data.post);
 data.trial = cumsum([0;diff(data.posx)<-100]);
@@ -32,7 +33,7 @@ cmap = parula(3);
 figure
 
 stim = round(data.vr_data_resampled.(object_field_name));
-
+stim(data.vr_data_resampled.visible>0.5)=-1;
 cmap = parula(numel(unique(stim)));
 for iC=1:numel(good_cells)
     idx = data.sp.clu==good_cells(sid(iC));
@@ -40,6 +41,7 @@ for iC=1:numel(good_cells)
     subplot(2,1,1)
     scatter(data.posx(this_idx),data.trial(this_idx),12,cmap(stim(this_idx)+2,:),'.')
     xlim([0,opt.TrackEnd])
+    ylim([0 max(data.trial)])
     subplot(2,1,2)
     mean_bl=squeeze(nanmean(frMat(sid(iC),stim_type==1,:),2));
     mean_other = squeeze(nanmean(frMat(sid(iC),stim_type==0,:),2));
@@ -50,6 +52,7 @@ for iC=1:numel(good_cells)
     plot(x_vec,mean_other);
     pause
     cla
+    
 end
 
 %%
