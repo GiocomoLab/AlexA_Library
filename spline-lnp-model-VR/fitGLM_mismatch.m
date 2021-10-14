@@ -53,7 +53,10 @@ for iA=1:numel(A)
 end
 %% gain
 %A{3}=bl_trial;
-
+B=A(2);
+    A=B;
+    all_control_points = all_control_points(2);
+    %% hack for speed only
 %%
 for cellIDX=1:length(good_cells)
     spike_t = data.sp.st(data.sp.clu==good_cells(cellIDX));
@@ -68,14 +71,15 @@ for cellIDX=1:length(good_cells)
     A{iA}=A{iA}(1:T,:);
 end
     
+    
     %%
     [train_ind,test_ind] = compute_test_train_ind(numFolds,numPts,T);
-    trial = data.trial(sample_idx);
-    tmp_ind = mod(trial(1:T),numFolds);
-    for k = 1:numFolds
-        test_ind{k} = find(tmp_ind == k-1);
-        train_ind{k} = setdiff(1:T,test_ind{k});
-    end
+%     trial = data.trial(sample_idx);
+%     tmp_ind = mod(trial(1:T),numFolds);
+%     for k = 1:numFolds
+%         test_ind{k} = find(tmp_ind == k-1);
+%         train_ind{k} = setdiff(1:T,test_ind{k});
+%     end
     %%%%%%%% FORWARD SEARCH PROCEDURE %%%%%%%%%
     try
         fprintf('\t Fitting model  for cell %d \n', cellIDX);
