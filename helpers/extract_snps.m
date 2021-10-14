@@ -26,6 +26,9 @@ fields = fieldnames(auxData);
 
 % remove any trigger too close to start, finish, or stack transition
 toDel=find(sum(abs(bsxfun(@minus,[0 length(trace)]',trigs))<=max(abs(win))));
+too_close_to_start = ~((0-trigs)<win(1)); 
+too_close_to_end = ~((length(trace)-trigs) >= win(2));
+toDel = too_close_to_start | too_close_to_end;
 trigIDX=true(size(trigs));
 trigIDX(toDel)=false;
 trigs(toDel)=[];
