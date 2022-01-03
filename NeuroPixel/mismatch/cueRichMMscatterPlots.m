@@ -12,12 +12,13 @@ opt = load_mismatch_opt;
 opt.TrackEnd=round(max(data.posx/10))*10;
 opt.track_length=opt.TrackEnd;
 opt.max_lag = 30;
-cm = trialCorrMat(good_cells,0:19,data,opt);
+cm = trialCorrMat(good_cells,0:max(data.trial)-1,data,opt);
 
 frMat = calcTrialFRMat(good_cells,0:max(data.trial)-1,data,opt);
 
 %%
-stab = nanmean(nanmean(cm,2),3);
+ft = min(max(data.trial)-1,10);
+stab = nanmean(nanmean(cm(:,2:ft,2:ft),2),3);
 [~,sid] = sort(stab,'descend','MissingPlacement','last');
 cmap = brewermap(3,'Set2');
 cmap = parula(3);
@@ -25,12 +26,13 @@ figure
 % [~,~,stim]=unique(round(data.mismatch_trigger*10));
 data.mismatch_trigger = data.vr_data_resampled.MM;
 stim=zeros(size(data.mismatch_trigger));
-stim(data.mismatch_trigger==0)=1;
-stim(data.mismatch_trigger==0.5)=2;
+stim(data.mismatch_trigger==0)=0;
+stim(data.mismatch_trigger==0.5)=1;
+stim(data.mismatch_trigger == 1)=2;
 % stim(data.mismatch_trigger == 0.8)=3;
-cmap = parula(numel(unique(stim)));
-cmap = flipud(cmap);
-%cmap = brewermap(numel(unique(stim)),'Set3')
+cmap = parula(3);
+%cmap = flipud(cmap);
+cmap = brewermap(3,'*Set1');
 for iC=1:numel(good_cells)
     idx = data.sp.clu==good_cells(sid(iC));
     this_idx = pos_idx(idx);

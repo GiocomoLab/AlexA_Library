@@ -8,7 +8,8 @@
 %matfiles = matfiles(~cellfun(@(x) contains(x,'tower'), {matfiles.name}));
 matfiles = dir('F:\Alex\new_2\*_MM_*');
 matfiles = cat(1,matfiles,dir('F:\Alex\new_2\*_mismatchSquare_*'));
-%matfiles = cat(1,matfiles,dir('Z:\giocomo\attialex\NP_DATA_corrected\*mismatch*.mat'));
+matfiles = cat(1,matfiles,dir('Z:\giocomo\attialex\NP_DATA_corrected\*mismatch*.mat'));
+matfiles = dir('Z:\giocomo\attialex\NP_DATA_corrected\*mismatch*.mat');
 savepath = 'F:\Alex\mm_out';
 if ~isfolder(savepath)
     mkdir(savepath)
@@ -77,7 +78,7 @@ for iF=1:numel(matfiles)
         CLUIDS{iF}=[good_cells,good_cells];
         if isfield(data_out.anatomy,'parent_shifted')
             reg = data_out.anatomy.parent_shifted;
-            subreg = data_out.anatomy.cluster_shifted;
+            subreg = data_out.anatomy.region_shifted;
             %depth = data_out.anatomy.depth_shifted';
         else
             reg = data_out.anatomy.cluster_parent;
@@ -215,6 +216,8 @@ DELAYS=[];
 REGION={};
 SUBREGION = {};
 FR=[];
+savepath = 'F:\Alex\mm_out';
+
 savefiles=dir(fullfile(savepath,'*.mat'));
 
 for iF=1:numel(savefiles)
@@ -233,7 +236,7 @@ end
 %%
 REGION=strrep(REGION,'MEC','ENTm');
 
-%% heatmap and average
+%% heatmap and average, and top/bottom of sort
 
 [uR,~,idxR]=unique(REGION);
 
@@ -243,15 +246,15 @@ MM_ms = MM_smooth-mean(MM_smooth(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
 for iR=1:numel(uR)
     
     idx = idxR==iR & FR>=1 & isfinite(MM(:,1));
-    idx = idx & isfinite(CORR_PB(:,1));
+    %idx = idx & isfinite(CORR_PB(:,1));
     if nnz(idx)<200
         continue
     end
     figure('Position',[ 680   141   366   837],'Color','w')
-    subplot(5,1,[1:4])
+    subplot(6,1,[1:4])
     tmp_r = MM_ms(idx,:);
     tmp_d = CORR_M(idx);
-    tmp_d = CORR_PB(idx,2);
+    %tmp_d = CORR_PB(idx,2);
     %tmp_d = CORR_PB(idx,1);
     %tmp_d = FR(idx);
     [~,sid]=sort(tmp_d);
@@ -259,13 +262,71 @@ for iR=1:numel(uR)
     xlim([-.5 1.5])
     colormap(brewermap(40,'*RdBu'))
     title(uR{iR})
-    subplot(5,1,5)
+    subplot(6,1,5)
     mm = nanmean(tmp_r);
     boundedline(opt.time_vecs,nanmean(MM_ms(idx,:)),nanstd(MM(idx,:))/sqrt(nnz(idx)))
     xlim([-.5 1.5])
     title(sprintf('%s, n=%d',uR{iR},nnz(idx) ))
     ylabel('change in FR')
     xlabel('time')
+    subplot(6,1,6)
+    MM_tmp = MM(idx,:);
+    MM_tmp = smoothdata(MM_tmp,2,'gaussian',5);
+    tmp_ms = MM_tmp-mean(MM_tmp(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+    idx = sid(1:round(0.2*numel(sid)));
+    boundedline(opt.time_vecs,nanmean(tmp_ms(idx,:)),nanstd(MM_tmp(idx,:))/sqrt(nnz(idx)),'alpha')
+    idx = sid(numel(sid)-round(0.2*numel(sid)):numel(sid));
+    boundedline(opt.time_vecs,nanmean(tmp_ms(idx,:)),nanstd(MM_tmp(idx,:))/sqrt(nnz(idx)),'cmap',[1 0 0],'alpha')
+    xlim([-.5 1.5])
+    ylabel('change in FR')
+    xlabel('time')
+    
+    
+end
+%% heatmap / top bottom
+regs = {'RSP'}
+MM_smooth = smoothdata(MM,2,'gaussian',5);
+MM_ms = MM_smooth-mean(MM_smooth(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+%MM_ms=MM_ms./FR;
+for iR=1:numel(regs)
+    
+    idx = startsWith(REGION,regs{iR}) & FR>=1 & isfinite(MM(:,1));
+    %idx = idx & isfinite(CORR_PB(:,1));
+    if nnz(idx)<200
+        continue
+    end
+    figure('Position',[ 680   141   366   837],'Color','w')
+    subplot(6,1,[1:4])
+    tmp_r = MM_ms(idx,:);
+    tmp_d = CORR_M(idx);
+    %tmp_d = CORR_PB(idx,2);
+    %tmp_d = CORR_PB(idx,1);
+    %tmp_d = FR(idx);
+    [~,sid]=sort(tmp_d);
+    imagesc(opt.time_vecs,1:numel(sid),tmp_r(sid,:),[-5 5]);
+    xlim([-.5 1.5])
+    colormap(brewermap(40,'*RdBu'))
+    title(regs{iR})
+    subplot(6,1,5)
+    mm = nanmean(tmp_r);
+    boundedline(opt.time_vecs,nanmean(MM_ms(idx,:)),nanstd(MM(idx,:))/sqrt(nnz(idx)))
+    xlim([-.5 1.5])
+    title(sprintf('%s, n=%d',regs{iR},nnz(idx) ))
+    ylabel('change in FR')
+    xlabel('time')
+    subplot(6,1,6)
+    MM_tmp = MM(idx,:);
+    MM_tmp = smoothdata(MM_tmp,2,'gaussian',5);
+    tmp_ms = MM_tmp-mean(MM_tmp(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+    idx = sid(1:round(0.2*numel(sid)));
+    boundedline(opt.time_vecs,nanmean(tmp_ms(idx,:)),nanstd(MM_tmp(idx,:))/sqrt(nnz(idx)),'alpha')
+    idx = sid(numel(sid)-round(0.2*numel(sid)):numel(sid));
+    boundedline(opt.time_vecs,nanmean(tmp_ms(idx,:)),nanstd(MM_tmp(idx,:))/sqrt(nnz(idx)),'cmap',[1 0 0],'alpha')
+    xlim([-.5 1.5])
+    ylabel('change in FR')
+    xlabel('time')
+    
+    
 end
 %% heatmap of subset
 figure
@@ -293,6 +354,57 @@ for iR=1:numel(regs)
     title(regs{iR})
     
 end
+%%
+%% heatmap of subset
+MM_smooth = smoothdata(MM,2,'gaussian',5);
+MM_ms = MM_smooth-mean(MM_smooth(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+%MM_ms=MM_ms./FR;
+regs = {'ENTm3'}
+for iR=1:numel(regs)
+    
+    idx = startsWith(SUBREGION,regs{iR}) & FR>=1 & isfinite(MM(:,1));
+    %idx = idx & isfinite(CORR_PB(:,1));
+    figure('Position',[ 680   141   366   837],'Color','w')
+    subplot(5,1,[1:4])
+    tmp_r = MM_ms(idx,:);
+    tmp_d = CORR_M(idx);
+    %tmp_d = CORR_PB(idx,2);
+    %tmp_d = CORR_PB(idx,1);
+    %tmp_d = FR(idx);
+    [~,sid]=sort(tmp_d);
+    imagesc(opt.time_vecs,1:numel(sid),tmp_r(sid,:),[-5 5]);
+    xlim([-.5 1.5])
+    colormap(brewermap(40,'*RdBu'))
+    title(regs{iR})
+    subplot(5,1,5)
+    mm = nanmean(tmp_r);
+    boundedline(opt.time_vecs,nanmean(MM_ms(idx,:)),nanstd(MM(idx,:))/sqrt(nnz(idx)))
+    xlim([-.5 1.5])
+    title(sprintf('%s, n=%d',regs{iR},nnz(idx) ))
+    ylabel('change in FR')
+    xlabel('time')
+end
+
+%% multiple on same plot
+MM_smooth = smoothdata(MM,2,'gaussian',5);
+MM_ms = MM_smooth-mean(MM_smooth(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
+%MM_ms=MM_ms./FR;
+regs = {'ENTm3','ENTm2','ENTm1'};
+cmap = brewermap(numel(regs),'Set1');
+figure
+hold on
+for iR=1:numel(regs)
+    
+    idx = startsWith(SUBREGION,regs{iR}) & FR>=1 & isfinite(MM(:,1));
+    
+    boundedline(opt.time_vecs,nanmean(MM_ms(idx,:)),nanstd(MM(idx,:))/sqrt(nnz(idx)),'cmap',cmap(iR,:),'alpha')
+
+end
+    xlim([-.5 1.5])
+    ylabel('change in FR')
+    xlabel('time')
+    legend(regs)
+
 %% scatter mimsatch and corrM
 figure
 hold on
@@ -313,6 +425,7 @@ hold on
 regs = {'ENTm','VISp','SCs'};
 mm_resp = mean(MM(:,opt.time_vecs>0.1 & opt.time_vecs<0.5),2)-mean(MM(:,opt.time_vecs<-.1),2);
 mm=mm_resp./FR;
+figure
 for iR=1:numel(regs)
     subplot(2,numel(regs),iR)
     idx = strcmp(REGION,regs{iR}) & FR>1;
@@ -395,11 +508,11 @@ for ii=1:3
 subplot(1,3,ii)
     legend(regs)
 end
-%%
-figure
+%% scatter pb correlations
+figure('Color','w')
 hold on
 %regs = {'MEC','VISp','ECT','RSPd'};
-regs = {'VISp','RSPv','ENTm'};
+regs = {'VISp','ENTm','RSPv'};
 
 MM_ms = MM-mean(MM(:,opt.time_bins>=-.5 & opt.time_bins<0),2);
 MM_ms = smoothdata(MM_ms,2,'gaussian',5);
@@ -411,14 +524,19 @@ for iR=1:numel(regs)
     idx = strcmp(REGION,regs{iR})  & isfinite(MM_ms(:,1)) & isfinite(CORR_PB(:,1));
     tmp_r = MM_ms(idx,:);
     tmp_d = CORR_M(idx);
-    %scatter(CORR_M(idx),CORR_PB(idx,1),35,mm_resp(idx),'.')
-    scatter(CORR_PB(idx,2),CORR_PB(idx,1),35,mm_resp(idx),'.')
+    scatter(CORR_M(idx),CORR_PB(idx,1),35,mm_resp(idx),'.')
+    %scatter(CORR_PB(idx,2),CORR_PB(idx,1),85,mm_resp(idx),'.')
     colormap(brewermap(20,'*RdYlBu'))
     %colormap jet
     set(gca,'CLIM',[-5 5])
     axis image
+    xlim([-.8 0.8])
+    ylim([-.8 .8])
     grid on
-    title(nnz(idx))
+    title(sprintf('%s, n=%d',regs{iR},nnz(idx)))
+    colorbar
+    xlabel('Corr Vis Flow')
+    ylabel('Corr Run Speed')
 end
 %%
 figure

@@ -18,6 +18,15 @@ for iF=1:numel(fields)
 end
 
 %%
+annotation_volume_location = 'C:\code\allenCCF\Allen\annotation_volume_10um_by_index.npy';
+structure_tree_location = 'C:\code\allenCCF\Allen\structure_tree_safe_2017.csv';
+template_volume_location = 'C:\code\allenCCF\Allen\template_volume_10um.npy';
+if ~exist('av','var') || ~exist('st','var')
+    disp('loading reference atlas...')
+    av = readNPY(annotation_volume_location);
+    st = loadStructureTree(structure_tree_location);
+end
+%%
 data_table = readtable("C:\Users\giocomolab\Downloads\vi_trippy_pairs.xlsx");
 trippy_path = 'F:\Alex\receptive_fields';
 %%
@@ -28,7 +37,7 @@ for iG=1%:numel(groups)
     idx = find(data_table.group == groups(iG));
     animal = data_table.Animal(idx(1));
     probe_nbrs = data_table.Probe_nbr(idx);
-    [~,pp]= plotProbeTrackAnimal(animals{iA},'',av,st,probe_nbrs');
+    [~,pp]= plotProbeTrackAnimal(animal{1},'',av,st,probe_nbrs');
     if length(idx)<2
         continue
     end

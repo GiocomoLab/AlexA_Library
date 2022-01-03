@@ -1,5 +1,5 @@
 function data_out = calc_distance_tuning(data_in,good_cells,opt)
-
+    data_in.trial = [];
     fr = calcFRVsDist(good_cells,1:max(data_in.trial),data_in,opt);
     fr_zscore = zscore(fr,0,2);
     
