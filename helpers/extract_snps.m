@@ -8,12 +8,12 @@ p = inputParser;
    defaultwin = [-100 100];
    defaultAux=struct();
    %defaultLayer = 1:4;
-   %defaultFields = {'velM_smoothed','velP_smoothed'};
+   defaultFields = {'velM'};
 
    addParameter(p,'win',defaultwin);
    addParameter(p,'aux',defaultAux);
    %addParameter(p,'layer',defaultLayer);
-   %addParameter(p,'fields',defaultFields);
+   addParameter(p,'fields',defaultFields);
   
    
    parse(p,varargin{:});
@@ -22,7 +22,7 @@ trigs=trigs(:)';
 
 win=p.Results.win;
 auxData=p.Results.aux;
-fields = fieldnames(auxData);
+fields = p.Results.fields;
 
 % remove any trigger too close to start, finish, or stack transition
 toDel=find(sum(abs(bsxfun(@minus,[0 length(trace)]',trigs))<=max(abs(win))));
