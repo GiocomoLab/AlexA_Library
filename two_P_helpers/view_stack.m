@@ -31,21 +31,15 @@
 p=inputParser;
 
 addRequired(p,'data',@isnumeric)
-try
+
     addParameter(p,'marks',[],@isnumeric)
     addParameter(p,'adata',[],@isnumeric)
     addParameter(p,'FrameRate',0,@isnumeric)
     addParameter(p,'FrameZero',0,@isnumeric)
-    addParameter(p,'map','gray',@ischar)
+    addParameter(p,'map','gray')
     addParameter(p,'targetsXY',[],@isnumeric)
     addParameter(p,'clim',[])
-catch % for older matlab versions
-    addParamValue(p,'marks',[],@isnumeric)
-    addParamValue(p,'adata',[],@isnumeric)
-    addParamValue(p,'FrameRate',0,@isnumeric)
-    addParamValue(p,'FrameZero',0,@isnumeric)
-    addParamValue(p,'map','gray',@ischar)
-end
+
 
 
 parse(p,data,varargin{:})
@@ -134,7 +128,7 @@ colormap(map);
 if drawtargets
     for t = 1:size(targetsXY,1)
         if targetsXY(t,3)
-            tColor = 'w';
+            tColor = 'r';
             markerform = 'o';
         else
             tColor = 'c';
@@ -369,6 +363,9 @@ end
 switch event.Key
     case 'rightarrow'
         if strcmp(event.Modifier,'shift')
+            if params.clim(1)==0
+                params.clim(1)=1;
+            end
             params.clim(1)=params.clim(1)*1.1;
             set(params.h_f_ax,'clim',params.clim)
             set(hf,'UserData',params);
